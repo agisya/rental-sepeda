@@ -1,26 +1,178 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+  Sistem warna Rental Sepeda Garut.
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  Warna merek sengaja teal tua, bukan hijau, supaya tidak tertukar dengan lencana
+  status "Tersedia" yang juga hijau. Latar dibuat putih hangat karena aplikasi ini
+  banyak dipakai di luar ruangan pada siang hari — putih murni terlalu menyilaukan.
+*/
+
+:root {
+  --bg: #f6f5f2;
+  --surface: #ffffff;
+  --surface-2: #f0efeb;
+  --line: #e2e0da;
+  --line-strong: #cbc8bf;
+
+  --ink: #1c1917;
+  --ink-muted: #6b6660;
+  --ink-faint: #9a948c;
+
+  --brand: #0f5c5b;
+  --brand-hover: #0c4a49;
+  --brand-ink: #ffffff;
+  --brand-soft: #e2f0ef;
+  --brand-soft-ink: #0b3f3e;
+
+  /* Status sepeda. Setiap status selalu ditemani teks dan ikon, tidak pernah
+     hanya dibedakan lewat warna. */
+  --ok: #147a3d;
+  --ok-soft: #e3f4e9;
+  --danger: #b3261e;
+  --danger-soft: #fce9e7;
+  --warn: #a15c00;
+  --warn-soft: #fdf0dc;
+  --info: #1d4ed8;
+  --info-soft: #e6ecfd;
+  --idle: #5d5a55;
+  --idle-soft: #eceae6;
+
+  --ring: #0f5c5b;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #14161a;
+    --surface: #1c1f24;
+    --surface-2: #23272d;
+    --line: #31363e;
+    --line-strong: #454b55;
+
+    --ink: #f1efec;
+    --ink-muted: #a8a49d;
+    --ink-faint: #7c7871;
+
+    --brand: #2fa39f;
+    --brand-hover: #3fb8b3;
+    --brand-ink: #06211f;
+    --brand-soft: #16332f;
+    --brand-soft-ink: #8fded9;
+
+    --ok: #52c07c;
+    --ok-soft: #16301f;
+    --danger: #f28b82;
+    --danger-soft: #3a1c1a;
+    --warn: #e8b465;
+    --warn-soft: #362614;
+    --info: #8fb2f7;
+    --info-soft: #1a2440;
+    --idle: #a6a29b;
+    --idle-soft: #292d33;
+
+    --ring: #2fa39f;
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-soft-ink: var(--brand-soft-ink);
+
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-idle: var(--idle);
+  --color-idle-soft: var(--idle-soft);
+
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Satu tangga radius, dipakai konsisten: kontrol kecil, kartu, lalu panel. */
+  --radius-control: 0.5rem;
+  --radius-card: 0.875rem;
+  --radius-panel: 1.25rem;
+
+  /* Kedalaman dipakai sangat hemat — hanya untuk elemen yang benar-benar
+     melayang di atas isi halaman, bukan untuk setiap kartu. */
+  --shadow-angkat: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 12px rgb(0 0 0 / 0.06);
+  --shadow-tempel: 0 1px 0 rgb(0 0 0 / 0.04);
+}
+
+/* Label bagian: huruf kecil berjarak, dipakai sebagai judul kelompok informasi.
+   Menggantikan judul tebal yang dulu bersaing dengan angka utama. */
+.label-bagian {
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* Angka besar pada kartu utama. Tabular supaya tidak bergeser saat nilainya
+   berubah setiap kali dashboard menyegarkan diri. */
+.angka-utama {
+  font-size: 2rem;
+  line-height: 2.25rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  /* Angka rupiah dan jam sejajar rapi di tabel. */
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cincin fokus yang terlihat jelas di semua elemen interaktif. Petugas yang
+   memakai scanner USB banyak berpindah antar-kolom dengan Tab. */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Halaman cetak stiker barcode: hilangkan semua kromo aplikasi. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff;
+    color: #000000;
+  }
 }

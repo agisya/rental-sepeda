@@ -1,0 +1,71 @@
+import type { Metadata } from "next";
+import { notFound, redirect } from "next/navigation";
+import { wajibPengguna } from "@/lib/auth/dal";
+import { pemilikById, pemilikPunyaSepeda } from "@/lib/queries/owners";
+import { hapusPemilik } from "@/lib/actions/owners";
+import { PageHeader } from "@/components/ui/page-header";
+import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { OwnerForm } from "@/components/pemilik/owner-form";
+
+export const metadata: Metadata = { title: "Ubah Pemilik" };
+
+export default async function HalamanUbahPemilik(
+  props: PageProps<"/pemilik/[id]/ubah">,
+) {
+  const pengguna = await wajibPengguna();
+  if (pengguna.peran === "kasir") redirect("/pemilik");
+
+  const { id } = await props.params;
+  const ownerId = Number(id);
+  if (!Number.isInteger(ownerId) || ownerId <= 0) notFound();
+
+  const pemilik = await pemilikById(ownerId);
+  if (!pemilik) notFound();
+
+  const punyaSepeda = await pemilikPunyaSepeda(ownerId);
+
+  return (
+    <div className="space-y-4">
+      <PageHeader judul="Ubah Pemilik" />
+
+      <Card>
+        <CardHeader judul={pemilik.nama} />
+        <CardBody>
+          <OwnerForm
+            awal={{
+              id: pemilik.id,
+              nama: pemilik.nama,
+              noHp: pemilik.noHp,
+              alamat: pemilik.alamat,
+              persentaseBagiHasil: pemilik.persentaseBagiHasil,
+              catatan: pemilik.catatan,
+              aktif: pemilik.aktif,
+            }}
+          />
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader
+          judul="Hapus pemilik"
+          keterangan={
+            punyaSepeda
+              ? "Pemilik ini masih punya sepeda, jadi hanya akan dinonaktifkan supaya laporan lama tetap utuh."
+              : "Pemilik ini belum punya sepeda dan bisa dihapus permanen."
+          }
+        />
+        <CardBody>
+          <form action={hapusPemilik}>
+            <input type="hidden" name="id" value={pemilik.id} />
+            <button
+              type="submit"
+              className="w-full rounded-control border border-danger px-4 py-2.5 text-sm font-medium text-danger hover:bg-danger-soft"
+            >
+              {punyaSepeda ? "Nonaktifkan pemilik" : "Hapus pemilik"}
+            </button>
+          </form>
+        </CardBody>
+      </Card>
+    </div>
+  );
+}
