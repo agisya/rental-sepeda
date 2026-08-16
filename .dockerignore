@@ -1,0 +1,40 @@
+# Berkas yang tidak boleh atau tidak perlu masuk ke konteks build Docker.
+#
+# Selain memperkecil image, daftar ini juga menjaga agar rahasia dan database
+# lokal tidak pernah ikut terkirim ke mesin build.
+
+# Rahasia dan data lokal
+.env
+.env.*
+!.env.example
+data
+
+# Dependensi dan hasil build — dibangun ulang di dalam image
+node_modules
+.next
+out
+build
+
+# Riwayat dan perkakas pengembangan
+.git
+.github
+.gitignore
+.vscode
+.idea
+
+# Uji dan berkas pengembangan yang tidak dipakai saat produksi berjalan
+test
+**/*.test.ts
+**/*.test.tsx
+vitest.config.mts
+
+# Dokumen dan berkas Docker itu sendiri
+README.md
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Berkas sementara sistem
+.DS_Store
+*.log
+npm-debug.log*

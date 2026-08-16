@@ -1,6 +1,8 @@
-import { Pool, neonConfig } from "@neondatabase/serverless";
+import { Pool as PoolNeon, neonConfig } from "@neondatabase/serverless";
+import { Pool as PoolPg } from "pg";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle as drizzleNeon, type NeonDatabase } from "drizzle-orm/neon-serverless";
+import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import { drizzle as drizzlePglite } from "drizzle-orm/pglite";
 import * as schema from "./schema";
 import { tentukanModeDb } from "./mode";
@@ -10,13 +12,19 @@ import { tentukanModeDb } from "./mode";
  *
  * Driver dipilih otomatis dari DATABASE_URL:
  *
- *  - kosong atau "file:..."  → PGlite, Postgres asli yang berjalan di dalam
+ *  - kosong atau "file:..."   → PGlite, Postgres asli yang berjalan di dalam
  *    proses dan menyimpan data sebagai berkas. Untuk pengembangan lokal: tanpa
  *    mendaftar layanan apa pun dan tanpa internet.
- *  - "postgresql://..."      → Neon lewat WebSocket. Untuk produksi.
+ *  - host berakhiran neon.tech → driver Neon lewat WebSocket.
+ *  - "postgresql://" lainnya   → driver Postgres biasa. Untuk Postgres yang
+ *    dijalankan sendiri, misalnya layanan Postgres di Dokploy atau VPS.
  *
- * Keduanya Postgres yang sama, jadi query, migrasi, dan transaksi tidak perlu
- * ditulis dua kali. Mengimpor kedua driver di sini murah: WASM PGlite baru
+ * Pemisahan Neon dan Postgres biasa bukan pilihan gaya: driver Neon bicara lewat
+ * WebSocket ke proksi milik Neon dan tidak bisa menyambung ke Postgres biasa,
+ * sedangkan driver Postgres biasa tidak bisa menyambung ke Neon.
+ *
+ * Ketiganya Postgres yang sama, jadi query, migrasi, dan transaksi tidak perlu
+ * ditulis berkali-kali. Mengimpor semua driver di sini murah: WASM PGlite baru
  * dimuat ketika instance-nya benar-benar dibuat.
  */
 
@@ -32,21 +40,25 @@ function buatDb(): Database {
 
   let instance: Database;
 
+  // Ketiga driver sama-sama PgDatabase dengan API query identik; yang berbeda
+  // hanya tipe hasil mentahnya, yang tidak dipakai di aplikasi ini.
   if (mode.jenis === "lokal") {
-    // Kedua driver sama-sama PgDatabase dengan API query identik; yang berbeda
-    // hanya tipe hasil mentahnya, yang tidak dipakai di aplikasi ini.
     instance = drizzlePglite(new PGlite(mode.direktori), {
       schema,
     }) as unknown as Database;
-  } else {
+  } else if (mode.jenis === "neon") {
     // Driver WebSocket dipakai (bukan neon-http) karena aplikasi butuh transaksi
     // sungguhan saat memulai dan menyelesaikan rental.
     if (typeof WebSocket !== "undefined") {
       neonConfig.webSocketConstructor = WebSocket;
     }
-    instance = drizzleNeon(new Pool({ connectionString: mode.connectionString }), {
+    instance = drizzleNeon(new PoolNeon({ connectionString: mode.connectionString }), {
       schema,
     });
+  } else {
+    instance = drizzlePg(new PoolPg({ connectionString: mode.connectionString }), {
+      schema,
+    }) as unknown as Database;
   }
 
   globalForDb.__rentalDb = instance;

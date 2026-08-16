@@ -8,10 +8,13 @@
 import { config } from "dotenv";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-import { Pool, neonConfig } from "@neondatabase/serverless";
+import { Pool as PoolNeon, neonConfig } from "@neondatabase/serverless";
+import { Pool as PoolPg } from "pg";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle as drizzleNeon } from "drizzle-orm/neon-serverless";
 import { migrate as migrateNeon } from "drizzle-orm/neon-serverless/migrator";
+import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
+import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator";
 import { drizzle as drizzlePglite } from "drizzle-orm/pglite";
 import { migrate as migratePglite } from "drizzle-orm/pglite/migrator";
 import * as schema from "./schema";
@@ -59,18 +62,33 @@ export function bukaKoneksiSkrip(): KoneksiSkrip {
     };
   }
 
-  if (typeof WebSocket !== "undefined") {
-    neonConfig.webSocketConstructor = WebSocket;
-  }
-
-  const pool = new Pool({ connectionString: mode.connectionString });
-  const db = drizzleNeon(pool, { schema });
+  // Kata sandi disamarkan sebelum ditampilkan, supaya log deploy tidak pernah
+  // memuat kredensial database.
   const inang = mode.connectionString.replace(/:\/\/[^@]*@/, "://***@");
 
+  if (mode.jenis === "neon") {
+    if (typeof WebSocket !== "undefined") {
+      neonConfig.webSocketConstructor = WebSocket;
+    }
+
+    const pool = new PoolNeon({ connectionString: mode.connectionString });
+    const db = drizzleNeon(pool, { schema });
+
+    return {
+      db,
+      keterangan: `Neon (${inang.slice(0, 60)}…)`,
+      jalankanMigrasi: () => migrateNeon(db, { migrationsFolder: FOLDER_MIGRASI }),
+      tutup: () => pool.end(),
+    };
+  }
+
+  const pool = new PoolPg({ connectionString: mode.connectionString });
+  const db = drizzlePg(pool, { schema });
+
   return {
-    db,
-    keterangan: `Neon (${inang.slice(0, 60)}…)`,
-    jalankanMigrasi: () => migrateNeon(db, { migrationsFolder: FOLDER_MIGRASI }),
+    db: db as unknown as KoneksiSkrip["db"],
+    keterangan: `Postgres (${inang.slice(0, 60)}…)`,
+    jalankanMigrasi: () => migratePg(db, { migrationsFolder: FOLDER_MIGRASI }),
     tutup: () => pool.end(),
   };
 }

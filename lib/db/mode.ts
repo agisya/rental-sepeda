@@ -7,10 +7,25 @@
 
 export type ModeDb =
   | { jenis: "lokal"; direktori: string }
-  | { jenis: "neon"; connectionString: string };
+  | { jenis: "neon"; connectionString: string }
+  | { jenis: "postgres"; connectionString: string };
 
 /** Tempat berkas database lokal kalau DATABASE_URL dikosongkan. */
 export const DIREKTORI_LOKAL_BAWAAN = "./data/rental";
+
+/**
+ * Neon tidak bicara protokol Postgres biasa; ia dijangkau lewat WebSocket dan
+ * menuntut driver tersendiri. Driver itu tidak bisa dipakai untuk Postgres biasa,
+ * dan sebaliknya. Karena itu jenisnya dikenali dari nama host.
+ */
+function inangNeon(connectionString: string): boolean {
+  try {
+    const inang = new URL(connectionString).hostname.toLowerCase();
+    return inang.endsWith(".neon.tech") || inang.endsWith(".neon.build");
+  } catch {
+    return false;
+  }
+}
 
 export function tentukanModeDb(databaseUrl: string | undefined): ModeDb {
   const nilai = (databaseUrl ?? "").trim();
@@ -28,7 +43,9 @@ export function tentukanModeDb(databaseUrl: string | undefined): ModeDb {
   }
 
   if (nilai.startsWith("postgresql://") || nilai.startsWith("postgres://")) {
-    return { jenis: "neon", connectionString: nilai };
+    return inangNeon(nilai)
+      ? { jenis: "neon", connectionString: nilai }
+      : { jenis: "postgres", connectionString: nilai };
   }
 
   throw new Error(

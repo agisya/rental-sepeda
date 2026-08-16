@@ -32,14 +32,20 @@ apakah databasenya terhubung, tabelnya sudah ada, dan akunnya sudah terisi.
 
 Ditentukan oleh `DATABASE_URL` di `.env.local`:
 
-| Isi `DATABASE_URL` | Yang dipakai |
+| Isi `DATABASE_URL` | Driver yang dipakai |
 | --- | --- |
-| dikosongkan (bawaan) | Berkas lokal di `./data/rental` lewat PGlite — Postgres asli yang berjalan di dalam proses aplikasi |
-| `postgresql://…` | Neon atau Postgres lain, lewat koneksi jaringan |
+| dikosongkan (bawaan) | **PGlite** — Postgres asli yang berjalan di dalam proses aplikasi, datanya berkas di `./data/rental` |
+| host berakhiran `neon.tech` | **Driver Neon**, lewat WebSocket |
+| `postgresql://…` lainnya | **Driver Postgres biasa** — untuk Postgres di Dokploy, VPS, atau mesin sendiri |
 
-Keduanya Postgres yang sama, jadi query, migrasi, dan transaksinya identik. Pindah
-dari lokal ke cloud cukup dengan menempel connection string — tidak ada kode yang
-perlu diubah.
+Ketiganya Postgres yang sama, jadi query, migrasi, dan transaksinya identik. Pindah
+antar-database cukup dengan menempel connection string — tidak ada kode yang perlu
+diubah.
+
+Pemisahan Neon dan Postgres biasa bukan pilihan gaya. Driver Neon bicara lewat
+WebSocket ke proksi milik Neon dan **tidak bisa** menyambung ke Postgres biasa;
+sebaliknya juga demikian. Salah driver membuat koneksi ditolak saat aplikasi
+berjalan, bukan saat build — karena itu jenisnya dikenali otomatis dari nama host.
 
 Database lokal berupa berkas dan hanya boleh dibuka satu proses. Kalau `npm run dev`
 sedang berjalan, hentikan dulu sebelum menjalankan `db:seed` atau `db:migrate`.
@@ -58,7 +64,7 @@ Data yang sudah ada di database lokal tidak ikut berpindah sendiri.
 | --- | --- |
 | `npm run dev` | Menjalankan aplikasi untuk pengembangan |
 | `npm run build` | Membuat versi produksi |
-| `npm test` | Menjalankan 119 uji otomatis |
+| `npm test` | Menjalankan 121 uji otomatis |
 | `npm run db:seed` | Membuat tabel + mengisi data awal (aman diulang) |
 | `npm run db:cek` | Memeriksa kesiapan database dan akun login |
 | `npm run db:migrate` | Menerapkan migrasi saja, tanpa mengisi data |
@@ -127,7 +133,7 @@ Dua aturan yang dijaga di seluruh kode:
 npm test
 ```
 
-119 uji, terbagi tujuh:
+121 uji, terbagi delapan:
 
 - **Perhitungan uang** — pembulatan jam, dan invarian bahwa bagian pemilik ditambah
   bagian rental selalu persis sama dengan total biaya, diuji pada puluhan kombinasi
@@ -148,6 +154,112 @@ npm test
   ada banyak rental dan banyak setoran, serta pengelompokan harian mengikuti WIB.
 - **Alur rental** — dari mulai sampai masuk laporan harian, termasuk bukti bahwa
   perubahan tarif tidak mengubah transaksi lama.
+
+## Deploy ke Dokploy
+
+Image dibangun di GitHub Actions, bukan di server. Dokploy tinggal menarik image
+yang sudah jadi, sehingga deploy ringan dan server tidak perlu ikut membangun.
+
+### 1. Image dibangun otomatis
+
+Setiap push ke `main` menjalankan [.github/workflows/docker.yml](.github/workflows/docker.yml):
+lint dan 121 uji dijalankan lebih dulu, baru image dibangun dan didorong ke GitHub
+Container Registry. Kalau uji gagal, image tidak pernah terdorong.
+
+Alamat image:
+
+```
+ghcr.io/gitapik/rental_apik:latest
+```
+
+Tag yang tersedia: `latest` (dari `main`), `<sha-pendek>` untuk tiap commit, dan
+`v1.2.3` beserta `v1.2` kalau Anda membuat tag rilis.
+
+**Sekali saja setelah build pertama:** buka Packages di GitHub → paket
+`rental_apik` → Package settings. Kalau repositorinya privat, image juga privat,
+jadi tambahkan Registry Credentials di Dokploy dengan username GitHub Anda dan
+sebuah Personal Access Token berizin `read:packages`. Kalau image dibuat publik,
+Dokploy bisa menariknya tanpa kredensial.
+
+### 2. Siapkan database
+
+Di Dokploy, buat service **PostgreSQL**. Catat connection string internalnya,
+bentuknya seperti:
+
+```
+postgresql://postgres:sandi@nama-service-postgres:5432/rental
+```
+
+Aplikasi mengenali sendiri jenis databasenya dari alamat ini — Postgres biasa,
+Neon, atau berkas lokal — dan memilih driver yang sesuai. Neon dan Postgres biasa
+memakai protokol yang berbeda, jadi salah driver membuat koneksi ditolak.
+
+### 3. Buat aplikasi di Dokploy
+
+Pilih **Docker** sebagai sumber (bukan Git), lalu isi:
+
+| Isian | Nilai |
+| --- | --- |
+| Docker Image | `ghcr.io/gitapik/rental_apik:latest` |
+| Port | `3000` |
+
+Environment Variables:
+
+```env
+DATABASE_URL=postgresql://postgres:sandi@nama-service-postgres:5432/rental
+SESSION_SECRET=<kunci acak baru, minimal 32 karakter>
+```
+
+Buat `SESSION_SECRET` **baru** untuk produksi, jangan pakai yang ada di komputer
+Anda:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+### 4. Deploy
+
+Tekan Deploy. Saat container menyala, migrasi database dijalankan otomatis lebih
+dulu lewat [instrumentation.ts](instrumentation.ts) — server baru menerima
+permintaan setelah skema siap. Kalau migrasi gagal, container ikut gagal menyala
+sehingga versi sebelumnya tetap melayani.
+
+Setel juga Health Check Path ke `/api/health`. Rute itu ikut menguji koneksi
+database, jadi `DATABASE_URL` yang salah ketahuan sebagai container tidak sehat,
+bukan sebagai kegagalan saat petugas mencoba login.
+
+### 5. Buat akun pertama
+
+Migrasi hanya membuat tabel; isinya masih kosong, sehingga belum ada akun untuk
+login. Image produksi sengaja tidak memuat skrip seed — kode dan perkakas
+pengembangan tidak ikut masuk ke image — jadi pengisian awal dijalankan dari
+komputer Anda.
+
+Di Dokploy, buka service PostgreSQL dan aktifkan akses eksternal untuk sementara,
+lalu salin connection string eksternalnya. Dari komputer Anda:
+
+```bash
+# .env.local — arahkan sementara ke database produksi
+DATABASE_URL="postgresql://postgres:sandi@ip-server:5432/rental"
+```
+
+```bash
+npm run db:seed     # membuat 3 akun, 3 pemilik, 10 sepeda contoh
+npm run db:cek      # memastikan semuanya siap
+```
+
+Setelah bisa masuk: **ganti ketiga kata sandi bawaan** lewat menu Pengaturan,
+**matikan lagi akses eksternal** Postgres di Dokploy, dan kembalikan
+`DATABASE_URL` di `.env.local` ke kosong supaya pengembangan lokal memakai
+database lokal lagi.
+
+Kalau tidak ingin memakai data contoh, isi hanya akun admin lalu hapus pemilik
+dan sepeda contohnya lewat aplikasi.
+
+### Memperbarui aplikasi
+
+Push ke `main`, tunggu Actions selesai, lalu tekan Redeploy di Dokploy. Migrasi
+skema ikut berjalan sendiri.
 
 ## Deploy ke Vercel
 
