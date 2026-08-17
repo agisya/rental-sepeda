@@ -45,6 +45,10 @@ RUN addgroup --system --gid 1001 nodejs \
 # dipakai, jadi node_modules penuh tidak perlu ikut.
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Folder public dijaga tetap ada lewat public/.gitkeep. Git tidak melacak folder
+# kosong, dan tanpa penanda itu folder ini lenyap dari hasil checkout sehingga
+# baris COPY di bawah menggagalkan build.
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Berkas migrasi adalah data, bukan kode, sehingga tidak ikut terbawa penelusuran
