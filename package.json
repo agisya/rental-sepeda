@@ -11,6 +11,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "//cek:tipe": "PageProps dan LayoutProps adalah tipe global yang dibuat Next, bukan yang ditulis tangan. Berkasnya lahir dari `next dev` atau `next build` dan ikut di-gitignore, sehingga `tsc` sendirian selalu gagal di mesin yang belum pernah menjalankan keduanya — seperti CI. `next typegen` membuat berkas itu tanpa ikut membangun aplikasi. Disimpan sebagai skrip supaya lokal dan CI menjalankan perintah yang sama persis.",
+    "cek:tipe": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:seed": "tsx lib/db/seed.ts",

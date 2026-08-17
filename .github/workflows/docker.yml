@@ -41,8 +41,13 @@ jobs:
       # Kesalahan tipe menggagalkan `next build` di dalam Docker, dan kegagalan di
       # sana muncul sebagai galat build image yang jauh lebih sulit dibaca.
       # Diperiksa lebih dulu di sini supaya pesannya langsung menunjuk berkasnya.
+      #
+      # Lewat skrip, bukan `npx tsc` langsung: skripnya menjalankan `next typegen`
+      # dulu untuk membuat tipe rute yang di-gitignore. Tanpa itu langkah ini
+      # gagal di CI dengan 23 galat "Cannot find name 'PageProps'" padahal kodenya
+      # tidak salah — dan tetap lolos di komputer yang sudah pernah `next dev`.
       - name: Periksa tipe
-        run: npx tsc --noEmit
+        run: npm run cek:tipe
 
       - name: Uji otomatis
         run: npm test
