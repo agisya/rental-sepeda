@@ -1,0 +1,76 @@
+# Deploy Rental Sepeda Garut di Dokploy.
+#
+# Berkas ini tidak punya bagian `build`, dan itu memang disengaja. Image sudah
+# dibangun di GitHub Actions lalu disimpan di GHCR, sehingga server Dokploy hanya
+# menarik dan menjalankan: tidak perlu Node, tidak perlu node_modules, dan tidak
+# ikut menanggung waktu build. Server kecil pun cukup.
+#
+# Database TIDAK ada di sini. Aplikasi menyambung ke Postgres yang dikelola di
+# luar compose ini — service PostgreSQL milik Dokploy, atau Neon. Alasannya:
+# database yang hidup-mati mengikuti stack aplikasi ikut terhapus setiap kali
+# stack dibongkar, sedangkan data rental harus lebih awet daripada aplikasinya.
+#
+# Nilai variabel diisi di tab Environment milik service Dokploy. Dokploy
+# menuliskannya menjadi berkas .env di sebelah berkas ini, dan `${...}` di bawah
+# mengambil dari situ. Variabel tidak masuk ke container dengan sendirinya —
+# hanya yang disebut di bagian `environment` yang sampai ke aplikasi.
+
+services:
+  app:
+    # Bisa ditimpa lewat APP_IMAGE, misalnya untuk menjalankan versi lama saat
+    # perlu mundur cepat: APP_IMAGE=ghcr.io/gitapik/rental_apik:a1b2c3d
+    image: ${APP_IMAGE:-ghcr.io/gitapik/rental_apik:latest}
+
+    # Tanpa ini Docker memakai `latest` yang sudah tersimpan di server. Deploy
+    # akan terlihat berhasil padahal yang jalan masih versi lama — kesalahan yang
+    # sangat membingungkan karena tidak memunculkan galat apa pun.
+    pull_policy: always
+
+    # Container ikut menyala kembali setelah server reboot atau setelah proses
+    # mati mendadak, tapi tetap diam kalau memang sengaja dihentikan.
+    restart: unless-stopped
+
+    environment:
+      # Tanda `:?` menghentikan deploy dengan pesan jelas saat variabel belum
+      # diisi. Lebih baik gagal di sini daripada container menyala lalu setiap
+      # halaman menampilkan galat database.
+      #
+      # Bentuk alamat menentukan driver yang dipakai aplikasi (Postgres biasa,
+      # Neon, atau berkas lokal), jadi tempel connection string apa adanya.
+      DATABASE_URL: ${DATABASE_URL:?isi di tab Environment Dokploy, contoh postgresql://postgres:sandi@nama-service-postgres:5432/rental}
+
+      # Kunci penandatangan cookie sesi. Wajib baru untuk produksi, minimal 32
+      # karakter acak. Kalau berubah, semua petugas yang sedang login ikut keluar.
+      SESSION_SECRET: ${SESSION_SECRET:?buat kunci acak baru minimal 32 karakter, jangan pakai yang di komputer sendiri}
+
+      # Migrasi skema dijalankan otomatis saat container menyala. Diisi 0 hanya
+      # kalau suatu saat perlu menyalakan aplikasi tanpa menyentuh skema.
+      MIGRASI_OTOMATIS: ${MIGRASI_OTOMATIS:-1}
+
+    # `expose` menyediakan port hanya di jaringan container, bukan di IP publik
+    # server. Traefik milik Dokploy yang meneruskan permintaan dari domain ke
+    # sini, sehingga tidak ada pintu tambahan yang terbuka ke internet.
+    expose:
+      - 3000
+
+    networks:
+      - dokploy-network
+
+    # Cek kesehatan sudah ikut di dalam image (lihat Dockerfile) dan menguji
+    # koneksi database juga, jadi tidak diulang di sini agar tidak ada dua
+    # definisi yang bisa berbeda isi.
+
+    # Log yang dibiarkan tumbuh tanpa batas adalah cara paling umum disk VPS
+    # kecil penuh, dan aplikasi ikut mati karenanya.
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+# Jaringan ini dibuat oleh Dokploy, bukan oleh berkas ini. Traefik berada di
+# dalamnya; tanpa ikut bergabung, domain yang disetel di tab Domains tidak akan
+# menemukan container ini.
+networks:
+  dokploy-network:
+    external: true

@@ -196,12 +196,17 @@ memakai protokol yang berbeda, jadi salah driver membuat koneksi ditolak.
 
 ### 3. Buat aplikasi di Dokploy
 
-Pilih **Docker** sebagai sumber (bukan Git), lalu isi:
+Buat resource bertipe **Compose**, lalu arahkan ke repositori ini:
 
 | Isian | Nilai |
 | --- | --- |
-| Docker Image | `ghcr.io/gitapik/rental_apik:latest` |
-| Port | `3000` |
+| Provider | Github → repositori ini, branch `main` |
+| Compose Path | `./docker-compose.yml` |
+
+[docker-compose.yml](docker-compose.yml) tidak punya bagian `build`: isinya hanya
+menarik image yang sudah jadi dari GHCR. Jadi meski sumbernya repositori, server
+tetap tidak ikut membangun apa pun — kode di repositori hanya dipakai untuk
+membaca berkas compose-nya.
 
 Environment Variables:
 
@@ -210,12 +215,22 @@ DATABASE_URL=postgresql://postgres:sandi@nama-service-postgres:5432/rental
 SESSION_SECRET=<kunci acak baru, minimal 32 karakter>
 ```
 
+Dokploy menuliskan keduanya menjadi `.env` di sebelah berkas compose, dan berkas
+compose meneruskannya ke container. Kalau salah satu belum diisi, deploy berhenti
+dengan pesan yang menyebut nama variabelnya — bukan menyalakan container yang
+pasti gagal di setiap halaman.
+
 Buat `SESSION_SECRET` **baru** untuk produksi, jangan pakai yang ada di komputer
 Anda:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
+
+Terakhir, di tab **Domains**, tambahkan domain dengan service `app` dan port
+`3000`. Port itu tidak dibuka ke IP publik server; Traefik milik Dokploy yang
+meneruskan permintaan dari domain ke container, dan itulah sebabnya service
+`app` ikut bergabung ke `dokploy-network` di berkas compose.
 
 ### 4. Deploy
 
@@ -224,9 +239,10 @@ dulu lewat [instrumentation.ts](instrumentation.ts) — server baru menerima
 permintaan setelah skema siap. Kalau migrasi gagal, container ikut gagal menyala
 sehingga versi sebelumnya tetap melayani.
 
-Setel juga Health Check Path ke `/api/health`. Rute itu ikut menguji koneksi
-database, jadi `DATABASE_URL` yang salah ketahuan sebagai container tidak sehat,
-bukan sebagai kegagalan saat petugas mencoba login.
+Cek kesehatan tidak perlu disetel di Dokploy karena sudah ikut di dalam image
+(lihat [Dockerfile](Dockerfile)). Pemeriksaannya memanggil `/api/health`, yang
+ikut menguji koneksi database — jadi `DATABASE_URL` yang salah ketahuan sebagai
+container tidak sehat, bukan sebagai kegagalan saat petugas mencoba login.
 
 ### 5. Buat akun pertama
 
@@ -260,6 +276,29 @@ dan sepeda contohnya lewat aplikasi.
 
 Push ke `main`, tunggu Actions selesai, lalu tekan Redeploy di Dokploy. Migrasi
 skema ikut berjalan sendiri.
+
+Redeploy bisa ikut otomatis: salin **Webhook URL** dari Dokploy, simpan di GitHub
+sebagai secret `DOKPLOY_WEBHOOK_URL` (Settings → Secrets and variables → Actions),
+maka setiap push ke `main` yang lulus uji langsung tayang tanpa disentuh. Tanpa
+secret itu alurnya tetap jalan, hanya penekanan Redeploy-nya manual.
+
+### Mundur ke versi sebelumnya
+
+Setiap commit punya tag image sendiri, jadi tidak perlu me-revert kode dulu.
+Isi `APP_IMAGE` di Environment Dokploy dengan tag versi yang masih sehat lalu
+Redeploy:
+
+```env
+APP_IMAGE=ghcr.io/gitapik/rental_apik:a1b2c3d
+```
+
+Daftar tag ada di halaman Packages GitHub, atau di ringkasan Actions milik build
+tersebut. Setelah perbaikannya terdorong ke `main`, hapus kembali `APP_IMAGE`
+supaya kembali mengikuti `latest`.
+
+Perlu diingat migrasi skema hanya maju, tidak turun. Kalau versi yang bermasalah
+sudah menambah tabel atau kolom, mundurnya image aman — tapi migrasi yang sudah
+diterapkan tetap ada di database.
 
 ## Deploy ke Vercel
 

@@ -1,12 +1,20 @@
 name: Build & push image
 
-# Image dibangun di GitHub Actions, lalu Dokploy tinggal menariknya. Mesin server
-# tidak perlu ikut membangun, sehingga deploy jauh lebih ringan dan cepat.
+# Image dibangun di GitHub Actions, lalu Dokploy tinggal menariknya lewat
+# docker-compose.yml. Mesin server tidak perlu ikut membangun, sehingga deploy
+# jauh lebih ringan dan cepat.
 on:
   push:
     branches: [main]
     tags: ["v*"]
   workflow_dispatch:
+
+# Push yang datang beruntun tidak perlu dibangun semuanya: hanya yang terakhir
+# yang akan dipakai. Yang lebih lama dibatalkan supaya antrean tidak menumpuk.
+# Tag rilis dikecualikan lewat penamaan grup per ref.
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
 
 env:
   REGISTRY: ghcr.io
@@ -30,8 +38,23 @@ jobs:
       - name: Lint
         run: npx eslint .
 
+      # Kesalahan tipe menggagalkan `next build` di dalam Docker, dan kegagalan di
+      # sana muncul sebagai galat build image yang jauh lebih sulit dibaca.
+      # Diperiksa lebih dulu di sini supaya pesannya langsung menunjuk berkasnya.
+      - name: Periksa tipe
+        run: npx tsc --noEmit
+
       - name: Uji otomatis
         run: npm test
+
+      # Salah tulis di compose baru ketahuan saat deploy gagal di server, padahal
+      # bisa ditangkap di sini dalam hitungan detik. Nilai di bawah hanya boneka
+      # agar variabel wajib terpenuhi; yang sebenarnya diisi di Dokploy.
+      - name: Periksa docker-compose.yml
+        run: docker compose -f docker-compose.yml config --quiet
+        env:
+          DATABASE_URL: postgresql://periksa:periksa@localhost:5432/periksa
+          SESSION_SECRET: periksa-periksa-periksa-periksa-periksa
 
   image:
     name: Build & push
@@ -94,4 +117,38 @@ jobs:
             echo '```'
             echo "${{ steps.meta.outputs.tags }}"
             echo '```'
+            echo
+            echo "Dipakai oleh \`docker-compose.yml\` lewat tag \`latest\`."
+            echo "Untuk mundur ke versi ini, setel \`APP_IMAGE\` di Dokploy ke salah satu tag di atas."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Dokploy menarik image sendiri, tapi hanya kalau diberi tahu. Tanpa langkah
+  # ini deploy tetap jalan — cukup tekan Redeploy di Dokploy secara manual.
+  # Dengan secret DOKPLOY_WEBHOOK_URL terisi, push ke main langsung tayang.
+  deploy:
+    name: Picu redeploy Dokploy
+    runs-on: ubuntu-latest
+    needs: image
+    if: github.ref == 'refs/heads/main'
+
+    env:
+      WEBHOOK: ${{ secrets.DOKPLOY_WEBHOOK_URL }}
+
+    steps:
+      - name: Beri tahu Dokploy
+        # Secret tidak bisa dibaca langsung di `if`, jadi dilewatkan dulu lewat
+        # env. Kalau belum diisi, langkah ini dilewati tanpa menggagalkan alur.
+        if: env.WEBHOOK != ''
+        run: curl --fail --silent --show-error --location -X POST "$WEBHOOK"
+
+      - name: Ingatkan kalau webhook belum disetel
+        if: env.WEBHOOK == ''
+        run: |
+          {
+            echo "### Redeploy masih manual"
+            echo
+            echo "Secret \`DOKPLOY_WEBHOOK_URL\` belum diisi, jadi image baru sudah"
+            echo "siap di GHCR tapi belum dipasang. Tekan **Redeploy** di Dokploy,"
+            echo "atau salin Webhook URL dari Dokploy ke secret tersebut supaya"
+            echo "langkah ini mengerjakannya sendiri."
           } >> "$GITHUB_STEP_SUMMARY"
