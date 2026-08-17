@@ -2,6 +2,10 @@
   "name": "rental-spda-garut",
   "version": "0.1.0",
   "private": true,
+  "//engines": "npm 10 dan npm 11 menyusun package-lock.json dengan cara berbeda untuk pohon dependensi ini, sehingga lockfile yang ditulis salah satunya ditolak yang lain. Node 24 dipakai di komputer pengembang, GitHub Actions, dan image Docker supaya ketiganya memakai npm yang sama.",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
