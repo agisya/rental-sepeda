@@ -7,6 +7,8 @@ import {
   FormGantiSandi,
   FormPengaturan,
 } from "@/components/pengaturan/form-pengaturan";
+import { DaftarTim, FormTambahAnggota } from "@/components/pengaturan/form-tim";
+import { daftarPengguna } from "@/lib/pengguna/kelola";
 
 export const metadata: Metadata = { title: "Pengaturan" };
 
@@ -22,6 +24,10 @@ export default async function HalamanPengaturan(props: PageProps<"/pengaturan">)
   const pengaturan = await ambilPengaturan();
 
   const bolehUbah = pengguna.peran !== "kasir";
+
+  // Pengelolaan akun hanya untuk admin — owner boleh melihat keuangan, tapi
+  // menambah dan menonaktifkan akun adalah kewenangan yang berbeda.
+  const tim = pengguna.peran === "admin" ? await daftarPengguna() : null;
 
   return (
     <div className="space-y-5">
@@ -83,6 +89,30 @@ export default async function HalamanPengaturan(props: PageProps<"/pengaturan">)
           <FormGantiSandi />
         </CardBody>
       </Card>
+
+      {tim && (
+        <>
+          <Card>
+            <CardHeader
+              judul="Tim"
+              keterangan={`${tim.length} akun terdaftar`}
+            />
+            <CardBody className="px-4 py-3.5">
+              <DaftarTim anggota={tim} idSaya={pengguna.id} />
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader
+              judul="Tambah anggota"
+              keterangan="Kata sandi awal Anda serahkan langsung kepada orangnya"
+            />
+            <CardBody>
+              <FormTambahAnggota />
+            </CardBody>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

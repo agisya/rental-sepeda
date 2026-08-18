@@ -10,7 +10,11 @@ import { NAMA_COOKIE_SESI, dekripsiSesi } from "@/lib/auth/token";
  * Sejak Next.js 16, berkas ini bernama proxy.ts (dulu middleware.ts).
  */
 
-const RUTE_PUBLIK = ["/login"];
+// /register dipakai membuat akun admin pertama pada instance yang baru dideploy,
+// jadi ia harus bisa dibuka tanpa sesi. Halamannya sendiri mengalihkan ke /login
+// begitu tabel pengguna berisi — pemeriksaan itu menyentuh database, sehingga
+// tidak boleh dilakukan di sini.
+const RUTE_PUBLIK = ["/login", "/register"];
 
 export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
