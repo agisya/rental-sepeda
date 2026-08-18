@@ -45,6 +45,9 @@ export const metodeBayarEnum = pgEnum("metode_bayar", [
   "transfer",
 ]);
 
+/** Setoran kas yang sudah dicatat kasir tapi belum ditandai diterima. */
+export const statusSetoranEnum = pgEnum("status_setoran", ["menunggu", "diterima"]);
+
 /** Sesuai spesifikasi: 🟡 Booking, 🟢 Selesai, 🔴 Batal. */
 export const statusBookingEnum = pgEnum("status_booking", [
   "booking",
@@ -147,9 +150,22 @@ export const rentals = pgTable(
     renterId: integer("renter_id")
       .notNull()
       .references(() => renters.id, { onDelete: "restrict" }),
+    /** Petugas yang memulai rental. */
     kasirId: integer("kasir_id")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
+
+    /**
+     * Petugas yang menyelesaikan rental, dan karena itu yang menerima uangnya.
+     *
+     * Berbeda dari kasirId kalau shift berganti saat sepeda masih di jalan — dan
+     * rental bisa berjam-jam, jadi itu bukan kejadian langka. Rekap kas harus
+     * mengikuti siapa yang memegang uang, bukan siapa yang mencatat
+     * keberangkatannya.
+     */
+    diselesaikanOleh: integer("diselesaikan_oleh").references(() => users.id, {
+      onDelete: "restrict",
+    }),
 
     // --- Kolom snapshot ---
     // Disalin saat rental dimulai. Kalau tarif atau persentase bagi hasil diubah
@@ -176,6 +192,18 @@ export const rentals = pgTable(
     status: statusRentalEnum("status").notNull().default("berjalan"),
     jaminan: text("jaminan"),
     catatan: text("catatan"),
+
+    // --- Jejak pembatalan ---
+    // Sebelumnya jejak ini ditulis sebagai teks ke dalam kolom catatan, yang
+    // berarti catatan asli kasir — jaminan apa yang ditahan, kondisi sepeda —
+    // ikut terhapus, dan pertanyaan "siapa membatalkan apa bulan ini" hanya bisa
+    // dijawab dengan memindai teks. Nama juga tidak bisa disambungkan kembali ke
+    // tabel pengguna kalau namanya berubah.
+    dibatalkanOleh: integer("dibatalkan_oleh").references(() => users.id, {
+      onDelete: "restrict",
+    }),
+    dibatalkanPada: timestamp("dibatalkan_pada", { withTimezone: true }),
+    alasanBatal: text("alasan_batal"),
     dibuatPada: timestamp("dibuat_pada", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -323,6 +351,16 @@ export const expenses = pgTable(
     maintenanceId: integer("maintenance_id").references(() => maintenances.id, {
       onDelete: "cascade",
     }),
+    /**
+     * Menentukan apakah uang ini keluar dari laci kasir atau dari rekening.
+     * Laba/rugi tidak peduli caranya dibayar, tapi rekap kas harian peduli
+     * sekali: pengeluaran tunai mengurangi uang yang harus disetorkan.
+     *
+     * Baris lama diisi "tunai" oleh migrasi. Rekap kas baru dipakai sejak fitur
+     * ini ada, jadi tebakan itu tidak mengubah penutupan mana pun yang sudah
+     * terjadi — tidak ada.
+     */
+    metode: metodeBayarEnum("metode").notNull().default("tunai"),
     dicatatOleh: integer("dicatat_oleh")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
@@ -361,6 +399,60 @@ export const ownerPayments = pgTable(
   (t) => [
     index("owner_payments_owner_idx").on(t.ownerId),
     index("owner_payments_tanggal_idx").on(t.tanggal),
+  ],
+);
+
+/**
+ * Penutupan kas harian oleh kasir.
+ *
+ * Aplikasi selama ini tahu berapa uang yang seharusnya masuk, tapi tidak pernah
+ * tahu berapa yang benar-benar berpindah tangan. Selisih laci baru ketahuan
+ * berhari-hari kemudian, saat ingatan semua orang sudah kabur.
+ *
+ * Dibuat dua langkah: kasir mencatat berapa yang ia serahkan, lalu admin atau
+ * owner menandainya diterima. Satu langkah saja tidak cukup — tanpa penerimaan,
+ * yang tercatat cuma pengakuan sepihak.
+ */
+export const cashDeposits = pgTable(
+  "cash_deposits",
+  {
+    id: serial("id").primaryKey(),
+    /** Awal hari WIB yang ditutup. Bukan waktu penutupannya dilakukan. */
+    tanggal: timestamp("tanggal", { withTimezone: true }).notNull(),
+    kasirId: integer("kasir_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+
+    // --- Angka sistem, dibekukan saat penutupan dibuat ---
+    // Disimpan, bukan dihitung ulang saat dibaca. Kalau besok ada rental yang
+    // dibatalkan atau pengeluaran yang diperbaiki, penutupan yang sudah
+    // ditandatangani tidak boleh ikut berubah diam-diam — kalau ia berubah,
+    // selisih yang dulu disepakati jadi tidak bisa dipertanggungjawabkan lagi.
+    penerimaanTunai: integer("penerimaan_tunai").notNull(),
+    pengeluaranTunai: integer("pengeluaran_tunai").notNull(),
+    setoranPemilikTunai: integer("setoran_pemilik_tunai").notNull(),
+    jumlahSeharusnya: integer("jumlah_seharusnya").notNull(),
+
+    /** Uang fisik yang benar-benar diserahkan. */
+    jumlahDiserahkan: integer("jumlah_diserahkan").notNull(),
+    /** Diserahkan dikurangi seharusnya. Negatif berarti kurang. */
+    selisih: integer("selisih").notNull(),
+    catatan: text("catatan"),
+
+    status: statusSetoranEnum("status").notNull().default("menunggu"),
+    diterimaOleh: integer("diterima_oleh").references(() => users.id, {
+      onDelete: "restrict",
+    }),
+    diterimaPada: timestamp("diterima_pada", { withTimezone: true }),
+
+    dibuatPada: timestamp("dibuat_pada", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // Satu penutupan per kasir per hari. Dijaga database, bukan hanya aplikasi,
+    // supaya dua kali tekan tidak menghasilkan dua setoran untuk hari yang sama.
+    uniqueIndex("cash_deposits_kasir_tanggal_unik").on(t.kasirId, t.tanggal),
+    index("cash_deposits_tanggal_idx").on(t.tanggal),
+    index("cash_deposits_status_idx").on(t.status),
   ],
 );
 

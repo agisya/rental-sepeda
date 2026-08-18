@@ -79,6 +79,9 @@ export const KELOMPOK_MENU: KelompokMenu[] = [
   {
     judul: "Keuangan",
     item: [
+      // Tanpa batasan peran: kasir justru yang paling sering membukanya, karena
+      // dialah yang memegang uangnya dan yang harus menutup kas tiap hari.
+      { href: "/kas", label: "Tutup Kas", labelPendek: "Kas", ikon: "uang" },
       {
         href: "/pengeluaran",
         label: "Pengeluaran",

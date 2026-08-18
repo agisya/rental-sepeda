@@ -172,7 +172,7 @@ export async function selesaikanRental(
   _sebelumnya: StatusAksi,
   formData: FormData,
 ): Promise<StatusAksi> {
-  await wajibPengguna();
+  const pengguna = await wajibPengguna();
 
   const hasil = skemaSelesai.safeParse({
     rentalId: formData.get("rentalId"),
@@ -221,6 +221,10 @@ export async function selesaikanRental(
           bagianRental: biaya.bagianRental,
           metodeBayar: data.metodeBayar,
           catatan: data.catatan ?? rental.catatan,
+          // Uang berpindah tangan di sini, bukan saat rental dimulai. Rekap kas
+          // harian membebankannya ke orang ini, bukan ke kasir pembuka — kalau
+          // shift berganti saat sepeda masih di jalan, keduanya berbeda.
+          diselesaikanOleh: pengguna.id,
           status: "selesai",
         })
         .where(eq(rentals.id, rental.id));
@@ -283,12 +287,18 @@ export async function batalkanRental(
 
       if (!rental) throw new GagalRental("Rental ini sudah tidak berjalan.");
 
+      // Kolom catatan sengaja tidak disentuh. Sebelumnya jejak pembatalan
+      // ditulis ke sana, yang berarti catatan asli kasir — jaminan apa yang
+      // ditahan, kondisi sepeda saat berangkat — ikut terhapus justru pada
+      // rental yang paling mungkin dipersoalkan kemudian.
       await tx
         .update(rentals)
         .set({
           status: "batal",
           waktuSelesai: new Date(),
-          catatan: `Dibatalkan oleh ${pengguna.nama}: ${data.alasan}`,
+          dibatalkanOleh: pengguna.id,
+          dibatalkanPada: new Date(),
+          alasanBatal: data.alasan,
         })
         .where(eq(rentals.id, rental.id));
 

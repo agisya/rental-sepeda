@@ -22,6 +22,14 @@ const kolomRental = {
   jaminan: rentals.jaminan,
   catatan: rentals.catatan,
 
+  // Jejak pembatalan. Sub-kueri, bukan join, supaya baris yang tidak dibatalkan
+  // tetap ikut terbawa — join biasa akan membuangnya, dan itu justru mayoritas.
+  dibatalkanPada: rentals.dibatalkanPada,
+  alasanBatal: rentals.alasanBatal,
+  namaPembatal: sql<string | null>`(
+    select ${users.nama} from ${users} where ${users.id} = ${rentals.dibatalkanOleh}
+  )`,
+
   bikeId: bikes.id,
   kodeSepeda: bikes.kode,
   namaSepeda: bikes.nama,
@@ -52,6 +60,9 @@ export type RentalLengkap = {
   metodeBayar: MetodeBayar | null;
   jaminan: string | null;
   catatan: string | null;
+  dibatalkanPada: Date | null;
+  alasanBatal: string | null;
+  namaPembatal: string | null;
   bikeId: number;
   kodeSepeda: string;
   namaSepeda: string;

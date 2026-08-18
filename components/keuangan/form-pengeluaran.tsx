@@ -88,6 +88,22 @@ export function FormPengeluaran({ tanggalHariIni }: { tanggalHariIni: string }) 
         )}
       </Field>
 
+      <Field
+        id="metode"
+        label="Dibayar dengan"
+        petunjuk="Yang tunai akan mengurangi uang di laci saat tutup kas"
+        galat={status.galatField?.metode}
+        wajib
+      >
+        {(props) => (
+          <Select {...props} name="metode" defaultValue="tunai" required>
+            <option value="tunai">Tunai — diambil dari laci</option>
+            <option value="transfer">Transfer — dari rekening</option>
+            <option value="qris">QRIS</option>
+          </Select>
+        )}
+      </Field>
+
       <TombolSimpan />
     </form>
   );

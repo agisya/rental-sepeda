@@ -45,6 +45,9 @@ const skemaPengeluaran = z.object({
     .int("Jumlah harus rupiah bulat")
     .min(1, "Jumlah harus lebih dari nol")
     .max(1_000_000_000),
+  // Laba/rugi tidak peduli caranya dibayar, tapi penutupan kas peduli sekali:
+  // hanya yang tunai yang mengurangi uang di laci.
+  metode: z.enum(["tunai", "qris", "transfer"], { error: "Pilih metode pembayaran" }),
 });
 
 export async function simpanPengeluaran(
@@ -61,6 +64,7 @@ export async function simpanPengeluaran(
     kategori: formData.get("kategori"),
     keterangan: formData.get("keterangan"),
     jumlah: formData.get("jumlah"),
+    metode: formData.get("metode"),
   });
 
   if (!hasil.success) {
@@ -75,6 +79,7 @@ export async function simpanPengeluaran(
     kategori: hasil.data.kategori,
     keterangan: hasil.data.keterangan,
     jumlah: hasil.data.jumlah,
+    metode: hasil.data.metode,
     dicatatOleh: pengguna.id,
   });
 

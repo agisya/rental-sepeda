@@ -15,7 +15,12 @@ import { StatusRentalBadge } from "@/components/ui/status-badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { Ikon } from "@/components/ui/icons";
 import { rupiah } from "@/lib/format";
-import { formatDurasi, formatJamWib, formatTanggalWib } from "@/lib/waktu";
+import {
+  formatDurasi,
+  formatJamWib,
+  formatTanggalJamWib,
+  formatTanggalWib,
+} from "@/lib/waktu";
 
 export const metadata: Metadata = { title: "Detail Transaksi" };
 
@@ -127,6 +132,27 @@ export default async function HalamanDetailTransaksi(
           <BarisData label="Dicatat oleh">{rental.namaKasir}</BarisData>
         </DaftarData>
       </Card>
+
+      {/* Jejak pembatalan berdiri sendiri, tidak lagi menimpa catatan kasir.
+          Rental yang dibatalkan justru yang paling mungkin dipersoalkan
+          kemudian, jadi catatan asli tentang jaminan dan kondisi sepeda harus
+          tetap utuh di sampingnya. */}
+      {rental.status === "batal" && (
+        <Card className="border-danger/40">
+          <CardHeader
+            className="border-danger/25"
+            judul={<span className="text-danger">Dibatalkan</span>}
+            keterangan={
+              rental.dibatalkanPada
+                ? `${rental.namaPembatal ?? "—"} · ${formatTanggalJamWib(rental.dibatalkanPada)}`
+                : undefined
+            }
+          />
+          <p className="px-4 py-3 text-sm leading-relaxed text-ink-muted">
+            {rental.alasanBatal ?? "Alasan tidak tercatat (pembatalan sebelum jejak ini ada)."}
+          </p>
+        </Card>
+      )}
 
       {rental.catatan && (
         <Card>

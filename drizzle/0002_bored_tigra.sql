@@ -1,0 +1,2 @@
+ALTER TABLE "rentals" ADD COLUMN "diselesaikan_oleh" integer;--> statement-breakpoint
+ALTER TABLE "rentals" ADD CONSTRAINT "rentals_diselesaikan_oleh_users_id_fk" FOREIGN KEY ("diselesaikan_oleh") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE no action;

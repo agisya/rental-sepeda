@@ -1,0 +1,1726 @@
+{
+  "id": "b6676fc9-0f3c-49e8-8a3e-ac75843351f6",
+  "prevId": "596f21eb-4868-447c-a657-93c279f501fb",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.bikes": {
+      "name": "bikes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "kode": {
+          "name": "kode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nama": {
+          "name": "nama",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jenis": {
+          "name": "jenis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "merk": {
+          "name": "merk",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "foto_url": {
+          "name": "foto_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "foto_data": {
+          "name": "foto_data",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "foto_tipe": {
+          "name": "foto_tipe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "foto_versi": {
+          "name": "foto_versi",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "tarif_per_jam": {
+          "name": "tarif_per_jam",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "status_sepeda",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'tersedia'"
+        },
+        "catatan": {
+          "name": "catatan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dibuat_pada": {
+          "name": "dibuat_pada",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bikes_owner_idx": {
+          "name": "bikes_owner_idx",
+          "columns": [
+            {
+              "expression": "owner_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bikes_status_idx": {
+          "name": "bikes_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bikes_owner_id_owners_id_fk": {
+          "name": "bikes_owner_id_owners_id_fk",
+          "tableFrom": "bikes",
+          "tableTo": "owners",
+          "columnsFrom": [
+            "owner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "bikes_kode_unique": {
+          "name": "bikes_kode_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "kode"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.booking_slots": {
+      "name": "booking_slots",
+      "schema": "",
+      "columns": {
+        "booking_id": {
+          "name": "booking_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bike_id": {
+          "name": "bike_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jam": {
+          "name": "jam",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aktif": {
+          "name": "aktif",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {
+        "booking_slots_satu_pemesan_per_jam": {
+          "name": "booking_slots_satu_pemesan_per_jam",
+          "columns": [
+            {
+              "expression": "bike_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "jam",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"booking_slots\".\"aktif\"",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "booking_slots_jam_idx": {
+          "name": "booking_slots_jam_idx",
+          "columns": [
+            {
+              "expression": "jam",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "booking_slots_booking_idx": {
+          "name": "booking_slots_booking_idx",
+          "columns": [
+            {
+              "expression": "booking_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "booking_slots_booking_id_bookings_id_fk": {
+          "name": "booking_slots_booking_id_bookings_id_fk",
+          "tableFrom": "booking_slots",
+          "tableTo": "bookings",
+          "columnsFrom": [
+            "booking_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "booking_slots_bike_id_bikes_id_fk": {
+          "name": "booking_slots_bike_id_bikes_id_fk",
+          "tableFrom": "booking_slots",
+          "tableTo": "bikes",
+          "columnsFrom": [
+            "bike_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.bookings": {
+      "name": "bookings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "bike_id": {
+          "name": "bike_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "renter_id": {
+          "name": "renter_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dicatat_oleh": {
+          "name": "dicatat_oleh",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "waktu_mulai": {
+          "name": "waktu_mulai",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "durasi_jam": {
+          "name": "durasi_jam",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tarif_per_jam_snapshot": {
+          "name": "tarif_per_jam_snapshot",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "metode_bayar": {
+          "name": "metode_bayar",
+          "type": "metode_bayar",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "status_booking",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'booking'"
+        },
+        "rental_id": {
+          "name": "rental_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "catatan": {
+          "name": "catatan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dibuat_pada": {
+          "name": "dibuat_pada",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bookings_rental_unik": {
+          "name": "bookings_rental_unik",
+          "columns": [
+            {
+              "expression": "rental_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"bookings\".\"rental_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bookings_waktu_mulai_idx": {
+          "name": "bookings_waktu_mulai_idx",
+          "columns": [
+            {
+              "expression": "waktu_mulai",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bookings_status_idx": {
+          "name": "bookings_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bookings_bike_idx": {
+          "name": "bookings_bike_idx",
+          "columns": [
+            {
+              "expression": "bike_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bookings_bike_id_bikes_id_fk": {
+          "name": "bookings_bike_id_bikes_id_fk",
+          "tableFrom": "bookings",
+          "tableTo": "bikes",
+          "columnsFrom": [
+            "bike_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "bookings_renter_id_renters_id_fk": {
+          "name": "bookings_renter_id_renters_id_fk",
+          "tableFrom": "bookings",
+          "tableTo": "renters",
+          "columnsFrom": [
+            "renter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "bookings_dicatat_oleh_users_id_fk": {
+          "name": "bookings_dicatat_oleh_users_id_fk",
+          "tableFrom": "bookings",
+          "tableTo": "users",
+          "columnsFrom": [
+            "dicatat_oleh"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "bookings_rental_id_rentals_id_fk": {
+          "name": "bookings_rental_id_rentals_id_fk",
+          "tableFrom": "bookings",
+          "tableTo": "rentals",
+          "columnsFrom": [
+            "rental_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.cash_deposits": {
+      "name": "cash_deposits",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tanggal": {
+          "name": "tanggal",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kasir_id": {
+          "name": "kasir_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "penerimaan_tunai": {
+          "name": "penerimaan_tunai",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pengeluaran_tunai": {
+          "name": "pengeluaran_tunai",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "setoran_pemilik_tunai": {
+          "name": "setoran_pemilik_tunai",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jumlah_seharusnya": {
+          "name": "jumlah_seharusnya",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jumlah_diserahkan": {
+          "name": "jumlah_diserahkan",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "selisih": {
+          "name": "selisih",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "catatan": {
+          "name": "catatan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "status_setoran",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'menunggu'"
+        },
+        "diterima_oleh": {
+          "name": "diterima_oleh",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "diterima_pada": {
+          "name": "diterima_pada",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dibuat_pada": {
+          "name": "dibuat_pada",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "cash_deposits_kasir_tanggal_unik": {
+          "name": "cash_deposits_kasir_tanggal_unik",
+          "columns": [
+            {
+              "expression": "kasir_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "tanggal",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "cash_deposits_tanggal_idx": {
+          "name": "cash_deposits_tanggal_idx",
+          "columns": [
+            {
+              "expression": "tanggal",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "cash_deposits_status_idx": {
+          "name": "cash_deposits_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "cash_deposits_kasir_id_users_id_fk": {
+          "name": "cash_deposits_kasir_id_users_id_fk",
+          "tableFrom": "cash_deposits",
+          "tableTo": "users",
+          "columnsFrom": [
+            "kasir_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "cash_deposits_diterima_oleh_users_id_fk": {
+          "name": "cash_deposits_diterima_oleh_users_id_fk",
+          "tableFrom": "cash_deposits",
+          "tableTo": "users",
+          "columnsFrom": [
+            "diterima_oleh"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.expenses": {
+      "name": "expenses",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tanggal": {
+          "name": "tanggal",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kategori": {
+          "name": "kategori",
+          "type": "kategori_pengeluaran",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "keterangan": {
+          "name": "keterangan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jumlah": {
+          "name": "jumlah",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "maintenance_id": {
+          "name": "maintenance_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metode": {
+          "name": "metode",
+          "type": "metode_bayar",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'tunai'"
+        },
+        "dicatat_oleh": {
+          "name": "dicatat_oleh",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dibuat_pada": {
+          "name": "dibuat_pada",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "expenses_tanggal_idx": {
+          "name": "expenses_tanggal_idx",
+          "columns": [
+            {
+              "expression": "tanggal",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "expenses_kategori_idx": {
+          "name": "expenses_kategori_idx",
+          "columns": [
+            {
+              "expression": "kategori",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "expenses_maintenance_unik": {
+          "name": "expenses_maintenance_unik",
+          "columns": [
+            {
+              "expression": "maintenance_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"expenses\".\"maintenance_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "expenses_maintenance_id_maintenances_id_fk": {
+          "name": "expenses_maintenance_id_maintenances_id_fk",
+          "tableFrom": "expenses",
+          "tableTo": "maintenances",
+          "columnsFrom": [
+            "maintenance_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "expenses_dicatat_oleh_users_id_fk": {
+          "name": "expenses_dicatat_oleh_users_id_fk",
+          "tableFrom": "expenses",
+          "tableTo": "users",
+          "columnsFrom": [
+            "dicatat_oleh"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.maintenances": {
+      "name": "maintenances",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "bike_id": {
+          "name": "bike_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tanggal": {
+          "name": "tanggal",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jenis": {
+          "name": "jenis",
+          "type": "jenis_maintenance",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'servis'"
+        },
+        "deskripsi": {
+          "name": "deskripsi",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "biaya": {
+          "name": "biaya",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "jam_pakai": {
+          "name": "jam_pakai",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tanggal_servis_berikutnya": {
+          "name": "tanggal_servis_berikutnya",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mekanik": {
+          "name": "mekanik",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "catatan": {
+          "name": "catatan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dicatat_oleh": {
+          "name": "dicatat_oleh",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dibuat_pada": {
+          "name": "dibuat_pada",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "maintenances_bike_idx": {
+          "name": "maintenances_bike_idx",
+          "columns": [
+            {
+              "expression": "bike_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "maintenances_tanggal_idx": {
+          "name": "maintenances_tanggal_idx",
+          "columns": [
+            {
+              "expression": "tanggal",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "maintenances_bike_id_bikes_id_fk": {
+          "name": "maintenances_bike_id_bikes_id_fk",
+          "tableFrom": "maintenances",
+          "tableTo": "bikes",
+          "columnsFrom": [
+            "bike_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "maintenances_dicatat_oleh_users_id_fk": {
+          "name": "maintenances_dicatat_oleh_users_id_fk",
+          "tableFrom": "maintenances",
+          "tableTo": "users",
+          "columnsFrom": [
+            "dicatat_oleh"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.owner_payments": {
+      "name": "owner_payments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tanggal": {
+          "name": "tanggal",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jumlah": {
+          "name": "jumlah",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "metode": {
+          "name": "metode",
+          "type": "metode_bayar",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'tunai'"
+        },
+        "catatan": {
+          "name": "catatan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dicatat_oleh": {
+          "name": "dicatat_oleh",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dibuat_pada": {
+          "name": "dibuat_pada",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "owner_payments_owner_idx": {
+          "name": "owner_payments_owner_idx",
+          "columns": [
+            {
+              "expression": "owner_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "owner_payments_tanggal_idx": {
+          "name": "owner_payments_tanggal_idx",
+          "columns": [
+            {
+              "expression": "tanggal",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "owner_payments_owner_id_owners_id_fk": {
+          "name": "owner_payments_owner_id_owners_id_fk",
+          "tableFrom": "owner_payments",
+          "tableTo": "owners",
+          "columnsFrom": [
+            "owner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "owner_payments_dicatat_oleh_users_id_fk": {
+          "name": "owner_payments_dicatat_oleh_users_id_fk",
+          "tableFrom": "owner_payments",
+          "tableTo": "users",
+          "columnsFrom": [
+            "dicatat_oleh"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.owners": {
+      "name": "owners",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nama": {
+          "name": "nama",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "no_hp": {
+          "name": "no_hp",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "alamat": {
+          "name": "alamat",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "persentase_bagi_hasil": {
+          "name": "persentase_bagi_hasil",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 60
+        },
+        "catatan": {
+          "name": "catatan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aktif": {
+          "name": "aktif",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "dibuat_pada": {
+          "name": "dibuat_pada",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.rentals": {
+      "name": "rentals",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "bike_id": {
+          "name": "bike_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "renter_id": {
+          "name": "renter_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kasir_id": {
+          "name": "kasir_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "diselesaikan_oleh": {
+          "name": "diselesaikan_oleh",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "owner_id_snapshot": {
+          "name": "owner_id_snapshot",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tarif_per_jam_snapshot": {
+          "name": "tarif_per_jam_snapshot",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "persentase_pemilik_snapshot": {
+          "name": "persentase_pemilik_snapshot",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "waktu_mulai": {
+          "name": "waktu_mulai",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "waktu_selesai": {
+          "name": "waktu_selesai",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estimasi_jam": {
+          "name": "estimasi_jam",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "durasi_menit": {
+          "name": "durasi_menit",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "durasi_jam_ditagih": {
+          "name": "durasi_jam_ditagih",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_biaya": {
+          "name": "total_biaya",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bagian_pemilik": {
+          "name": "bagian_pemilik",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bagian_rental": {
+          "name": "bagian_rental",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metode_bayar": {
+          "name": "metode_bayar",
+          "type": "metode_bayar",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "status_rental",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'berjalan'"
+        },
+        "jaminan": {
+          "name": "jaminan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "catatan": {
+          "name": "catatan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dibatalkan_oleh": {
+          "name": "dibatalkan_oleh",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dibatalkan_pada": {
+          "name": "dibatalkan_pada",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alasan_batal": {
+          "name": "alasan_batal",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dibuat_pada": {
+          "name": "dibuat_pada",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "rentals_satu_berjalan_per_sepeda": {
+          "name": "rentals_satu_berjalan_per_sepeda",
+          "columns": [
+            {
+              "expression": "bike_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"rentals\".\"status\" = 'berjalan'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "rentals_waktu_mulai_idx": {
+          "name": "rentals_waktu_mulai_idx",
+          "columns": [
+            {
+              "expression": "waktu_mulai",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "rentals_waktu_selesai_idx": {
+          "name": "rentals_waktu_selesai_idx",
+          "columns": [
+            {
+              "expression": "waktu_selesai",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "rentals_status_idx": {
+          "name": "rentals_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "rentals_owner_snapshot_idx": {
+          "name": "rentals_owner_snapshot_idx",
+          "columns": [
+            {
+              "expression": "owner_id_snapshot",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "rentals_bike_id_bikes_id_fk": {
+          "name": "rentals_bike_id_bikes_id_fk",
+          "tableFrom": "rentals",
+          "tableTo": "bikes",
+          "columnsFrom": [
+            "bike_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "rentals_renter_id_renters_id_fk": {
+          "name": "rentals_renter_id_renters_id_fk",
+          "tableFrom": "rentals",
+          "tableTo": "renters",
+          "columnsFrom": [
+            "renter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "rentals_kasir_id_users_id_fk": {
+          "name": "rentals_kasir_id_users_id_fk",
+          "tableFrom": "rentals",
+          "tableTo": "users",
+          "columnsFrom": [
+            "kasir_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "rentals_diselesaikan_oleh_users_id_fk": {
+          "name": "rentals_diselesaikan_oleh_users_id_fk",
+          "tableFrom": "rentals",
+          "tableTo": "users",
+          "columnsFrom": [
+            "diselesaikan_oleh"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "rentals_owner_id_snapshot_owners_id_fk": {
+          "name": "rentals_owner_id_snapshot_owners_id_fk",
+          "tableFrom": "rentals",
+          "tableTo": "owners",
+          "columnsFrom": [
+            "owner_id_snapshot"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "rentals_dibatalkan_oleh_users_id_fk": {
+          "name": "rentals_dibatalkan_oleh_users_id_fk",
+          "tableFrom": "rentals",
+          "tableTo": "users",
+          "columnsFrom": [
+            "dibatalkan_oleh"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.renters": {
+      "name": "renters",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nama": {
+          "name": "nama",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "no_hp": {
+          "name": "no_hp",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "catatan": {
+          "name": "catatan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dibuat_pada": {
+          "name": "dibuat_pada",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "renters_no_hp_unique": {
+          "name": "renters_no_hp_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "no_hp"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.settings": {
+      "name": "settings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "default": 1
+        },
+        "nama_usaha": {
+          "name": "nama_usaha",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Rental Sepeda Garut'"
+        },
+        "alamat": {
+          "name": "alamat",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "no_hp": {
+          "name": "no_hp",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "batas_jam_rental": {
+          "name": "batas_jam_rental",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 12
+        },
+        "toleransi_booking_menit": {
+          "name": "toleransi_booking_menit",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 60
+        },
+        "diperbarui_pada": {
+          "name": "diperbarui_pada",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nama": {
+          "name": "nama",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "peran": {
+          "name": "peran",
+          "type": "peran",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'kasir'"
+        },
+        "aktif": {
+          "name": "aktif",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "dibuat_pada": {
+          "name": "dibuat_pada",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_username_unique": {
+          "name": "users_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.jenis_maintenance": {
+      "name": "jenis_maintenance",
+      "schema": "public",
+      "values": [
+        "servis",
+        "sparepart",
+        "lainnya"
+      ]
+    },
+    "public.kategori_pengeluaran": {
+      "name": "kategori_pengeluaran",
+      "schema": "public",
+      "values": [
+        "gaji",
+        "listrik",
+        "pdam",
+        "maintenance",
+        "sparepart",
+        "operasional",
+        "lainnya"
+      ]
+    },
+    "public.metode_bayar": {
+      "name": "metode_bayar",
+      "schema": "public",
+      "values": [
+        "tunai",
+        "qris",
+        "transfer"
+      ]
+    },
+    "public.peran": {
+      "name": "peran",
+      "schema": "public",
+      "values": [
+        "admin",
+        "kasir",
+        "owner"
+      ]
+    },
+    "public.status_booking": {
+      "name": "status_booking",
+      "schema": "public",
+      "values": [
+        "booking",
+        "selesai",
+        "batal"
+      ]
+    },
+    "public.status_rental": {
+      "name": "status_rental",
+      "schema": "public",
+      "values": [
+        "berjalan",
+        "selesai",
+        "batal"
+      ]
+    },
+    "public.status_sepeda": {
+      "name": "status_sepeda",
+      "schema": "public",
+      "values": [
+        "tersedia",
+        "disewa",
+        "booking",
+        "servis",
+        "nonaktif"
+      ]
+    },
+    "public.status_setoran": {
+      "name": "status_setoran",
+      "schema": "public",
+      "values": [
+        "menunggu",
+        "diterima"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
