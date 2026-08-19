@@ -3,13 +3,18 @@
 /*
   Sistem warna Rental Sepeda Garut.
 
-  Diambil dari materi promosi komunitas goweser: navy tua, hijau zaitun, dan
-  latar krem. Navy dipakai sebagai warna merek — tombol utama dan penanda aktif.
-  Hijau zaitun dipakai untuk status "Tersedia", bukan untuk merek, supaya dua
-  hal yang berbeda tidak diberi warna yang sama.
+  Latar putih, tulisan hitam, hijau sebagai satu-satunya warna beraksen. Hijaunya
+  diambil dari materi promosi komunitas goweser; navy dilepas supaya halaman
+  hanya punya satu warna yang menarik perhatian, dan perhatian itu jatuh ke
+  tombol serta angka yang memang perlu dilihat.
 
-  Krem juga menjawab kebutuhan lapangan: aplikasi ini banyak dipakai di luar
-  ruangan pada siang hari, dan putih murni terlalu menyilaukan di sana.
+  Satu hal yang ditukar sadar-sadar. Sebelumnya merek sengaja BUKAN hijau, supaya
+  tidak tertukar dengan lencana status "Tersedia" yang hijau. Sekarang keduanya
+  hijau, dan pemisahnya berpindah ke bentuk: tombol berupa blok hijau pekat
+  bertulisan putih, lencana berupa pil hijau pucat bertulisan hijau tua. Nada
+  hijaunya juga dibedakan — merek condong ke zaitun, status ke hijau yang lebih
+  sejuk. Kalau di lapangan tetap terasa tertukar, warna status yang digeser,
+  bukan mereknya.
 
   Tiga keadaan tema, bukan dua. Pengguna yang belum memilih apa pun mengikuti
   setelan sistemnya; yang sudah memilih ditandai lewat data-theme pada elemen
@@ -19,73 +24,83 @@
 :root {
   color-scheme: light;
 
-  --bg: #f7f4e7;
-  --surface: #fffdf7;
-  --surface-2: #efead8;
-  --line: #e3ddc7;
-  --line-strong: #c9bf9f;
+  /* Latar dan kartu sama-sama putih; yang memisahkan keduanya garis tepi, bukan
+     beda warna. Itu yang membuat halaman terbaca bersih daripada bertingkat
+     abu-abu. --surface-2 dipakai untuk isian sekunder, dan sengaja berbias hijau
+     tipis supaya tidak terlihat kotor di sebelah putih murni. */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f3f6f2;
+  --line: #e3e8e1;
+  --line-strong: #c7cfc4;
 
-  --ink: #16233d;
-  --ink-muted: #5a6376;
-  --ink-faint: #8b8f9a;
+  /* Hitam, tapi tidak #000. Hitam murni di atas putih murni berkilat dan
+     melelahkan pada layar HP di bawah matahari — yang justru keadaan sehari-hari
+     di sini. */
+  --ink: #10130f;
+  --ink-muted: #565c54;
+  --ink-faint: #878d84;
 
-  --brand: #14305b;
-  --brand-hover: #0e2447;
+  --brand: #4a7a1e;
+  --brand-hover: #3c6518;
   --brand-ink: #ffffff;
-  --brand-soft: #e3e9f3;
-  --brand-soft-ink: #14305b;
+  --brand-soft: #ecf3e2;
+  --brand-soft-ink: #2f5210;
 
   /* Status sepeda. Setiap status selalu ditemani teks dan ikon, tidak pernah
-     hanya dibedakan lewat warna. */
-  --ok: #5c7a17;
-  --ok-soft: #ecf1da;
+     hanya dibedakan lewat warna — itulah yang menahan hijau status dan hijau
+     merek supaya tetap bisa dibedakan. Hijau status dibuat lebih sejuk daripada
+     hijau merek yang condong zaitun. */
+  --ok: #12793f;
+  --ok-soft: #e3f4ea;
   --danger: #b3261e;
   --danger-soft: #fce9e7;
-  --warn: #a15c00;
+  --warn: #9a5b00;
   --warn-soft: #fdf0dc;
   --info: #1d4ed8;
   --info-soft: #e6ecfd;
-  --idle: #6b6a5f;
-  --idle-soft: #eeeade;
+  --idle: #6a6f67;
+  --idle-soft: #eef0ed;
 
-  --ring: #14305b;
+  --ring: #4a7a1e;
 
   /*
     Palet gelap disimpan sekali di sini, lalu dipetakan di dua tempat di bawah.
     Nilai heksanya tidak boleh ditulis dua kali: itulah cara tema terang dan
     gelap perlahan berbeda tanpa ada yang menyadarinya.
 
-    Latar gelapnya navy, bukan abu-abu netral, dan tulisannya krem — supaya
-    identitas yang sama tetap terbaca saat malam.
+    Gelapnya netral, bukan berwarna — kebalikan yang jujur dari terangnya yang
+    putih polos. Hijau tetap satu-satunya warna beraksen, hanya dicerahkan supaya
+    terbaca di atas latar gelap.
   */
-  --d-bg: #0d1729;
-  --d-surface: #13203a;
-  --d-surface-2: #1a2b48;
-  --d-line: #26385a;
-  --d-line-strong: #3b527a;
+  --d-bg: #0d0f0c;
+  --d-surface: #151814;
+  --d-surface-2: #1c201a;
+  --d-line: #282d26;
+  --d-line-strong: #3e453b;
 
-  --d-ink: #f2eee0;
-  --d-ink-muted: #a8b2c4;
-  --d-ink-faint: #7a8598;
+  --d-ink: #eef1eb;
+  --d-ink-muted: #a5aca2;
+  --d-ink-faint: #787f75;
 
-  /* Navy tidak terbaca di atas latar navy, jadi mereknya dicerahkan ke biru
-     dari keluarga yang sama. */
-  --d-brand: #7aa7e8;
-  --d-brand-hover: #92b8ef;
-  --d-brand-ink: #0a1428;
-  --d-brand-soft: #1c2f4f;
-  --d-brand-soft-ink: #b7d0f0;
+  /* Hijau tua tidak terbaca di atas latar gelap, jadi dicerahkan ke hijau daun
+     dari keluarga yang sama, dengan tulisan gelap di atasnya. */
+  --d-brand: #8fc55a;
+  --d-brand-hover: #a3d370;
+  --d-brand-ink: #0e1608;
+  --d-brand-soft: #1f2c14;
+  --d-brand-soft-ink: #bcdc93;
 
-  --d-ok: #9dbe4a;
-  --d-ok-soft: #22301a;
+  --d-ok: #57c184;
+  --d-ok-soft: #12301f;
   --d-danger: #f28b82;
   --d-danger-soft: #3a1c1a;
   --d-warn: #e8b465;
   --d-warn-soft: #362614;
   --d-info: #8fb2f7;
   --d-info-soft: #1a2440;
-  --d-idle: #a2a99b;
-  --d-idle-soft: #202c3f;
+  --d-idle: #a1a79c;
+  --d-idle-soft: #23271f;
 }
 
 /* Dipakai dua kali: sekali untuk yang mengikuti sistem, sekali untuk yang

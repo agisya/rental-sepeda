@@ -23,8 +23,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f4e7" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d1729" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d0f0c" },
   ],
   // Zoom tidak dikunci: petugas harus tetap bisa memperbesar teks.
   width: "device-width",
