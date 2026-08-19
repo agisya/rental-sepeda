@@ -98,7 +98,7 @@ export function MaintenanceForm({
               type="number"
               inputMode="numeric"
               min={0}
-              step={1000}
+              step={1}
               defaultValue={0}
               required
             />

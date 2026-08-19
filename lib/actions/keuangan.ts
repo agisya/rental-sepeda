@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { expenses, ownerPayments } from "@/lib/db/schema";
@@ -87,31 +87,6 @@ export async function simpanPengeluaran(
   redirect("/pengeluaran");
 }
 
-export async function hapusPengeluaran(formData: FormData): Promise<void> {
-  const pengguna = await wajibPengguna();
-  if (pengguna.peran === "kasir") return;
-
-  const id = Number(formData.get("id"));
-  if (!Number.isInteger(id) || id <= 0) return;
-
-  const [baris] = await db
-    .select({ maintenanceId: expenses.maintenanceId })
-    .from(expenses)
-    .where(eq(expenses.id, id))
-    .limit(1);
-
-  // Pengeluaran yang lahir dari catatan maintenance hanya boleh dihapus lewat
-  // catatan maintenance-nya, supaya keduanya tidak pernah berbeda isi.
-  if (baris?.maintenanceId) {
-    redirect("/maintenance");
-  }
-
-  await db.delete(expenses).where(eq(expenses.id, id));
-
-  segarkan();
-  redirect("/pengeluaran");
-}
-
 // --- Pembayaran bagi hasil ke pemilik ---------------------------------------
 
 const skemaPembayaran = z.object({
@@ -187,17 +162,4 @@ export async function catatPembayaranPemilik(
 
   segarkan();
   redirect(`/laporan/pemilik?pemilik=${data.ownerId}&tersimpan=1`);
-}
-
-export async function hapusPembayaranPemilik(formData: FormData): Promise<void> {
-  const pengguna = await wajibPengguna();
-  if (pengguna.peran !== "admin" && pengguna.peran !== "owner") return;
-
-  const id = Number(formData.get("id"));
-  if (!Number.isInteger(id) || id <= 0) return;
-
-  await db.delete(ownerPayments).where(eq(ownerPayments.id, id));
-
-  segarkan();
-  redirect("/laporan/pemilik");
 }

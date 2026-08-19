@@ -87,7 +87,7 @@ export function FormPembayaranPemilik({
               inputMode="numeric"
               min={1}
               max={dipilih?.sisa || undefined}
-              step={1000}
+              step={1}
               placeholder="500000"
               required
             />

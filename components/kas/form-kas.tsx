@@ -3,8 +3,8 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
+  batalkanSetoranKas,
   catatPengeluaranDariLaci,
-  hapusPengeluaranDariLaci,
   terimaSetoranKas,
   tutupKas,
   type StatusAksi,
@@ -176,7 +176,7 @@ export function FormPengeluaranLaci({ tanggal }: { tanggal: string }) {
               type="number"
               inputMode="numeric"
               min={1}
-              step={1000}
+              step={1}
               placeholder="25000"
               required
             />
@@ -201,33 +201,6 @@ export function FormPengeluaranLaci({ tanggal }: { tanggal: string }) {
   );
 }
 
-function TombolHapus() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" ukuran="sm" variasi="halus" disabled={pending}>
-      {pending ? "…" : "Hapus"}
-    </Button>
-  );
-}
-
-/** Membatalkan pengeluaran yang salah catat, selama kas belum ditutup. */
-export function FormHapusPengeluaran({ id }: { id: number }) {
-  const [status, aksi] = useActionState(hapusPengeluaranDariLaci, AWAL);
-
-  return (
-    <form action={aksi}>
-      <input type="hidden" name="id" value={id} />
-      {status.galat ? (
-        <p role="alert" className="text-xs text-danger">
-          {status.galat}
-        </p>
-      ) : (
-        <TombolHapus />
-      )}
-    </form>
-  );
-}
-
 /** Tombol bagi admin dan owner untuk menyatakan uangnya benar-benar diterima. */
 export function FormTerimaSetoran({ id }: { id: number }) {
   const [status, aksi] = useActionState(terimaSetoranKas, AWAL);
@@ -237,6 +210,51 @@ export function FormTerimaSetoran({ id }: { id: number }) {
       <input type="hidden" name="id" value={id} />
       {status.galat && <PesanGalat>{status.galat}</PesanGalat>}
       <TombolTerima />
+    </form>
+  );
+}
+
+function TombolBatal() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" ukuran="sm" variasi="bahaya" disabled={pending}>
+      {pending ? "Membatalkan…" : "Batalkan"}
+    </Button>
+  );
+}
+
+/**
+ * Membatalkan penutupan yang salah ketik.
+ *
+ * Alasannya diketik lebih dulu, di kolom yang selalu terlihat. Pembatalan tanpa
+ * alasan pada catatan uang sama saja dengan menghapusnya — dan besok tidak ada
+ * yang ingat kenapa angka hari itu berubah.
+ */
+export function FormBatalkanSetoran({ id }: { id: number }) {
+  const [status, aksi] = useActionState(batalkanSetoranKas, AWAL);
+
+  return (
+    <form action={aksi} className="space-y-2">
+      <input type="hidden" name="id" value={id} />
+
+      {status.galat && <PesanGalat>{status.galat}</PesanGalat>}
+
+      <div className="flex flex-wrap items-start gap-2">
+        <div className="min-w-44 flex-1">
+          <Field
+            id={`alasan-batal-${id}`}
+            label="Alasan pembatalan"
+            galat={status.galatField?.alasan}
+          >
+            {(props) => (
+              <Input {...props} name="alasan" placeholder="Salah ketik jumlah" />
+            )}
+          </Field>
+        </div>
+        <div className="pt-7">
+          <TombolBatal />
+        </div>
+      </div>
     </form>
   );
 }

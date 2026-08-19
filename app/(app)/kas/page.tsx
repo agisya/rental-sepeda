@@ -20,7 +20,7 @@ import { Bagian, PageHeader } from "@/components/ui/page-header";
 import { StatUtama } from "@/components/ui/stat";
 import { Ikon } from "@/components/ui/icons";
 import {
-  FormHapusPengeluaran,
+  FormBatalkanSetoran,
   FormPengeluaranLaci,
   FormTerimaSetoran,
   FormTutupKas,
@@ -219,9 +219,6 @@ export default async function HalamanKas() {
                   waktu={p.waktu}
                   utama={p.keterangan}
                   nominal={`−${rupiah(p.jumlah)}`}
-                  // Tombol hapus hanya selama kas belum ditutup. Sesudah itu
-                  // angkanya sudah dibekukan dan disepakati dua pihak.
-                  aksi={!punyaHariIni && <FormHapusPengeluaran id={p.id} />}
                 />
               ))}
             </Lipatan>
@@ -334,7 +331,14 @@ export default async function HalamanKas() {
             ) : (
               <ul className="divide-y divide-line">
                 {semua.map((s) => (
-                  <li key={s.id} className="space-y-2 px-4 py-3.5">
+                  <li
+                    key={s.id}
+                    className={
+                      s.status === "dibatalkan"
+                        ? "space-y-2 px-4 py-3.5 opacity-60"
+                        : "space-y-2 px-4 py-3.5"
+                    }
+                  >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-ink">
@@ -343,7 +347,7 @@ export default async function HalamanKas() {
                         <p className="text-xs text-ink-muted">
                           Seharusnya {rupiah(s.jumlahSeharusnya)} · diserahkan{" "}
                           {rupiah(s.jumlahDiserahkan)}
-                          {s.selisih !== 0 && (
+                          {s.selisih !== 0 && s.status !== "dibatalkan" && (
                             <span className="font-medium text-danger">
                               {" "}
                               · selisih {rupiah(s.selisih)}
@@ -353,17 +357,34 @@ export default async function HalamanKas() {
                         {s.catatan && (
                           <p className="mt-1 text-xs text-ink-muted">{s.catatan}</p>
                         )}
+
+                        {/* Jejak pembatalan tetap terbaca. Baris yang bisa
+                            lenyap tanpa keterangan membuat catatan uang ini
+                            tidak ada gunanya sebagai pertanggungjawaban. */}
+                        {s.status === "dibatalkan" && (
+                          <p className="mt-1 text-xs font-medium text-danger">
+                            Dibatalkan {s.namaPembatal ?? "—"}
+                            {s.dibatalkanPada &&
+                              ` · ${formatTanggalJamWib(s.dibatalkanPada)}`}
+                            {s.alasanBatal && ` — ${s.alasanBatal}`}
+                          </p>
+                        )}
                       </div>
 
-                      {s.status === "diterima" ? (
+                      {s.status === "diterima" && (
                         <p className="shrink-0 text-xs text-ink-muted">
                           Diterima {s.namaPenerima ?? "—"}
                           {s.diterimaPada && ` · ${formatTanggalJamWib(s.diterimaPada)}`}
                         </p>
-                      ) : (
-                        <FormTerimaSetoran id={s.id} />
                       )}
+
+                      {s.status === "menunggu" && <FormTerimaSetoran id={s.id} />}
                     </div>
+
+                    {/* Hanya yang masih menunggu. Yang sudah diterima berarti
+                        dua pihak menyepakatinya, dan membatalkannya sepihak
+                        akan membubarkan kesepakatan itu. */}
+                    {s.status === "menunggu" && <FormBatalkanSetoran id={s.id} />}
                   </li>
                 ))}
               </ul>

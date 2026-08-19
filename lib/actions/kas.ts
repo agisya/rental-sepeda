@@ -6,14 +6,13 @@ import { wajibPengguna, wajibPeran } from "@/lib/auth/dal";
 import { dariKunciTanggalWib } from "@/lib/waktu";
 import { kategoriPengeluaranEnum } from "@/lib/db/schema";
 import {
-  BukanMilikAnda,
-  KasSudahDitutup,
   SetoranTidakAda,
+  SudahDibatalkan,
   SudahDiterima,
   SudahDitutup,
+  batalkanSetoran,
   buatSetoran,
   catatPengeluaranLaci,
-  hapusPengeluaranLaci,
   terimaSetoran,
 } from "@/lib/kas/kelola";
 import type { StatusAksi } from "./rental";
@@ -147,35 +146,53 @@ export async function catatPengeluaranDariLaci(
   return { berhasil: "Pengeluaran dicatat dan sudah dikurangkan dari setoran Anda." };
 }
 
-const skemaHapusPengeluaran = z.object({
-  id: z.coerce.number({ error: "Catatan tidak dikenali" }).int().positive(),
+const skemaBatal = z.object({
+  id: z.coerce.number({ error: "Setoran tidak dikenali" }).int().positive(),
+  alasan: z.string().trim().min(3, "Tulis alasan pembatalan").max(200),
 });
 
-/** Membatalkan pengeluaran yang salah catat, selama kas belum ditutup. */
-export async function hapusPengeluaranDariLaci(
+/**
+ * Membatalkan penutupan yang salah ketik. Hanya admin dan owner.
+ *
+ * Sebelum ini, kasir yang salah mengetik jumlah setoran terkunci: indeks unik
+ * menolak penutupan kedua untuk hari yang sama, dan jalan keluarnya hanya SQL
+ * langsung ke database produksi. Kuncinya sendiri benar dan tetap ada; yang
+ * ditambahkan adalah jalan keluar yang sah dan berjejak.
+ *
+ * Alasan wajib diisi. Pembatalan tanpa alasan pada catatan uang sama saja
+ * dengan menghapusnya.
+ */
+export async function batalkanSetoranKas(
   _sebelumnya: StatusAksi,
   formData: FormData,
 ): Promise<StatusAksi> {
-  const pengguna = await wajibPengguna();
+  const pengguna = await wajibPeran("admin", "owner");
 
-  const hasil = skemaHapusPengeluaran.safeParse({ id: formData.get("id") });
-  if (!hasil.success) return { galat: "Catatan yang dimaksud tidak dikenali." };
+  const hasil = skemaBatal.safeParse({
+    id: formData.get("id"),
+    alasan: formData.get("alasan"),
+  });
+
+  if (!hasil.success) {
+    return { galatField: z.flattenError(hasil.error).fieldErrors };
+  }
 
   try {
-    await hapusPengeluaranLaci(hasil.data.id, pengguna.id);
+    await batalkanSetoran(hasil.data.id, pengguna.id, hasil.data.alasan);
   } catch (galat) {
-    if (galat instanceof KasSudahDitutup) return { galat: galat.message };
-    if (galat instanceof BukanMilikAnda) {
-      return { galat: "Itu bukan catatan Anda, jadi tidak bisa dihapus dari sini." };
+    if (galat instanceof SudahDiterima || galat instanceof SudahDibatalkan) {
+      return { galat: galat.message };
     }
-    console.error("Gagal menghapus pengeluaran dari laci:", galat);
-    return { galat: "Tidak bisa menghapus catatan. Coba lagi." };
+    if (galat instanceof SetoranTidakAda) {
+      return { galat: "Setoran itu sudah tidak ada." };
+    }
+    console.error("Gagal membatalkan setoran:", galat);
+    return { galat: "Tidak bisa membatalkan setoran. Coba lagi." };
   }
 
   revalidatePath("/kas");
-  revalidatePath("/pengeluaran");
 
-  return { berhasil: "Catatan dihapus." };
+  return { berhasil: "Penutupan dibatalkan. Kasir bisa menutup ulang hari itu." };
 }
 
 const skemaTerima = z.object({
