@@ -99,17 +99,22 @@ export function Sidebar({ peran }: { peran: Peran }) {
             );
 
             if (kelompok.selaluTampil) {
+              // Tanpa judul di atasnya. Kelompok ini berada paling atas dan
+              // tidak punya kembarannya yang perlu dibedakan, jadi judulnya
+              // hanya menambah baris yang tidak menjelaskan apa pun. Nama
+              // kelompoknya tetap ada di aria-label demi pembaca layar.
               return (
-                <div key={kelompok.judul} className="pb-3">
-                  <p className="label-bagian px-3 pb-1.5">{kelompok.judul}</p>
-                  <ul className="space-y-0.5">
-                    {kelompok.item.map((m) => (
-                      <li key={m.href}>
-                        <TautanMenu item={m} aktif={menuAktif(pathname, m.href)} />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <ul
+                  key={kelompok.judul}
+                  aria-label={kelompok.judul}
+                  className="space-y-0.5 pb-3"
+                >
+                  {kelompok.item.map((m) => (
+                    <li key={m.href}>
+                      <TautanMenu item={m} aktif={menuAktif(pathname, m.href)} />
+                    </li>
+                  ))}
+                </ul>
               );
             }
 
