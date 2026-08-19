@@ -11,6 +11,7 @@ import {
   renters,
   rentals,
   users,
+  type KategoriPengeluaran,
   type MetodeBayar,
 } from "@/lib/db/schema";
 import { pelanggaranUnik } from "@/lib/db/galat";
@@ -234,6 +235,79 @@ export async function setoranHari(
     .limit(1);
 
   return baris ?? null;
+}
+
+/** Pengeluaran ini bukan milik orang yang mencoba menghapusnya. */
+export class BukanMilikAnda extends Error {}
+
+/** Kas hari itu sudah ditutup; dasarnya tidak boleh diubah lagi. */
+export class KasSudahDitutup extends Error {}
+
+/**
+ * Mencatat uang yang diambil kasir dari laci.
+ *
+ * Menu Pengeluaran yang penuh sengaja tetap tertutup bagi kasir — di sana ada
+ * gaji dan seluruh pengeluaran usaha. Yang dibuka hanya ini: uang dari lacinya
+ * sendiri, hari ini, atas namanya sendiri.
+ *
+ * Metode tidak bisa dipilih. Uang yang diambil dari laci menurut definisinya
+ * tunai; membiarkannya dipilih hanya membuka jalan mencatat pengeluaran yang
+ * tidak pernah mengurangi laci.
+ */
+export async function catatPengeluaranLaci(input: {
+  kasirId: number;
+  hari: Date;
+  kategori: KategoriPengeluaran;
+  keterangan: string;
+  jumlah: number;
+}): Promise<{ id: number }> {
+  const [baris] = await db
+    .insert(expenses)
+    .values({
+      tanggal: input.hari,
+      kategori: input.kategori,
+      keterangan: input.keterangan.trim(),
+      jumlah: input.jumlah,
+      metode: "tunai",
+      dicatatOleh: input.kasirId,
+    })
+    .returning({ id: expenses.id });
+
+  return baris;
+}
+
+/**
+ * Membatalkan pengeluaran yang salah catat.
+ *
+ * Tanpa ini, satu salah ketik terkunci selamanya dan angka setorannya ikut
+ * salah — jebakan yang justru diciptakan oleh fitur pencatatannya sendiri.
+ *
+ * Dua batas yang dijaga: hanya catatan sendiri, dan hanya selama kas hari itu
+ * belum ditutup. Penutupan membekukan angkanya dan sudah disepakati dua pihak;
+ * menghapus dasarnya membuat rincian tidak lagi menjumlah ke angka yang
+ * ditandatangani.
+ */
+export async function hapusPengeluaranLaci(id: number, kasirId: number): Promise<void> {
+  const [baris] = await db
+    .select({ tanggal: expenses.tanggal, dicatatOleh: expenses.dicatatOleh })
+    .from(expenses)
+    .where(and(eq(expenses.id, id), eq(expenses.metode, "tunai")))
+    .limit(1);
+
+  // Baris yang tidak ada dan baris milik orang lain sengaja dibalas sama.
+  // Membedakannya akan memberi tahu penebak bahwa suatu id itu ada.
+  if (!baris || baris.dicatatOleh !== kasirId) {
+    throw new BukanMilikAnda("Pengeluaran itu bukan catatan Anda.");
+  }
+
+  const sudah = await setoranHari(kasirId, baris.tanggal);
+  if (sudah) {
+    throw new KasSudahDitutup(
+      "Kas hari itu sudah ditutup, jadi catatannya tidak bisa diubah lagi. Minta admin memperbaikinya.",
+    );
+  }
+
+  await db.delete(expenses).where(eq(expenses.id, id));
 }
 
 export type BarisRental = {
