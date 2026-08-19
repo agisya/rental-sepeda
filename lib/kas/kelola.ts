@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, desc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   bikes,
@@ -34,6 +34,9 @@ export class SetoranTidakAda extends Error {}
 /** Setoran sudah ditandai diterima; penerimanya tidak boleh tertimpa. */
 export class SudahDiterima extends Error {}
 
+/** Setoran sudah dibatalkan sebelumnya. */
+export class SudahDibatalkan extends Error {}
+
 export type RekapKas = {
   /** Rental selesai yang dibayar tunai dan diterima kasir ini. */
   penerimaanTunai: number;
@@ -57,9 +60,12 @@ export type SetoranLengkap = {
   jumlahDiserahkan: number;
   selisih: number;
   catatan: string | null;
-  status: "menunggu" | "diterima";
+  status: "menunggu" | "diterima" | "dibatalkan";
   namaPenerima: string | null;
   diterimaPada: Date | null;
+  namaPembatal: string | null;
+  dibatalkanPada: Date | null;
+  alasanBatal: string | null;
 };
 
 function angka(nilai: unknown): number {
@@ -192,13 +198,66 @@ export async function terimaSetoran(id: number, diterimaOlehId: number): Promise
   if (hasil.length > 0) return;
 
   const [ada] = await db
-    .select({ id: cashDeposits.id })
+    .select({ status: cashDeposits.status })
     .from(cashDeposits)
     .where(eq(cashDeposits.id, id))
     .limit(1);
 
   if (!ada) throw new SetoranTidakAda("Setoran tidak ditemukan.");
+  if (ada.status === "dibatalkan") {
+    throw new SudahDibatalkan(
+      "Setoran ini sudah dibatalkan, jadi tidak bisa ditandai diterima.",
+    );
+  }
   throw new SudahDiterima("Setoran ini sudah ditandai diterima.");
+}
+
+/**
+ * Membatalkan penutupan yang salah ketik.
+ *
+ * Barisnya dibatalkan, tidak dihapus. Penutupan kas adalah tempat selisih uang
+ * dipersoalkan; baris yang bisa lenyap tanpa jejak membuat seluruh catatan itu
+ * tidak ada gunanya sebagai pertanggungjawaban. Yang berubah hanya statusnya,
+ * dan indeks unik sengaja mengecualikan yang sudah dibatalkan sehingga hari itu
+ * bisa ditutup ulang.
+ *
+ * Yang sudah ditandai diterima tidak bisa dibatalkan: dua pihak sudah
+ * menyepakatinya, dan membatalkannya berarti membubarkan kesepakatan itu
+ * sepihak. Kalau memang perlu, koreksinya lewat catatan penutupan berikutnya.
+ */
+export async function batalkanSetoran(
+  id: number,
+  olehId: number,
+  alasan: string,
+): Promise<void> {
+  const hasil = await db
+    .update(cashDeposits)
+    .set({
+      status: "dibatalkan",
+      dibatalkanOleh: olehId,
+      dibatalkanPada: new Date(),
+      alasanBatal: alasan.trim(),
+    })
+    // Syarat status di dalam WHERE, bukan diperiksa lebih dulu: dua admin yang
+    // menekan bersamaan hanya membuat satu di antaranya berhasil.
+    .where(and(eq(cashDeposits.id, id), eq(cashDeposits.status, "menunggu")))
+    .returning({ id: cashDeposits.id });
+
+  if (hasil.length > 0) return;
+
+  const [ada] = await db
+    .select({ status: cashDeposits.status })
+    .from(cashDeposits)
+    .where(eq(cashDeposits.id, id))
+    .limit(1);
+
+  if (!ada) throw new SetoranTidakAda("Setoran tidak ditemukan.");
+  if (ada.status === "dibatalkan") {
+    throw new SudahDibatalkan("Setoran ini sudah dibatalkan sebelumnya.");
+  }
+  throw new SudahDiterima(
+    "Setoran ini sudah ditandai diterima, jadi tidak bisa dibatalkan lagi.",
+  );
 }
 
 const kolomSetoran = {
@@ -214,23 +273,45 @@ const kolomSetoran = {
   catatan: cashDeposits.catatan,
   status: cashDeposits.status,
   diterimaPada: cashDeposits.diterimaPada,
+  dibatalkanPada: cashDeposits.dibatalkanPada,
+  alasanBatal: cashDeposits.alasanBatal,
 };
 
 const penerima = sql<string | null>`(
   select ${users.nama} from ${users} where ${users.id} = ${cashDeposits.diterimaOleh}
 )`;
 
-/** Penutupan milik satu kasir pada satu hari, atau null kalau belum ada. */
+const pembatal = sql<string | null>`(
+  select ${users.nama} from ${users} where ${users.id} = ${cashDeposits.dibatalkanOleh}
+)`;
+
+/**
+ * Penutupan yang berlaku bagi satu kasir pada satu hari, atau null kalau belum
+ * ada.
+ *
+ * Yang sudah dibatalkan tidak ikut, sama seperti indeks uniknya. Inilah yang
+ * membuat formulir tutup kas muncul lagi setelah pembatalan — dan yang membuat
+ * kasir boleh menghapus lagi pengeluaran lacinya untuk hari itu.
+ */
 export async function setoranHari(
   kasirId: number,
   hari: Date,
 ): Promise<SetoranLengkap | null> {
   const [baris] = await db
-    .select({ ...kolomSetoran, namaKasir: users.nama, namaPenerima: penerima })
+    .select({
+      ...kolomSetoran,
+      namaKasir: users.nama,
+      namaPenerima: penerima,
+      namaPembatal: pembatal,
+    })
     .from(cashDeposits)
     .innerJoin(users, eq(users.id, cashDeposits.kasirId))
     .where(
-      and(eq(cashDeposits.kasirId, kasirId), eq(cashDeposits.tanggal, awalHariWib(hari))),
+      and(
+        eq(cashDeposits.kasirId, kasirId),
+        eq(cashDeposits.tanggal, awalHariWib(hari)),
+        isNull(cashDeposits.dibatalkanPada),
+      ),
     )
     .limit(1);
 
@@ -445,7 +526,7 @@ export async function daftarSetoran(rentang: {
   selesai: Date;
 }): Promise<SetoranLengkap[]> {
   return db
-    .select({ ...kolomSetoran, namaKasir: users.nama, namaPenerima: penerima })
+    .select({ ...kolomSetoran, namaKasir: users.nama, namaPenerima: penerima, namaPembatal: pembatal })
     .from(cashDeposits)
     .innerJoin(users, eq(users.id, cashDeposits.kasirId))
     .where(

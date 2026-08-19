@@ -46,7 +46,11 @@ export const metodeBayarEnum = pgEnum("metode_bayar", [
 ]);
 
 /** Setoran kas yang sudah dicatat kasir tapi belum ditandai diterima. */
-export const statusSetoranEnum = pgEnum("status_setoran", ["menunggu", "diterima"]);
+export const statusSetoranEnum = pgEnum("status_setoran", [
+  "menunggu",
+  "diterima",
+  "dibatalkan",
+]);
 
 /** Sesuai spesifikasi: 🟡 Booking, 🟢 Selesai, 🔴 Batal. */
 export const statusBookingEnum = pgEnum("status_booking", [
@@ -445,12 +449,32 @@ export const cashDeposits = pgTable(
     }),
     diterimaPada: timestamp("diterima_pada", { withTimezone: true }),
 
+    /**
+     * Pembatalan penutupan yang salah ketik.
+     *
+     * Barisnya dibatalkan, tidak dihapus. Penutupan kas adalah tempat selisih
+     * uang dipersoalkan; baris yang bisa lenyap tanpa jejak membuat seluruh
+     * catatan itu tidak ada gunanya sebagai pertanggungjawaban.
+     */
+    dibatalkanOleh: integer("dibatalkan_oleh").references(() => users.id, {
+      onDelete: "restrict",
+    }),
+    dibatalkanPada: timestamp("dibatalkan_pada", { withTimezone: true }),
+    alasanBatal: text("alasan_batal"),
+
     dibuatPada: timestamp("dibuat_pada", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     // Satu penutupan per kasir per hari. Dijaga database, bukan hanya aplikasi,
     // supaya dua kali tekan tidak menghasilkan dua setoran untuk hari yang sama.
-    uniqueIndex("cash_deposits_kasir_tanggal_unik").on(t.kasirId, t.tanggal),
+    //
+    // Yang sudah dibatalkan dikecualikan, sehingga kasir bisa menutup ulang hari
+    // itu. Syaratnya memakai kolom dibatalkan_pada, bukan nilai enum status:
+    // Postgres menolak memakai nilai enum yang baru ditambahkan di dalam
+    // transaksi yang sama, dan migrasi ini menambah nilai itu.
+    uniqueIndex("cash_deposits_kasir_tanggal_unik")
+      .on(t.kasirId, t.tanggal)
+      .where(sql`${t.dibatalkanPada} is null`),
     index("cash_deposits_tanggal_idx").on(t.tanggal),
     index("cash_deposits_status_idx").on(t.status),
   ],
