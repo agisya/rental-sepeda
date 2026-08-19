@@ -8,6 +8,8 @@
   },
   "scripts": {
     "dev": "next dev",
+    "//dev:hp": "Kamera hanya boleh dibuka peramban di alamat aman, jadi menguji scan barcode dari HP lewat http://192.168.x.x tidak akan pernah berhasil. Perintah ini menyalakan server ber-HTTPS dengan sertifikat buatan sendiri dan membukanya ke jaringan lokal. Di HP akan muncul peringatan sertifikat tidak dikenal — lanjutkan saja, itu wajar untuk sertifikat lokal, dan kameranya sudah bisa dipakai setelah itu.",
+    "dev:hp": "next dev --experimental-https -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
