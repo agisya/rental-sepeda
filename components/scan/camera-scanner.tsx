@@ -20,6 +20,34 @@ import { Ikon } from "@/components/ui/icons";
 
 type Arah = "belakang" | "depan";
 
+type RentangZoom = { min: number; max: number; langkah: number; nilai: number };
+
+/**
+ * Membaca kemampuan perbesaran kamera, kalau ada.
+ *
+ * zoom belum masuk tipe standar TypeScript walau sudah lama didukung Chrome di
+ * Android. Perangkat yang tidak mendukungnya cukup mengembalikan null, dan
+ * pengaturnya tidak ditampilkan sama sekali — lebih baik tidak ada daripada ada
+ * tapi tidak melakukan apa-apa.
+ */
+function bacaZoom(track: MediaStreamTrack): RentangZoom | null {
+  const kemampuan = track.getCapabilities?.() as
+    | { zoom?: { min: number; max: number; step?: number } }
+    | undefined;
+
+  const rentang = kemampuan?.zoom;
+  if (!rentang || rentang.max <= rentang.min) return null;
+
+  const setelan = track.getSettings() as { zoom?: number };
+
+  return {
+    min: rentang.min,
+    max: rentang.max,
+    langkah: rentang.step && rentang.step > 0 ? rentang.step : 0.1,
+    nilai: setelan.zoom ?? rentang.min,
+  };
+}
+
 /**
  * Meminta kamera belakang secara tegas.
  *
@@ -71,9 +99,37 @@ function Pratinjau({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const pembacaRef = useRef<BrowserMultiFormatReader | null>(null);
+  const trackRef = useRef<MediaStreamTrack | null>(null);
   const [galat, setGalat] = useState<string | null>(null);
   const [siap, setSiap] = useState(false);
   const [gagalAmbil, setGagalAmbil] = useState(false);
+  const [zoom, setZoom] = useState<RentangZoom | null>(null);
+
+  /**
+   * Mengubah perbesaran kamera.
+   *
+   * Ini perbesaran sungguhan pada sensor, bukan gambar yang dibesarkan setelah
+   * diambil — barcode benar-benar mendapat lebih banyak piksel. Itulah kenapa
+   * ia menolong dari jarak yang sebelumnya gagal, sementara memperbesar gambar
+   * hasil jepretan tidak menolong sama sekali.
+   *
+   * Perangkat berhak menolak nilainya; kalau ditolak, kameranya tetap jalan
+   * pada perbesaran sebelumnya dan tidak ada yang perlu dilaporkan.
+   */
+  async function ubahZoom(nilai: number) {
+    const track = trackRef.current;
+    if (!track) return;
+
+    try {
+      // zoom belum ada di tipe MediaTrackConstraintSet, jadi lewat unknown.
+      await track.applyConstraints({
+        advanced: [{ zoom: nilai }],
+      } as unknown as MediaTrackConstraints);
+      setZoom((sebelum) => (sebelum ? { ...sebelum, nilai } : sebelum));
+    } catch {
+      // Perbesaran ditolak perangkat. Bukan kerusakan.
+    }
+  }
 
   /**
    * Membaca barcode dari bingkai yang sedang tampil, atas permintaan petugas.
@@ -93,22 +149,48 @@ function Pratinjau({
 
     setGagalAmbil(false);
 
-    const kanvas = document.createElement("canvas");
-    kanvas.width = video.videoWidth;
-    kanvas.height = video.videoHeight;
+    const lebar = video.videoWidth;
+    const tinggi = video.videoHeight;
 
+    /*
+      Dicoba beberapa potongan, dari seluruh bingkai lalu makin mengecil ke
+      tengah.
+
+      Barcode kecil di tengah bingkai besar lebih sulit dibaca daripada barcode
+      yang sama tapi memenuhi gambar — bukan karena pikselnya berkurang, tapi
+      karena pembaca menyapu baris merata ke seluruh tinggi gambar dan sebagian
+      besar sapuan itu jatuh di lantai, tangan, atau sepeda. Memotong ke pita
+      tengah membuat hampir semua sapuan mengenai barcode-nya.
+
+      Inilah yang selama ini dikerjakan tangan dengan mendekatkan kamera.
+    */
+    const potongan = [
+      { x: 0, y: 0, w: lebar, h: tinggi },
+      { x: lebar * 0.1, y: tinggi * 0.3, w: lebar * 0.8, h: tinggi * 0.4 },
+      { x: lebar * 0.25, y: tinggi * 0.35, w: lebar * 0.5, h: tinggi * 0.3 },
+    ];
+
+    const kanvas = document.createElement("canvas");
     const konteks = kanvas.getContext("2d");
     if (!konteks) return;
-    konteks.drawImage(video, 0, 0, kanvas.width, kanvas.height);
 
-    try {
-      const hasil = pembaca.decodeFromCanvas(kanvas);
-      onHasil(hasil.getText());
-    } catch {
-      // decodeFromCanvas melempar kalau tidak menemukan apa pun. Itu keadaan
-      // yang lumrah, bukan kerusakan, jadi tidak dicatat sebagai galat.
-      setGagalAmbil(true);
+    for (const { x, y, w, h } of potongan) {
+      kanvas.width = Math.round(w);
+      kanvas.height = Math.round(h);
+      konteks.drawImage(video, x, y, w, h, 0, 0, kanvas.width, kanvas.height);
+
+      try {
+        const hasil = pembaca.decodeFromCanvas(kanvas);
+        onHasil(hasil.getText());
+        return;
+      } catch {
+        // Potongan ini tidak memuat barcode yang terbaca. Lanjut ke berikutnya.
+      }
     }
+
+    // Tidak menemukan apa pun adalah keadaan yang lumrah saat kamera masih
+    // terlalu jauh, bukan kerusakan, jadi tidak dicatat sebagai galat.
+    setGagalAmbil(true);
   }
 
   useEffect(() => {
@@ -120,6 +202,7 @@ function Pratinjau({
     function lepaskan() {
       controls?.stop();
       stream?.getTracks().forEach((track) => track.stop());
+      trackRef.current = null;
 
       const video = videoRef.current;
       if (video) {
@@ -176,6 +259,12 @@ function Pratinjau({
         }
 
         video.srcObject = stream;
+
+        const track = stream.getVideoTracks()[0];
+        if (track) {
+          trackRef.current = track;
+          setZoom(bacaZoom(track));
+        }
 
         /*
           Pemindai diberi tahu apa yang dicari, bukan dibiarkan menebak.
@@ -283,8 +372,12 @@ function Pratinjau({
         </p>
       ) : gagalAmbil ? (
         <p role="status" className="text-sm text-warn">
-          Barcode belum terbaca. Dekatkan kamera sampai stikernya memenuhi kotak,
-          pastikan cukup terang, lalu ambil lagi.
+          Barcode belum terbaca.{" "}
+          {zoom
+            ? "Naikkan perbesaran di bawah, atau dekatkan kamera"
+            : "Dekatkan kamera"}{" "}
+          sampai stikernya memenuhi kotak — sisakan sedikit ruang putih di kiri dan
+          kanannya. Pastikan cukup terang, lalu ambil lagi.
         </p>
       ) : (
         <p className="text-sm text-ink-muted">
@@ -292,6 +385,28 @@ function Pratinjau({
           tekan Ambil barcode. Memakai kamera{" "}
           {arah === "belakang" ? "belakang" : "depan"}.
         </p>
+      )}
+
+      {siap && zoom && (
+        <div className="space-y-1.5">
+          <label
+            htmlFor="zoom-kamera"
+            className="flex items-center justify-between text-sm text-ink-muted"
+          >
+            <span>Perbesaran</span>
+            <span className="font-medium text-ink">{zoom.nilai.toFixed(1)}×</span>
+          </label>
+          <input
+            id="zoom-kamera"
+            type="range"
+            min={zoom.min}
+            max={zoom.max}
+            step={zoom.langkah}
+            value={zoom.nilai}
+            onChange={(e) => void ubahZoom(Number(e.target.value))}
+            className="h-11 w-full accent-brand"
+          />
+        </div>
       )}
 
       {siap && (
