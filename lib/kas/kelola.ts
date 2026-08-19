@@ -1,13 +1,17 @@
 import "server-only";
 
-import { and, desc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lt, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
+  bikes,
   cashDeposits,
   expenses,
+  owners,
   ownerPayments,
+  renters,
   rentals,
   users,
+  type MetodeBayar,
 } from "@/lib/db/schema";
 import { pelanggaranUnik } from "@/lib/db/galat";
 import { awalHariWib, rentangHariWib } from "@/lib/waktu";
@@ -230,6 +234,136 @@ export async function setoranHari(
     .limit(1);
 
   return baris ?? null;
+}
+
+export type BarisRental = {
+  id: number;
+  waktu: Date;
+  kodeSepeda: string;
+  namaPenyewa: string;
+  metode: MetodeBayar | null;
+  jumlah: number;
+};
+
+export type BarisPengeluaran = {
+  id: number;
+  waktu: Date;
+  keterangan: string;
+  jumlah: number;
+};
+
+export type BarisSetoranPemilik = {
+  id: number;
+  waktu: Date;
+  namaPemilik: string;
+  jumlah: number;
+};
+
+export type RincianKas = {
+  rentalTunai: BarisRental[];
+  /** QRIS dan transfer. Uangnya tidak masuk laci, tapi tetap perlu terlihat
+   *  supaya penutupan menggambarkan seluruh hari, bukan hanya isi laci. */
+  rentalNonTunai: BarisRental[];
+  pengeluaranTunai: BarisPengeluaran[];
+  setoranPemilikTunai: BarisSetoranPemilik[];
+};
+
+/**
+ * Transaksi yang membentuk angka penutupan kas.
+ *
+ * Rekapnya menjawab "berapa"; ini menjawab "dari mana". Ketika uang di laci
+ * tidak cocok dengan catatan, tanpa rincian tidak ada apa pun yang bisa
+ * diperiksa — dan selisih yang tidak bisa ditelusuri akhirnya cuma
+ * ditandatangani saja.
+ *
+ * Penyaringnya sengaja disamakan persis dengan rekapKasHarian. Rincian yang
+ * isinya berbeda dari angkanya lebih berbahaya daripada tidak ada rincian sama
+ * sekali, karena ia membuat orang percaya pada pemeriksaan yang sebenarnya
+ * salah.
+ */
+export async function rincianKasHarian(
+  kasirId: number,
+  hari: Date,
+): Promise<RincianKas> {
+  const { mulai, selesai } = rentangHariWib(hari);
+
+  const penanggungJawab = sql`coalesce(${rentals.diselesaikanOleh}, ${rentals.kasirId})`;
+
+  const barisRental = await db
+    .select({
+      id: rentals.id,
+      waktu: rentals.waktuSelesai,
+      kodeSepeda: bikes.kode,
+      namaPenyewa: renters.nama,
+      metode: rentals.metodeBayar,
+      jumlah: rentals.totalBiaya,
+    })
+    .from(rentals)
+    .innerJoin(bikes, eq(rentals.bikeId, bikes.id))
+    .innerJoin(renters, eq(rentals.renterId, renters.id))
+    .where(
+      and(
+        eq(rentals.status, "selesai"),
+        sql`${penanggungJawab} = ${kasirId}`,
+        gte(rentals.waktuSelesai, mulai),
+        lt(rentals.waktuSelesai, selesai),
+      ),
+    )
+    .orderBy(asc(rentals.waktuSelesai));
+
+  const rental: BarisRental[] = barisRental.map((baris) => ({
+    id: baris.id,
+    // Sudah dijamin ada oleh penyaring status "selesai" dan rentang waktunya.
+    waktu: baris.waktu!,
+    kodeSepeda: baris.kodeSepeda,
+    namaPenyewa: baris.namaPenyewa,
+    metode: baris.metode,
+    jumlah: baris.jumlah ?? 0,
+  }));
+
+  const pengeluaranTunai = await db
+    .select({
+      id: expenses.id,
+      waktu: expenses.tanggal,
+      keterangan: expenses.keterangan,
+      jumlah: expenses.jumlah,
+    })
+    .from(expenses)
+    .where(
+      and(
+        eq(expenses.metode, "tunai"),
+        eq(expenses.dicatatOleh, kasirId),
+        gte(expenses.tanggal, mulai),
+        lt(expenses.tanggal, selesai),
+      ),
+    )
+    .orderBy(asc(expenses.tanggal));
+
+  const setoranPemilikTunai = await db
+    .select({
+      id: ownerPayments.id,
+      waktu: ownerPayments.tanggal,
+      namaPemilik: owners.nama,
+      jumlah: ownerPayments.jumlah,
+    })
+    .from(ownerPayments)
+    .innerJoin(owners, eq(ownerPayments.ownerId, owners.id))
+    .where(
+      and(
+        eq(ownerPayments.metode, "tunai"),
+        eq(ownerPayments.dicatatOleh, kasirId),
+        gte(ownerPayments.tanggal, mulai),
+        lt(ownerPayments.tanggal, selesai),
+      ),
+    )
+    .orderBy(asc(ownerPayments.tanggal));
+
+  return {
+    rentalTunai: rental.filter((r) => r.metode === "tunai"),
+    rentalNonTunai: rental.filter((r) => r.metode !== "tunai"),
+    pengeluaranTunai,
+    setoranPemilikTunai,
+  };
 }
 
 export async function daftarSetoran(rentang: {
