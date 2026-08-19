@@ -108,7 +108,7 @@ export default async function HalamanPengeluaran(props: PageProps<"/pengeluaran"
       <Card>
         <CardHeader
           judul="Catat pengeluaran"
-          keterangan="Biaya maintenance dicatat dari menu Maintenance supaya tidak terhitung dua kali"
+          keterangan="Biaya servis dicatat di menu Maintenance supaya tidak terhitung dua kali"
         />
         <CardBody>
           <FormPengeluaran tanggalHariIni={kunciTanggalWib(new Date())} />
@@ -121,7 +121,7 @@ export default async function HalamanPengeluaran(props: PageProps<"/pengeluaran"
           <KeadaanKosong
             ikon={Ikon.pengeluaran}
             judul="Belum ada pengeluaran"
-            keterangan="Catat gaji, listrik, PDAM, dan biaya operasional lainnya di sini."
+            keterangan="Catat gaji, listrik, PDAM, dan biaya operasional lainnya."
           />
         ) : (
           <ul className="divide-y divide-line">

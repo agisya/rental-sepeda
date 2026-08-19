@@ -28,16 +28,16 @@ const AWAL: StatusAksi = {};
 function TombolTutup({ jumlahSeharusnya }: { jumlahSeharusnya: number }) {
   return (
     <KonfirmasiAksi
-      label="Tutup kas hari ini"
-      judul="Tutup kas hari ini?"
+      label="Tutup toko hari ini"
+      judul="Tutup toko hari ini?"
       keterangan={
         <>
-          Angka {rupiah(jumlahSeharusnya)} akan dibekukan sebagai dasar setoran hari
-          ini, dan hanya admin yang bisa membatalkannya. Pastikan uangnya sudah
-          dihitung dan semua pengeluaran dari laci sudah dicatat.
+          Angka {rupiah(jumlahSeharusnya)} dikunci sebagai dasar setoran hari
+          ini dan hanya bisa dibatalkan admin. Pastikan uangnya sudah dihitung
+          dan seluruh pengeluaran toko sudah dicatat.
         </>
       }
-      labelYa="Tutup kas"
+      labelYa="Tutup toko"
       labelSedang="Menyimpan…"
       variasi="utama"
       ukuran="lg"
@@ -78,8 +78,8 @@ export function FormTutupKas({
 
       <Field
         id="jumlahDiserahkan"
-        label="Uang yang diserahkan"
-        petunjuk="Hitung uang fisiknya dulu, baru isi di sini"
+        label="Uang yang disetor"
+        petunjuk="Hitung uang fisiknya dulu"
         galat={status.galatField?.jumlahDiserahkan}
         wajib
       >
@@ -118,7 +118,7 @@ export function FormTutupKas({
       <Field
         id="catatan"
         label="Catatan"
-        petunjuk="Wajib diisi kalau ada selisih — jelaskan sebabnya selagi masih ingat"
+        petunjuk="Wajib diisi bila ada selisih — jelaskan sebabnya"
         galat={status.galatField?.catatan}
       >
         {(props) => (
@@ -144,7 +144,7 @@ function TombolTerima() {
     <KonfirmasiAksi
       label="Tandai diterima"
       judul="Sudah menerima uangnya?"
-      keterangan="Setelah ditandai diterima, penutupan ini tidak bisa dibatalkan lagi. Tandai hanya kalau uangnya benar-benar sudah Anda terima dan sudah dihitung."
+      keterangan="Setelah ditandai diterima, penutupan ini tidak bisa dibatalkan lagi. Tandai hanya bila uangnya sudah Anda terima dan sudah dihitung."
       labelYa="Sudah diterima"
       variasi="sukses"
       ukuran="sm"
@@ -191,7 +191,7 @@ export function FormPengeluaranLaci({ tanggal }: { tanggal: string }) {
 
       <Field
         id="keterangan-laci"
-        label="Untuk apa"
+        label="Keperluan"
         galat={status.galatField?.keterangan}
         wajib
       >

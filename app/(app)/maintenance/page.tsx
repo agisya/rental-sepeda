@@ -110,7 +110,7 @@ export default async function HalamanMaintenance() {
         <Card>
           <CardHeader
             judul={`Sedang diservis · ${semuaSepeda.length}`}
-            keterangan="Sepeda ini tidak bisa disewakan sampai statusnya dikembalikan"
+            keterangan="Tidak bisa disewakan sampai statusnya dikembalikan"
           />
           <ul className="divide-y divide-line">
             {semuaSepeda.map((s) => (
@@ -144,7 +144,7 @@ export default async function HalamanMaintenance() {
           <KeadaanKosong
             ikon={Ikon.servis}
             judul="Belum ada catatan maintenance"
-            keterangan="Catat servis dan penggantian sparepart di sini supaya biayanya terlacak."
+            keterangan="Catat servis dan penggantian sparepart supaya biayanya terlacak."
             aksi={
               bolehKelola ? (
                 <ButtonLink href="/maintenance/baru" ikon={Ikon.tambah}>

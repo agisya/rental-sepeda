@@ -121,7 +121,7 @@ export function MaintenanceForm({
         <Field
           id="tanggalServisBerikutnya"
           label="Servis berikutnya"
-          petunjuk="Akan muncul sebagai pengingat saat tanggalnya tiba."
+          petunjuk="Muncul sebagai pengingat saat tanggalnya tiba."
           galat={status.galatField?.tanggalServisBerikutnya}
         >
           {(props) => (

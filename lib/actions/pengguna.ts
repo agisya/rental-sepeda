@@ -164,7 +164,7 @@ export async function tambahAnggota(
     return { galat: "Tidak bisa menyimpan akun. Coba lagi." };
   }
 
-  revalidatePath("/pengaturan");
+  revalidatePath("/pengaturan/tim");
 
   return {
     berhasil:
@@ -220,7 +220,7 @@ export async function ubahStatusAnggota(
     return { galat: "Tidak bisa mengubah status akun. Coba lagi." };
   }
 
-  revalidatePath("/pengaturan");
+  revalidatePath("/pengaturan/tim");
 
   return {
     berhasil: jadikanAktif ? "Akun diaktifkan kembali." : "Akun dinonaktifkan.",
@@ -258,7 +258,7 @@ export async function setelUlangSandiAnggota(
     return { galat: "Tidak bisa mengganti kata sandi. Coba lagi." };
   }
 
-  revalidatePath("/pengaturan");
+  revalidatePath("/pengaturan/tim");
 
   return { berhasil: "Kata sandi disetel ulang. Serahkan yang baru kepada pemilik akun." };
 }

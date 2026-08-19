@@ -75,7 +75,7 @@ export function StartForm({
       <Field
         id="noHp"
         label="Nomor HP"
-        petunjuk="Dipakai untuk mengenali pelanggan lama dan menghubungi kalau sepeda belum kembali."
+        petunjuk="Untuk mengenali pelanggan lama dan menghubungi bila sepeda belum kembali."
         galat={status.galatField?.noHp}
         wajib
       >
@@ -96,7 +96,7 @@ export function StartForm({
         <Field
           id="estimasiJam"
           label="Perkiraan durasi (jam)"
-          petunjuk="Hanya catatan. Tagihan tetap dihitung dari waktu kembali."
+          petunjuk="Hanya catatan. Tagihan dihitung dari waktu kembali."
           galat={status.galatField?.estimasiJam}
         >
           {(props) => (

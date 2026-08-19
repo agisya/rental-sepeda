@@ -25,7 +25,7 @@ export default async function HalamanSepedaBaru() {
           <KeadaanKosong
             ikon={Ikon.pemilik}
             judul="Belum ada pemilik aktif"
-            keterangan="Setiap sepeda harus punya pemilik untuk perhitungan bagi hasil. Tambahkan pemiliknya dulu."
+            keterangan="Setiap sepeda harus punya pemilik untuk perhitungan bagi hasil."
             aksi={
               <ButtonLink href="/pemilik/baru" ikon={Ikon.tambah}>
                 Tambah pemilik
@@ -37,7 +37,7 @@ export default async function HalamanSepedaBaru() {
         <Card>
           <CardHeader
             judul="Data sepeda"
-            keterangan="Kode yang diisi di sini adalah isi barcode yang akan dicetak jadi stiker."
+            keterangan="Kode yang diisi di sini menjadi isi barcode yang dicetak jadi stiker."
           />
           <CardBody>
             <BikeForm pemilik={pemilik} />

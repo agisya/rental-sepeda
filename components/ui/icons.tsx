@@ -18,12 +18,16 @@ import {
   Camera,
   ChartColumn,
   ChevronRight,
+  ClipboardList,
   CircleQuestionMark,
   Clock,
+  Database,
   FileText,
   ImagePlus,
+  Landmark,
   LayoutDashboard,
   LogOut,
+  Palette,
   Phone,
   Plus,
   Printer,
@@ -76,6 +80,10 @@ export const Ikon = {
   keluar: LogOut,
   batal: X,
   lanjut: ChevronRight,
+  data: Database,
+  arsip: ClipboardList,
+  keuangan: Landmark,
+  tampilan: Palette,
 } as const satisfies Record<string, LucideIcon>;
 
 export type NamaIkon = keyof typeof Ikon;

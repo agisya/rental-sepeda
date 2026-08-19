@@ -51,7 +51,7 @@ export default async function HalamanScan(props: PageProps<"/scan">) {
           <KeadaanKosong
             ikon={Ikon.scan}
             judul="Belum ada sepeda yang di-scan"
-            keterangan="Tembak barcode dengan scanner, buka kamera, atau ketik kode sepeda seperti MTB-023."
+            keterangan="Tembak barcode, buka kamera, atau ketik kode sepeda (mis. MTB-023)."
           />
         </Card>
       )}
@@ -61,7 +61,7 @@ export default async function HalamanScan(props: PageProps<"/scan">) {
           <KeadaanKosong
             ikon={Ikon.tidakDitemukan}
             judul={`Kode "${kode}" tidak ditemukan`}
-            keterangan="Periksa kembali stikernya, atau cari sepeda lewat menu Data Sepeda."
+            keterangan="Periksa stikernya, atau cari lewat menu Data Sepeda."
             aksi={
               <Link
                 href="/sepeda"
@@ -222,7 +222,7 @@ async function IsiSepeda({
           <KeadaanKosong
             ikon={Ikon.peringatan}
             judul="Data rental tidak ditemukan"
-            keterangan="Sepeda ini bertanda sedang disewa tapi tidak ada rental berjalan yang tercatat. Hubungi admin untuk memperbaiki statusnya."
+            keterangan="Sepeda bertanda sedang disewa, tapi tidak ada rental berjalan yang tercatat. Hubungi admin untuk memperbaiki statusnya."
           />
         </Card>
       )}

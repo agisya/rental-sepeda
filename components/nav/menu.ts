@@ -12,6 +12,15 @@ export type ItemMenu = {
 
 export type KelompokMenu = {
   judul: string;
+  ikon: NamaIkon;
+  /**
+   * Kelompok yang tidak pernah dilipat.
+   *
+   * Menu operasional dibuka berkali-kali dalam satu jam. Menaruhnya di balik
+   * satu ketukan tambahan membuat pekerjaan yang paling sering justru yang
+   * paling jauh dijangkau.
+   */
+  selaluTampil?: boolean;
   item: ItemMenu[];
 };
 
@@ -26,6 +35,8 @@ const PENGELOLA: Peran[] = ["admin", "owner"];
 export const KELOMPOK_MENU: KelompokMenu[] = [
   {
     judul: "Operasional",
+    ikon: "dashboard",
+    selaluTampil: true,
     item: [
       { href: "/dashboard", label: "Dashboard", labelPendek: "Beranda", ikon: "dashboard" },
       { href: "/scan", label: "Scan Barcode", labelPendek: "Scan", ikon: "scan" },
@@ -35,6 +46,7 @@ export const KELOMPOK_MENU: KelompokMenu[] = [
   },
   {
     judul: "Data",
+    ikon: "data",
     item: [
       { href: "/sepeda", label: "Data Sepeda", labelPendek: "Sepeda", ikon: "sepeda" },
       { href: "/pemilik", label: "Data Pemilik", labelPendek: "Pemilik", ikon: "pemilik" },
@@ -49,6 +61,7 @@ export const KELOMPOK_MENU: KelompokMenu[] = [
   },
   {
     judul: "Laporan",
+    ikon: "arsip",
     item: [
       {
         href: "/laporan/harian",
@@ -78,10 +91,11 @@ export const KELOMPOK_MENU: KelompokMenu[] = [
   },
   {
     judul: "Keuangan",
+    ikon: "keuangan",
     item: [
       // Tanpa batasan peran: kasir justru yang paling sering membukanya, karena
-      // dialah yang memegang uangnya dan yang harus menutup kas tiap hari.
-      { href: "/kas", label: "Tutup Kas", labelPendek: "Kas", ikon: "uang" },
+      // dialah yang memegang uangnya dan yang harus menutup toko tiap hari.
+      { href: "/kas", label: "Tutup Toko", labelPendek: "Tutup", ikon: "uang" },
       {
         href: "/pengeluaran",
         label: "Pengeluaran",
@@ -91,7 +105,7 @@ export const KELOMPOK_MENU: KelompokMenu[] = [
       },
       {
         href: "/laba-rugi",
-        label: "Laba / Rugi",
+        label: "Laba Rugi",
         labelPendek: "Laba",
         ikon: "labaRugi",
         peran: PENGELOLA,
@@ -100,6 +114,7 @@ export const KELOMPOK_MENU: KelompokMenu[] = [
   },
   {
     judul: "Lainnya",
+    ikon: "pengaturan",
     item: [
       {
         href: "/pengaturan",

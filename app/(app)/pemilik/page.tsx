@@ -33,7 +33,7 @@ export default async function HalamanPemilik() {
           <KeadaanKosong
             ikon={Ikon.pemilik}
             judul="Belum ada pemilik"
-            keterangan="Tambahkan pemilik sepeda lebih dulu, karena setiap sepeda harus punya pemilik."
+            keterangan="Setiap sepeda harus punya pemilik. Tambahkan pemiliknya lebih dulu."
             aksi={
               bolehKelola ? (
                 <ButtonLink href="/pemilik/baru" ikon={Ikon.tambah}>

@@ -51,7 +51,7 @@ export function FormPengaturan({ awal }: { awal: Settings }) {
       <Field
         id="batasJamRental"
         label="Batas jam rental mencurigakan"
-        petunjuk="Rental yang berjalan lebih lama dari ini akan ditandai di dashboard sebagai sepeda belum kembali."
+        petunjuk="Rental yang melewati batas ini ditandai di dashboard sebagai sepeda belum kembali."
         galat={status.galatField?.batasJamRental}
         wajib
       >
@@ -72,7 +72,7 @@ export function FormPengaturan({ awal }: { awal: Settings }) {
       <Field
         id="toleransiBookingMenit"
         label="Toleransi keterlambatan booking (menit)"
-        petunjuk="Setelah lewat dari ini, booking ditandai terlewat dan boleh dihanguskan."
+        petunjuk="Setelah batas ini terlewat, booking ditandai hangus."
         galat={status.galatField?.toleransiBookingMenit}
         wajib
       >

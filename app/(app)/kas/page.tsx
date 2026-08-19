@@ -34,7 +34,7 @@ import {
   rentangBulanWib,
 } from "@/lib/waktu";
 
-export const metadata: Metadata = { title: "Tutup Kas" };
+export const metadata: Metadata = { title: "Tutup Toko" };
 
 /** Satu baris rincian: waktu, keterangan, nominal. */
 function BarisRincian({
@@ -89,7 +89,7 @@ function Lipatan({
     <details className="border-t border-line first:border-t-0">
       <summary className="flex min-h-11 cursor-pointer items-center justify-between px-4 text-sm font-medium text-ink marker:content-['']">
         <span>{judul}</span>
-        <span className="text-xs text-ink-muted">{jumlah} baris · ketuk untuk buka</span>
+        <span className="text-xs text-ink-muted">{jumlah} baris</span>
       </summary>
       <ul className="divide-y divide-line border-t border-line bg-surface-2/40">
         {children}
@@ -130,8 +130,8 @@ export default async function HalamanKas() {
   return (
     <div className="space-y-5">
       <PageHeader
-        judul="Tutup Kas"
-        keterangan={`Uang tunai Anda · ${formatTanggalWib(sekarang)}`}
+        judul="Tutup Toko"
+        keterangan={`Setoran tunai harian · ${formatTanggalWib(sekarang)}`}
       />
 
       {/* Sepeda yang masih di luar dulu, sebelum urusan uang. Menutup kas
@@ -147,7 +147,7 @@ export default async function HalamanKas() {
                 {masihDiLuar.length} sepeda belum kembali
               </span>
             }
-            keterangan="Uang sewanya belum masuk hitungan karena rentalnya belum diselesaikan"
+            keterangan="Uang sewanya belum masuk hitungan"
           />
           <ul className="divide-y divide-warn/20">
             {masihDiLuar.map((r) => (
@@ -165,39 +165,39 @@ export default async function HalamanKas() {
       )}
 
       <StatUtama
-        label="Seharusnya ada di tangan Anda"
+        label="Tunai yang harus disetor"
         nilai={rupiah(rekap.jumlahSeharusnya)}
-        keterangan="Tunai dari rental, dikurangi yang sudah terpakai dari laci"
+        keterangan="Penerimaan tunai dikurangi pengeluaran toko"
       />
 
       <Card>
         <CardHeader
-          judul="Rinciannya"
+          judul="Rincian"
           keterangan={
             jumlahBaris === 0
               ? "Belum ada transaksi tunai hari ini"
-              : "Ketuk salah satu baris untuk melihat transaksinya"
+              : "Ketuk baris untuk melihat transaksinya"
           }
         />
 
         <DaftarData>
-          <BarisData label="Rental dibayar tunai">
+          <BarisData label="Penerimaan tunai">
             {rupiah(rekap.penerimaanTunai)}
           </BarisData>
-          <BarisData label="Pengeluaran dari laci">
+          <BarisData label="Pengeluaran toko">
             −{rupiah(rekap.pengeluaranTunai)}
           </BarisData>
-          <BarisData label="Setoran tunai ke pemilik">
+          <BarisData label="Setoran ke pemilik">
             −{rupiah(rekap.setoranPemilikTunai)}
           </BarisData>
-          <BarisData label="Seharusnya" tebal>
+          <BarisData label="Harus disetor" tebal>
             {rupiah(rekap.jumlahSeharusnya)}
           </BarisData>
         </DaftarData>
 
         {jumlahBaris > 0 && (
           <div className="border-t border-line">
-            <Lipatan judul="Rental dibayar tunai" jumlah={rincian.rentalTunai.length}>
+            <Lipatan judul="Penerimaan tunai" jumlah={rincian.rentalTunai.length}>
               {rincian.rentalTunai.map((r) => (
                 <BarisRincian
                   key={r.id}
@@ -210,7 +210,7 @@ export default async function HalamanKas() {
             </Lipatan>
 
             <Lipatan
-              judul="Pengeluaran dari laci"
+              judul="Pengeluaran toko"
               jumlah={rincian.pengeluaranTunai.length}
             >
               {rincian.pengeluaranTunai.map((p) => (
@@ -224,7 +224,7 @@ export default async function HalamanKas() {
             </Lipatan>
 
             <Lipatan
-              judul="Setoran tunai ke pemilik"
+              judul="Setoran ke pemilik"
               jumlah={rincian.setoranPemilikTunai.length}
             >
               {rincian.setoranPemilikTunai.map((s) => (
@@ -246,8 +246,8 @@ export default async function HalamanKas() {
       {rincian.rentalNonTunai.length > 0 && (
         <Card>
           <CardHeader
-            judul="Masuk tanpa uang tunai"
-            keterangan="Tidak perlu Anda serahkan — hanya supaya hari ini terlihat utuh"
+            judul="Pembayaran non-tunai"
+            keterangan="Tidak ikut disetor, hanya sebagai catatan"
           />
           <DaftarData>
             <BarisData label={`QRIS & transfer · ${rincian.rentalNonTunai.length} transaksi`} tebal>
@@ -255,7 +255,7 @@ export default async function HalamanKas() {
             </BarisData>
           </DaftarData>
           <div className="border-t border-line">
-            <Lipatan judul="Lihat transaksinya" jumlah={rincian.rentalNonTunai.length}>
+            <Lipatan judul="Lihat transaksi" jumlah={rincian.rentalNonTunai.length}>
               {rincian.rentalNonTunai.map((r) => (
                 <BarisRincian
                   key={r.id}
@@ -277,8 +277,8 @@ export default async function HalamanKas() {
       {!punyaHariIni && (
         <Card>
           <CardHeader
-            judul="Ambil uang dari laci"
-            keterangan="Catat begitu uangnya keluar, selagi masih ingat — langsung dikurangkan dari setoran Anda"
+            judul="Pengeluaran dari uang toko"
+            keterangan="Catat saat uangnya keluar. Otomatis mengurangi setoran Anda."
           />
           <CardBody>
             <FormPengeluaranLaci tanggal={kunciTanggalWib(sekarang)} />
@@ -289,15 +289,15 @@ export default async function HalamanKas() {
       {punyaHariIni ? (
         <Card>
           <CardHeader
-            judul="Kas hari ini sudah ditutup"
+            judul="Toko sudah ditutup hari ini"
             keterangan={
               punyaHariIni.status === "diterima"
                 ? `Diterima ${punyaHariIni.namaPenerima ?? "—"}`
-                : "Menunggu admin menandai diterima"
+                : "Menunggu konfirmasi admin"
             }
           />
           <DaftarData>
-            <BarisData label="Diserahkan">{rupiah(punyaHariIni.jumlahDiserahkan)}</BarisData>
+            <BarisData label="Disetor">{rupiah(punyaHariIni.jumlahDiserahkan)}</BarisData>
             <BarisData label="Selisih">{rupiah(punyaHariIni.selisih)}</BarisData>
             {punyaHariIni.catatan && (
               <BarisData label="Catatan">{punyaHariIni.catatan}</BarisData>
@@ -307,8 +307,8 @@ export default async function HalamanKas() {
       ) : (
         <Card>
           <CardHeader
-            judul="Tutup kas"
-            keterangan="Hitung uang fisiknya dulu, jangan menyalin angka di atas"
+            judul="Tutup toko"
+            keterangan="Hitung uang fisiknya dulu, jangan salin angka di atas"
           />
           <CardBody>
             <FormTutupKas
@@ -325,8 +325,8 @@ export default async function HalamanKas() {
             {semua.length === 0 ? (
               <KeadaanKosong
                 ikon={Ikon.uang}
-                judul="Belum ada penutupan kas bulan ini"
-                keterangan="Setoran akan muncul di sini begitu kasir menutup kasnya."
+                judul="Belum ada setoran bulan ini"
+                keterangan="Setoran muncul di sini setelah kasir menutup toko."
               />
             ) : (
               <ul className="divide-y divide-line">
@@ -345,7 +345,7 @@ export default async function HalamanKas() {
                           {s.namaKasir} · {formatTanggalWib(s.tanggal)}
                         </p>
                         <p className="text-xs text-ink-muted">
-                          Seharusnya {rupiah(s.jumlahSeharusnya)} · diserahkan{" "}
+                          Harus disetor {rupiah(s.jumlahSeharusnya)} · disetor{" "}
                           {rupiah(s.jumlahDiserahkan)}
                           {s.selisih !== 0 && s.status !== "dibatalkan" && (
                             <span className="font-medium text-danger">

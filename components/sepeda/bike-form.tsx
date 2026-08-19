@@ -63,7 +63,7 @@ export function BikeForm({
       <Field
         id="kode"
         label="Kode / isi barcode"
-        petunjuk="Kode ini yang dicetak jadi stiker dan dibaca scanner. Contoh: MTB-023."
+        petunjuk="Dicetak jadi stiker dan dibaca scanner. Contoh: MTB-023."
         galat={status.galatField?.kode}
         wajib
       >
@@ -152,7 +152,7 @@ export function BikeForm({
       <Field
         id="ownerId"
         label="Pemilik"
-        petunjuk="Menentukan ke siapa bagi hasil rental sepeda ini masuk."
+        petunjuk="Menentukan tujuan bagi hasil sepeda ini."
         galat={status.galatField?.ownerId}
         wajib
       >
@@ -223,7 +223,7 @@ export function BikeForm({
         <Field
           id="foto"
           label="Foto sepeda"
-          petunjuk="Boleh dilewati, tapi jauh lebih mudah dikenali kalau ada. JPG, PNG, atau WebP."
+          petunjuk="Opsional, tapi sangat membantu pengenalan. Format JPG, PNG, atau WebP."
           galat={status.galatField?.foto}
         >
           {(props) => (

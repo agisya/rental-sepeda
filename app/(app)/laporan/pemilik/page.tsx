@@ -53,7 +53,7 @@ export default async function HalamanLaporanPemilik(
 
       <PageHeader
         judul="Laporan Pemilik"
-        keterangan="Bagi hasil dan setoran, dihitung sejak awal sampai hari ini"
+        keterangan="Bagi hasil dan setoran sejak awal sampai hari ini"
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -75,13 +75,13 @@ export default async function HalamanLaporanPemilik(
       <Card>
         <CardHeader
           judul="Saldo per pemilik"
-          keterangan="Sisa adalah total hak dikurangi seluruh setoran yang pernah dicatat"
+          keterangan="Sisa = total hak dikurangi seluruh setoran"
         />
         {saldo.length === 0 ? (
           <KeadaanKosong
             ikon={Ikon.pemilik}
             judul="Belum ada pemilik"
-            keterangan="Tambahkan pemilik sepeda lebih dulu di menu Data Pemilik."
+            keterangan="Tambahkan pemilik lebih dulu di menu Data Pemilik."
           />
         ) : (
           <div className="overflow-x-auto">
@@ -170,7 +170,7 @@ export default async function HalamanLaporanPemilik(
           <KeadaanKosong
             ikon={Ikon.uang}
             judul="Belum ada setoran"
-            keterangan="Setoran yang sudah diberikan ke pemilik akan tercatat di sini."
+            keterangan="Setoran yang sudah diberikan ke pemilik tercatat di sini."
           />
         ) : (
           <ul className="divide-y divide-line">

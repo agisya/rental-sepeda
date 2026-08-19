@@ -91,7 +91,7 @@ export function FormFotoSepeda({
           <KonfirmasiAksi
             label="Hapus foto"
             judul="Hapus foto sepeda ini?"
-            keterangan="Fotonya hilang dari daftar sepeda dan dari kartu hasil scan. Tidak bisa dikembalikan — perlu diunggah lagi dari berkas aslinya."
+            keterangan="Foto hilang dari daftar sepeda dan kartu hasil scan. Untuk mengembalikannya, unggah ulang dari berkas asli."
             labelYa="Hapus foto"
             variasi="kedua"
             penuh

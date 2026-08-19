@@ -5,7 +5,44 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import type { Peran } from "@/lib/db/schema";
 import { Ikon } from "@/components/ui/icons";
-import { ikonMenu, kelompokUntukPeran, menuAktif } from "./menu";
+import { kelompokUntukPeran, menuAktif, type ItemMenu } from "./menu";
+
+/** Satu tautan menu. Bentuknya sama baik di dalam lipatan maupun di luar. */
+function TautanMenu({ item, aktif }: { item: ItemMenu; aktif: boolean }) {
+  // Diambil langsung dari tabel, bukan lewat ikonMenu(): pemanggilan fungsi di
+  // dalam badan komponen dibaca lint sebagai komponen yang dibuat saat render.
+  const IkonMenu = Ikon[item.ikon];
+
+  return (
+    <Link
+      href={item.href}
+      aria-current={aktif ? "page" : undefined}
+      className={cn(
+        "relative flex items-center gap-3 rounded-control px-3 py-2 text-sm transition-colors",
+        aktif
+          ? "bg-brand-soft font-medium text-brand-soft-ink"
+          : "text-ink-muted hover:bg-surface-2 hover:text-ink",
+      )}
+    >
+      {/* Penanda batang di tepi kiri: status aktif tidak hanya dibedakan
+          lewat warna. */}
+      {aktif && (
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-brand"
+        />
+      )}
+
+      <IkonMenu
+        className={cn("size-[18px] shrink-0", aktif && "text-brand")}
+        strokeWidth={aktif ? 2.2 : 1.8}
+        aria-hidden="true"
+      />
+
+      {item.label}
+    </Link>
+  );
+}
 
 /**
  * Navigasi samping untuk laptop kasir. Disembunyikan di layar kecil.
@@ -31,54 +68,114 @@ export function Sidebar({ peran }: { peran: Peran }) {
           >
             <Ikon.sepeda className="size-5" strokeWidth={2} />
           </span>
+
           <span className="text-[0.9375rem] font-semibold leading-tight tracking-tight text-ink">
             Rental Sepeda
             <span className="block text-xs font-normal text-ink-muted">Garut</span>
           </span>
         </div>
 
-        <div className="flex-1 space-y-6 overflow-y-auto px-3 pb-6">
-          {kelompokMenu.map((kelompok) => (
-            <div key={kelompok.judul}>
-              <p className="label-bagian px-3 pb-1.5">{kelompok.judul}</p>
-              <ul className="space-y-0.5">
-                {kelompok.item.map((m) => {
-                  const aktif = menuAktif(pathname, m.href);
-                  const IkonMenu = ikonMenu(m);
+        {/*
+          Tiga bentuk, dipilih menurut isi kelompoknya sendiri:
 
-                  return (
+          1. Kelompok operasional tidak pernah dilipat. Dashboard, scan, booking,
+             dan transaksi dibuka berkali-kali dalam satu jam; menaruhnya di balik
+             satu ketukan tambahan justru memperjauh yang paling sering dipakai.
+          2. Kelompok yang setelah disaring peran hanya menyisakan satu menu
+             ditampilkan sebagai tautan biasa. Melipat satu baris di balik satu
+             baris lain tidak memendekkan apa pun — bagi kasir, Keuangan hanya
+             berisi Tutup Toko, dan Lainnya hanya berisi Pengaturan.
+          3. Sisanya dilipat, dan yang memuat halaman sedang dibuka selalu
+             terbuka.
+
+          Memakai details/summary bawaan peramban: keadaan terbuka-tertutup,
+          pengoperasian lewat papan tik, dan pembacaan oleh pembaca layar sudah
+          benar tanpa ditulis ulang.
+        */}
+        <div className="flex-1 space-y-1.5 overflow-y-auto px-3 pb-6">
+          {kelompokMenu.map((kelompok) => {
+            const memuatHalamanIni = kelompok.item.some((m) =>
+              menuAktif(pathname, m.href),
+            );
+
+            if (kelompok.selaluTampil) {
+              return (
+                <div key={kelompok.judul} className="pb-3">
+                  <p className="label-bagian px-3 pb-1.5">{kelompok.judul}</p>
+                  <ul className="space-y-0.5">
+                    {kelompok.item.map((m) => (
+                      <li key={m.href}>
+                        <TautanMenu item={m} aktif={menuAktif(pathname, m.href)} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            }
+
+            if (kelompok.item.length === 1) {
+              const m = kelompok.item[0];
+              return (
+                <TautanMenu
+                  key={kelompok.judul}
+                  item={m}
+                  aktif={menuAktif(pathname, m.href)}
+                />
+              );
+            }
+
+            const IkonKelompok = Ikon[kelompok.ikon];
+
+            return (
+              /*
+                key ikut berubah saat kelompoknya menjadi aktif atau berhenti
+                aktif, supaya open dihitung ulang. Tanpa itu, kelompok yang tadi
+                dilipat sendiri oleh pengguna tetap terlipat meskipun halaman yang
+                sedang dibuka ada di dalamnya — dan menu aktifnya tidak terlihat.
+              */
+              <details
+                key={`${kelompok.judul}:${memuatHalamanIni}`}
+                open={memuatHalamanIni}
+                className="group"
+              >
+                <summary
+                  className={cn(
+                    "flex cursor-pointer list-none items-center gap-3 rounded-control px-3 py-2 text-sm transition-colors marker:content-['']",
+                    memuatHalamanIni
+                      ? "font-medium text-ink"
+                      : "text-ink-muted hover:bg-surface-2 hover:text-ink",
+                  )}
+                >
+                  <IkonKelompok
+                    className={cn(
+                      "size-[18px] shrink-0",
+                      memuatHalamanIni && "text-brand",
+                    )}
+                    strokeWidth={memuatHalamanIni ? 2.2 : 1.8}
+                    aria-hidden="true"
+                  />
+
+                  <span className="flex-1">{kelompok.judul}</span>
+
+                  <Ikon.lanjut
+                    className="size-4 shrink-0 transition-transform group-open:rotate-90"
+                    strokeWidth={2}
+                    aria-hidden="true"
+                  />
+                </summary>
+
+                {/* Digeser masuk supaya terbaca sebagai isi kelompok di atasnya,
+                    bukan sebagai menu sejajar yang kebetulan berurutan. */}
+                <ul className="mt-0.5 ml-3 space-y-0.5 border-l border-line pl-1.5">
+                  {kelompok.item.map((m) => (
                     <li key={m.href}>
-                      <Link
-                        href={m.href}
-                        aria-current={aktif ? "page" : undefined}
-                        className={cn(
-                          "relative flex items-center gap-3 rounded-control px-3 py-2 text-sm transition-colors",
-                          aktif
-                            ? "bg-brand-soft font-medium text-brand-soft-ink"
-                            : "text-ink-muted hover:bg-surface-2 hover:text-ink",
-                        )}
-                      >
-                        {/* Penanda batang di tepi kiri: status aktif tidak hanya
-                            dibedakan lewat warna. */}
-                        {aktif && (
-                          <span
-                            aria-hidden="true"
-                            className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-brand"
-                          />
-                        )}
-                        <IkonMenu
-                          className={cn("size-[18px] shrink-0", aktif && "text-brand")}
-                          strokeWidth={aktif ? 2.2 : 1.8}
-                          aria-hidden="true"
-                        />
-                        {m.label}
-                      </Link>
+                      <TautanMenu item={m} aktif={menuAktif(pathname, m.href)} />
                     </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+                  ))}
+                </ul>
+              </details>
+            );
+          })}
         </div>
       </div>
     </nav>

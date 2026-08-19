@@ -61,7 +61,7 @@ export function Topbar({ pengguna }: { pengguna: PenggunaAktif }) {
             <KonfirmasiAksi
               label="Keluar"
               judul="Keluar dari akun?"
-              keterangan="Anda perlu memasukkan username dan kata sandi lagi untuk masuk kembali."
+              keterangan="Anda perlu memasukkan username dan kata sandi lagi."
               labelYa="Keluar"
               variasi="bahaya"
               pemicuLabel="Keluar dari akun"

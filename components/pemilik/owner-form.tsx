@@ -93,7 +93,7 @@ export function OwnerForm({ awal }: { awal?: NilaiAwal }) {
         <Field
           id="persentaseBagiHasil"
           label="Bagian pemilik (%)"
-          petunjuk="Sisanya menjadi bagian Rental Sepeda Garut. Contoh: 60 berarti pemilik 60%, rental 40%."
+          petunjuk="Sisanya bagian rental. Contoh: 60 berarti pemilik 60%, rental 40%."
           galat={status.galatField?.persentaseBagiHasil}
           wajib
         >

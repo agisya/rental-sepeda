@@ -123,5 +123,5 @@ export async function gantiKataSandi(
     .set({ passwordHash: await hashKataSandi(hasil.data.kataSandiBaru) })
     .where(eq(users.id, pengguna.id));
 
-  redirect("/pengaturan?sandi=1");
+  redirect("/pengaturan/akun?sandi=1");
 }

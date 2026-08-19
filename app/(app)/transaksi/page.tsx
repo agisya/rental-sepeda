@@ -107,7 +107,7 @@ export default async function HalamanTransaksi(props: PageProps<"/transaksi">) {
           <KeadaanKosong
             ikon={Ikon.transaksi}
             judul="Belum ada transaksi"
-            keterangan="Transaksi akan muncul di sini setelah ada sepeda yang disewakan."
+            keterangan="Transaksi muncul di sini setelah ada sepeda yang disewakan."
           />
         </Card>
       ) : (

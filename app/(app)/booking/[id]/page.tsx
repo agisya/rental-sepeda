@@ -122,7 +122,7 @@ export default async function HalamanDetailBooking(props: PageProps<"/booking/[i
           <Card>
             <CardHeader
               judul="Penyewa tidak jadi"
-              keterangan="Jam yang terkunci akan dilepas supaya bisa dipesan orang lain."
+              keterangan="Jam yang terkunci dilepas supaya bisa dipesan orang lain."
             />
             <CardBody className="space-y-3">
               <FormBatalBooking bookingId={booking.id} />

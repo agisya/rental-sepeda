@@ -128,7 +128,7 @@ export default async function HalamanLaporanHarian(
           <KeadaanKosong
             ikon={Ikon.pemilik}
             judul="Belum ada rental selesai"
-            keterangan="Angka bagi hasil muncul setelah ada rental yang diselesaikan pada tanggal ini."
+            keterangan="Angka muncul setelah ada rental yang diselesaikan pada tanggal ini."
           />
         ) : (
           <div className="overflow-x-auto">

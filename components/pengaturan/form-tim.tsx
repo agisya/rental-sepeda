@@ -123,7 +123,7 @@ export function FormTambahAnggota() {
       <Field
         id="sandi-anggota"
         label="Kata sandi awal"
-        petunjuk="Minimal 8 karakter. Minta yang bersangkutan menggantinya sendiri setelah masuk."
+        petunjuk="Minimal 8 karakter. Minta diganti sendiri setelah masuk."
         galat={status.galatField?.kataSandi}
         wajib
       >
@@ -159,7 +159,7 @@ function FormStatus({ anggota }: { anggota: RingkasanPengguna }) {
         <KonfirmasiAksi
           label="Nonaktifkan"
           judul={`Nonaktifkan akun ${anggota.nama}?`}
-          keterangan="Aksesnya terputus segera, bahkan kalau sedang membuka aplikasi. Semua catatan yang pernah ia buat tetap utuh, dan akunnya bisa diaktifkan lagi kapan saja."
+          keterangan="Akses langsung terputus, meski aplikasi sedang dibuka. Seluruh catatannya tetap utuh dan akun bisa diaktifkan kembali kapan saja."
           labelYa="Nonaktifkan"
           variasi="bahaya"
           ukuran="sm"

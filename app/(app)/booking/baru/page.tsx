@@ -63,7 +63,7 @@ export default async function HalamanBookingBaru(props: PageProps<"/booking/baru
     <div className="space-y-4">
       <PageHeader
         judul="Booking Baru"
-        keterangan="Catat pesanan yang masuk lewat telepon atau WhatsApp"
+        keterangan="Catat pesanan dari telepon atau WhatsApp"
       />
 
       {bisaDipesan.length === 0 ? (
@@ -71,7 +71,7 @@ export default async function HalamanBookingBaru(props: PageProps<"/booking/baru
           <KeadaanKosong
             ikon={Ikon.sepeda}
             judul="Tidak ada sepeda yang bisa dipesan"
-            keterangan="Semua sepeda sedang diservis atau ditandai tidak aktif."
+            keterangan="Semua sepeda sedang diservis atau tidak aktif."
             aksi={<ButtonLink href="/sepeda">Buka Data Sepeda</ButtonLink>}
           />
         </Card>
@@ -79,7 +79,7 @@ export default async function HalamanBookingBaru(props: PageProps<"/booking/baru
         <Card>
           <CardHeader
             judul="Data booking"
-            keterangan="Jam yang dipesan akan langsung terkunci untuk sepeda ini."
+            keterangan="Jam yang dipesan langsung terkunci untuk sepeda ini."
           />
           <CardBody>
             <BookingForm
@@ -104,7 +104,7 @@ export default async function HalamanBookingBaru(props: PageProps<"/booking/baru
               <KeadaanKosong
                 ikon={Ikon.peringatan}
                 judul="Sepeda itu tidak bisa dipesan"
-                keterangan="Kodenya tidak terdaftar, atau sepedanya sedang diservis atau ditandai tidak aktif. Coba scan sepeda lain."
+                keterangan="Kode tidak terdaftar, atau sepedanya sedang diservis atau tidak aktif. Coba sepeda lain."
               />
             </Card>
           )}

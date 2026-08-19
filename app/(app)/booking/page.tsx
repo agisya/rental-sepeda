@@ -91,7 +91,7 @@ export default async function HalamanBooking(props: PageProps<"/booking">) {
           <KeadaanKosong
             ikon={Ikon.booking}
             judul="Belum ada booking"
-            keterangan="Catat pesanan yang masuk lewat telepon atau WhatsApp di sini supaya sepedanya terkunci."
+            keterangan="Catat pesanan dari telepon atau WhatsApp supaya sepedanya terkunci."
             aksi={
               <ButtonLink href="/booking/baru" ikon={Ikon.tambah}>
                 Tambah booking
