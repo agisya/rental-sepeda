@@ -1,13 +1,28 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { wajibPengguna } from "@/lib/auth/dal";
-import { daftarSetoran, rekapKasHarian, setoranHari } from "@/lib/kas/kelola";
-import { Card, CardBody, CardHeader, DaftarData, BarisData, KeadaanKosong } from "@/components/ui/card";
-import { PageHeader, Bagian } from "@/components/ui/page-header";
+import {
+  daftarSetoran,
+  rekapKasHarian,
+  rincianKasHarian,
+  setoranHari,
+} from "@/lib/kas/kelola";
+import { daftarRentalBerjalan } from "@/lib/queries/rentals";
+import {
+  BarisData,
+  Card,
+  CardBody,
+  CardHeader,
+  DaftarData,
+  KeadaanKosong,
+} from "@/components/ui/card";
+import { Bagian, PageHeader } from "@/components/ui/page-header";
 import { StatUtama } from "@/components/ui/stat";
 import { Ikon } from "@/components/ui/icons";
 import { FormTerimaSetoran, FormTutupKas } from "@/components/kas/form-kas";
 import { rupiah } from "@/lib/format";
 import {
+  formatJamWib,
   formatTanggalJamWib,
   formatTanggalWib,
   kunciTanggalWib,
@@ -16,13 +31,70 @@ import {
 
 export const metadata: Metadata = { title: "Tutup Kas" };
 
+/** Satu baris rincian: waktu, keterangan, nominal. */
+function BarisRincian({
+  waktu,
+  utama,
+  tambahan,
+  nominal,
+}: {
+  waktu: Date;
+  utama: string;
+  tambahan?: string;
+  nominal: ReactNode;
+}) {
+  return (
+    <li className="flex items-baseline justify-between gap-3 px-4 py-2">
+      <div className="min-w-0">
+        <p className="truncate text-sm text-ink">
+          <span className="tabular-nums text-ink-muted">{formatJamWib(waktu)}</span>{" "}
+          {utama}
+        </p>
+        {tambahan && <p className="truncate text-xs text-ink-muted">{tambahan}</p>}
+      </div>
+      <p className="shrink-0 text-sm font-medium tabular-nums text-ink">{nominal}</p>
+    </li>
+  );
+}
+
+/**
+ * Rincian yang terlipat.
+ *
+ * Angka besarnya yang dipakai tiap hari; rinciannya hanya dibuka ketika uang
+ * di laci tidak cocok. Menampilkan keduanya sekaligus membuat halaman ini
+ * penuh angka setiap sore, dan yang penuh angka justru berhenti dibaca.
+ */
+function Lipatan({
+  judul,
+  jumlah,
+  children,
+}: {
+  judul: string;
+  jumlah: number;
+  children: ReactNode;
+}) {
+  if (jumlah === 0) return null;
+
+  return (
+    <details className="border-t border-line first:border-t-0">
+      <summary className="flex min-h-11 cursor-pointer items-center justify-between px-4 text-sm font-medium text-ink marker:content-['']">
+        <span>{judul}</span>
+        <span className="text-xs text-ink-muted">{jumlah} baris · ketuk untuk buka</span>
+      </summary>
+      <ul className="divide-y divide-line border-t border-line bg-surface-2/40">
+        {children}
+      </ul>
+    </details>
+  );
+}
+
 /**
  * Penutupan kas harian.
  *
- * Aplikasi sudah lama tahu berapa uang yang seharusnya masuk. Yang belum pernah
- * tercatat adalah berapa yang benar-benar berpindah tangan, dan kepada siapa.
- * Halaman ini menutup jarak itu, dan sengaja dua langkah: kasir menyatakan
- * berapa yang ia serahkan, admin atau owner menyatakan sudah menerimanya.
+ * Dibuat dua langkah: kasir menyatakan berapa yang ia serahkan, admin atau
+ * owner menyatakan sudah menerimanya. Rinciannya ada di halaman yang sama
+ * supaya selisih bisa ditelusuri saat itu juga — selisih yang ditunda
+ * pemeriksaannya sampai besok tidak akan pernah benar-benar diperiksa.
  */
 export default async function HalamanKas() {
   const pengguna = await wajibPengguna();
@@ -31,11 +103,19 @@ export default async function HalamanKas() {
   const bolehMenerima = pengguna.peran === "admin" || pengguna.peran === "owner";
   const bulan = rentangBulanWib(sekarang);
 
-  const [rekap, punyaHariIni, semua] = await Promise.all([
+  const [rekap, rincian, punyaHariIni, masihDiLuar, semua] = await Promise.all([
     rekapKasHarian(pengguna.id, sekarang),
+    rincianKasHarian(pengguna.id, sekarang),
     setoranHari(pengguna.id, sekarang),
+    daftarRentalBerjalan(),
     bolehMenerima ? daftarSetoran(bulan) : Promise.resolve([]),
   ]);
+
+  const nonTunai = rincian.rentalNonTunai.reduce((total, r) => total + r.jumlah, 0);
+  const jumlahBaris =
+    rincian.rentalTunai.length +
+    rincian.pengeluaranTunai.length +
+    rincian.setoranPemilikTunai.length;
 
   return (
     <div className="space-y-5">
@@ -44,6 +124,36 @@ export default async function HalamanKas() {
         keterangan={`Uang tunai Anda · ${formatTanggalWib(sekarang)}`}
       />
 
+      {/* Sepeda yang masih di luar dulu, sebelum urusan uang. Menutup kas
+          sementara sepeda belum kembali berarti hari itu belum benar-benar
+          selesai, dan uang sewanya belum masuk hitungan mana pun. */}
+      {masihDiLuar.length > 0 && (
+        <Card className="border-warn/40 bg-warn-soft/40">
+          <CardHeader
+            className="border-warn/25"
+            judul={
+              <span className="flex items-center gap-2 text-warn">
+                <Ikon.peringatan className="size-4" strokeWidth={2.2} aria-hidden="true" />
+                {masihDiLuar.length} sepeda belum kembali
+              </span>
+            }
+            keterangan="Uang sewanya belum masuk hitungan karena rentalnya belum diselesaikan"
+          />
+          <ul className="divide-y divide-warn/20">
+            {masihDiLuar.map((r) => (
+              <li key={r.id} className="px-4 py-2.5">
+                <p className="truncate text-sm font-medium text-ink">
+                  {r.kodeSepeda} — {r.namaSepeda}
+                </p>
+                <p className="truncate text-xs text-ink-muted">
+                  {r.namaPenyewa} · sejak {formatJamWib(r.waktuMulai)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
       <StatUtama
         label="Seharusnya ada di tangan Anda"
         nilai={rupiah(rekap.jumlahSeharusnya)}
@@ -51,7 +161,15 @@ export default async function HalamanKas() {
       />
 
       <Card>
-        <CardHeader judul="Rinciannya" keterangan="Hanya yang berbentuk uang tunai" />
+        <CardHeader
+          judul="Rinciannya"
+          keterangan={
+            jumlahBaris === 0
+              ? "Belum ada transaksi tunai hari ini"
+              : "Ketuk salah satu baris untuk melihat transaksinya"
+          }
+        />
+
         <DaftarData>
           <BarisData label="Rental dibayar tunai">
             {rupiah(rekap.penerimaanTunai)}
@@ -66,7 +184,81 @@ export default async function HalamanKas() {
             {rupiah(rekap.jumlahSeharusnya)}
           </BarisData>
         </DaftarData>
+
+        {jumlahBaris > 0 && (
+          <div className="border-t border-line">
+            <Lipatan judul="Rental dibayar tunai" jumlah={rincian.rentalTunai.length}>
+              {rincian.rentalTunai.map((r) => (
+                <BarisRincian
+                  key={r.id}
+                  waktu={r.waktu}
+                  utama={r.kodeSepeda}
+                  tambahan={r.namaPenyewa}
+                  nominal={rupiah(r.jumlah)}
+                />
+              ))}
+            </Lipatan>
+
+            <Lipatan
+              judul="Pengeluaran dari laci"
+              jumlah={rincian.pengeluaranTunai.length}
+            >
+              {rincian.pengeluaranTunai.map((p) => (
+                <BarisRincian
+                  key={p.id}
+                  waktu={p.waktu}
+                  utama={p.keterangan}
+                  nominal={`−${rupiah(p.jumlah)}`}
+                />
+              ))}
+            </Lipatan>
+
+            <Lipatan
+              judul="Setoran tunai ke pemilik"
+              jumlah={rincian.setoranPemilikTunai.length}
+            >
+              {rincian.setoranPemilikTunai.map((s) => (
+                <BarisRincian
+                  key={s.id}
+                  waktu={s.waktu}
+                  utama={s.namaPemilik}
+                  nominal={`−${rupiah(s.jumlah)}`}
+                />
+              ))}
+            </Lipatan>
+          </div>
+        )}
       </Card>
+
+      {/* Uang non-tunai tidak menuntut apa pun dari kasir, tapi tetap
+          ditampilkan supaya penutupan menggambarkan seluruh hari — bukan hanya
+          isi laci. Tanpa ini, hari dengan banyak QRIS terlihat sepi. */}
+      {rincian.rentalNonTunai.length > 0 && (
+        <Card>
+          <CardHeader
+            judul="Masuk tanpa uang tunai"
+            keterangan="Tidak perlu Anda serahkan — hanya supaya hari ini terlihat utuh"
+          />
+          <DaftarData>
+            <BarisData label={`QRIS & transfer · ${rincian.rentalNonTunai.length} transaksi`} tebal>
+              {rupiah(nonTunai)}
+            </BarisData>
+          </DaftarData>
+          <div className="border-t border-line">
+            <Lipatan judul="Lihat transaksinya" jumlah={rincian.rentalNonTunai.length}>
+              {rincian.rentalNonTunai.map((r) => (
+                <BarisRincian
+                  key={r.id}
+                  waktu={r.waktu}
+                  utama={r.kodeSepeda}
+                  tambahan={`${r.namaPenyewa} · ${r.metode ?? "—"}`}
+                  nominal={rupiah(r.jumlah)}
+                />
+              ))}
+            </Lipatan>
+          </div>
+        </Card>
+      )}
 
       {punyaHariIni ? (
         <Card>
