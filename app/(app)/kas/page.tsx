@@ -19,7 +19,12 @@ import {
 import { Bagian, PageHeader } from "@/components/ui/page-header";
 import { StatUtama } from "@/components/ui/stat";
 import { Ikon } from "@/components/ui/icons";
-import { FormTerimaSetoran, FormTutupKas } from "@/components/kas/form-kas";
+import {
+  FormHapusPengeluaran,
+  FormPengeluaranLaci,
+  FormTerimaSetoran,
+  FormTutupKas,
+} from "@/components/kas/form-kas";
 import { rupiah } from "@/lib/format";
 import {
   formatJamWib,
@@ -37,11 +42,13 @@ function BarisRincian({
   utama,
   tambahan,
   nominal,
+  aksi,
 }: {
   waktu: Date;
   utama: string;
   tambahan?: string;
   nominal: ReactNode;
+  aksi?: ReactNode;
 }) {
   return (
     <li className="flex items-baseline justify-between gap-3 px-4 py-2">
@@ -52,7 +59,10 @@ function BarisRincian({
         </p>
         {tambahan && <p className="truncate text-xs text-ink-muted">{tambahan}</p>}
       </div>
-      <p className="shrink-0 text-sm font-medium tabular-nums text-ink">{nominal}</p>
+      <div className="flex shrink-0 items-center gap-2">
+        <p className="text-sm font-medium tabular-nums text-ink">{nominal}</p>
+        {aksi}
+      </div>
     </li>
   );
 }
@@ -209,6 +219,9 @@ export default async function HalamanKas() {
                   waktu={p.waktu}
                   utama={p.keterangan}
                   nominal={`−${rupiah(p.jumlah)}`}
+                  // Tombol hapus hanya selama kas belum ditutup. Sesudah itu
+                  // angkanya sudah dibekukan dan disepakati dua pihak.
+                  aksi={!punyaHariIni && <FormHapusPengeluaran id={p.id} />}
                 />
               ))}
             </Lipatan>
@@ -257,6 +270,22 @@ export default async function HalamanKas() {
               ))}
             </Lipatan>
           </div>
+        </Card>
+      )}
+
+      {/* Dicatat di sini, bukan di menu Pengeluaran — menu itu memuat gaji dan
+          seluruh pengeluaran usaha, dan tetap tertutup bagi kasir. Yang dibuka
+          hanya uang dari lacinya sendiri. Tanpa jalan ini, ban yang dibeli
+          kasir selalu muncul sebagai selisih yang tidak bisa dijelaskan. */}
+      {!punyaHariIni && (
+        <Card>
+          <CardHeader
+            judul="Ambil uang dari laci"
+            keterangan="Catat begitu uangnya keluar, selagi masih ingat — langsung dikurangkan dari setoran Anda"
+          />
+          <CardBody>
+            <FormPengeluaranLaci tanggal={kunciTanggalWib(sekarang)} />
+          </CardBody>
         </Card>
       )}
 

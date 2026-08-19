@@ -2,9 +2,15 @@
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { tutupKas, terimaSetoranKas, type StatusAksi } from "@/lib/actions/kas";
+import {
+  catatPengeluaranDariLaci,
+  hapusPengeluaranDariLaci,
+  terimaSetoranKas,
+  tutupKas,
+  type StatusAksi,
+} from "@/lib/actions/kas";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Textarea } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { PesanBerhasil, PesanGalat } from "@/components/ui/card";
 import { rupiah } from "@/lib/format";
 
@@ -110,6 +116,115 @@ function TombolTerima() {
     <Button type="submit" ukuran="sm" variasi="sukses" disabled={pending}>
       {pending ? "Menyimpan…" : "Tandai diterima"}
     </Button>
+  );
+}
+
+const KATEGORI = [
+  { nilai: "sparepart", label: "Sparepart — ban, rantai, rem" },
+  { nilai: "operasional", label: "Operasional — bensin, parkir, makan" },
+  { nilai: "maintenance", label: "Servis sepeda" },
+  { nilai: "listrik", label: "Listrik" },
+  { nilai: "pdam", label: "PDAM" },
+  { nilai: "gaji", label: "Gaji" },
+  { nilai: "lainnya", label: "Lain-lain" },
+] as const;
+
+function TombolCatat() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" penuh disabled={pending}>
+      {pending ? "Menyimpan…" : "Catat pengeluaran"}
+    </Button>
+  );
+}
+
+/**
+ * Mencatat uang yang diambil dari laci.
+ *
+ * Metode pembayaran tidak ditanyakan. Uang yang diambil dari laci menurut
+ * definisinya tunai, dan menanyakannya hanya menambah satu pilihan yang
+ * jawabannya sudah pasti — sekaligus membuka jalan salah pilih yang membuat
+ * setorannya tidak berkurang.
+ */
+export function FormPengeluaranLaci({ tanggal }: { tanggal: string }) {
+  const [status, aksi] = useActionState(catatPengeluaranDariLaci, AWAL);
+
+  return (
+    <form action={aksi} className="space-y-4">
+      <input type="hidden" name="tanggal" value={tanggal} />
+
+      {status.galat && <PesanGalat>{status.galat}</PesanGalat>}
+      {status.berhasil && <PesanBerhasil>{status.berhasil}</PesanBerhasil>}
+
+      <Field
+        id="keterangan-laci"
+        label="Untuk apa"
+        galat={status.galatField?.keterangan}
+        wajib
+      >
+        {(props) => (
+          <Input {...props} name="keterangan" placeholder="Ban dalam MTB-004" required />
+        )}
+      </Field>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="jumlah-laci" label="Jumlah (Rp)" galat={status.galatField?.jumlah} wajib>
+          {(props) => (
+            <Input
+              {...props}
+              name="jumlah"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              step={1000}
+              placeholder="25000"
+              required
+            />
+          )}
+        </Field>
+
+        <Field id="kategori-laci" label="Kategori" galat={status.galatField?.kategori} wajib>
+          {(props) => (
+            <Select {...props} name="kategori" defaultValue="operasional" required>
+              {KATEGORI.map((k) => (
+                <option key={k.nilai} value={k.nilai}>
+                  {k.label}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+      </div>
+
+      <TombolCatat />
+    </form>
+  );
+}
+
+function TombolHapus() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" ukuran="sm" variasi="halus" disabled={pending}>
+      {pending ? "…" : "Hapus"}
+    </Button>
+  );
+}
+
+/** Membatalkan pengeluaran yang salah catat, selama kas belum ditutup. */
+export function FormHapusPengeluaran({ id }: { id: number }) {
+  const [status, aksi] = useActionState(hapusPengeluaranDariLaci, AWAL);
+
+  return (
+    <form action={aksi}>
+      <input type="hidden" name="id" value={id} />
+      {status.galat ? (
+        <p role="alert" className="text-xs text-danger">
+          {status.galat}
+        </p>
+      ) : (
+        <TombolHapus />
+      )}
+    </form>
   );
 }
 
