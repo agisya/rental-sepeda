@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, asc, eq, gte, lt, sql, desc } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { bikes, owners, rentals } from "@/lib/db/schema";
 import { rentangBulanWib } from "@/lib/waktu";
@@ -41,10 +41,14 @@ export async function pilihanPemilik() {
       id: owners.id,
       nama: owners.nama,
       persentaseBagiHasil: owners.persentaseBagiHasil,
+      milikSendiri: owners.milikSendiri,
     })
     .from(owners)
     .where(eq(owners.aktif, true))
-    .orderBy(asc(owners.nama));
+    // Milik sendiri paling atas. Di rental yang punya sepeda sendiri, itulah
+    // pilihan yang paling sering dipakai saat menambah sepeda — menaruhnya di
+    // tengah daftar nama pemilik membuatnya harus dicari setiap kali.
+    .orderBy(desc(owners.milikSendiri), asc(owners.nama));
 }
 
 export async function pemilikById(id: number) {

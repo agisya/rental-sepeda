@@ -22,7 +22,10 @@ const PENGGUNA = [
 const PEMILIK = [
   { nama: "Budi Santoso", noHp: "081234567890", persentaseBagiHasil: 60, alamat: "Tarogong Kidul, Garut" },
   { nama: "Andi Permana", noHp: "081298765432", persentaseBagiHasil: 55, alamat: "Cipanas, Garut" },
-  { nama: "Rental Sepeda Garut", noHp: "082100001111", persentaseBagiHasil: 100, alamat: "Jl. Cimanuk, Garut" },
+  // 0 persen, bukan 100. Ini rental itu sendiri: seluruh omzetnya masuk ke
+  // bagian rental dan ikut terhitung sebagai laba. Angka 100 justru berarti
+  // sebaliknya — seluruhnya jadi hak pihak lain dan laba terbaca nol.
+  { nama: "Rental Sepeda Garut", noHp: "082100001111", persentaseBagiHasil: 0, milikSendiri: true, alamat: "Jl. Cimanuk, Garut" },
 ];
 
 const SEPEDA = [

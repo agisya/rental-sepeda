@@ -34,8 +34,14 @@ export default async function HalamanLaporanPemilik(
     daftarPembayaranPemilik(undefined, 50),
   ]);
 
-  const totalHak = saldo.reduce((n, s) => n + s.totalHak, 0);
-  const totalDibayar = saldo.reduce((n, s) => n + s.sudahDibayar, 0);
+  // Baris "milik sendiri" dikeluarkan dari ketiga total. Haknya memang sudah nol
+  // sehingga angkanya tidak berubah, tapi memasukkannya membuat halaman ini
+  // seolah menghitung utang kepada diri sendiri — dan begitu suatu saat
+  // persentasenya salah terisi, totalnya langsung ikut salah tanpa peringatan.
+  const titipan = saldo.filter((s) => !s.milikSendiri);
+
+  const totalHak = titipan.reduce((n, s) => n + s.totalHak, 0);
+  const totalDibayar = titipan.reduce((n, s) => n + s.sudahDibayar, 0);
   const totalSisa = totalHak - totalDibayar;
   const bolehCatat = pengguna.peran !== "kasir";
 
@@ -106,9 +112,17 @@ export default async function HalamanLaporanPemilik(
                       >
                         {s.nama}
                       </Link>
-                      <span className="ml-1.5 text-xs text-ink-muted">
-                        ({s.persentaseBagiHasil}%)
-                      </span>
+                      {/* Lencana, bukan "0%". Persentase nol menuntut orang
+                          menerjemahkannya sendiri; lencana menyebut artinya. */}
+                      {s.milikSendiri ? (
+                        <span className="ml-1.5 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand-soft-ink">
+                          Milik sendiri
+                        </span>
+                      ) : (
+                        <span className="ml-1.5 text-xs text-ink-muted">
+                          ({s.persentaseBagiHasil}%)
+                        </span>
+                      )}
                     </th>
                     <td className="px-2 py-3 text-right tabular-nums text-ink-muted">
                       {rupiah(s.totalHak)}
@@ -131,7 +145,7 @@ export default async function HalamanLaporanPemilik(
         )}
       </Card>
 
-      {bolehCatat && saldo.length > 0 && (
+      {bolehCatat && titipan.length > 0 && (
         <Card>
           <CardHeader
             judul="Catat setoran ke pemilik"
@@ -139,7 +153,7 @@ export default async function HalamanLaporanPemilik(
           />
           <CardBody>
             <FormPembayaranPemilik
-              pemilik={saldo.map((s) => ({ id: s.ownerId, nama: s.nama, sisa: s.sisa }))}
+              pemilik={titipan.map((s) => ({ id: s.ownerId, nama: s.nama, sisa: s.sisa }))}
               tanggalHariIni={kunciTanggalWib(new Date())}
               pemilikAwal={pemilikTerpilih}
             />

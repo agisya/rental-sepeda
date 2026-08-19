@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { owners } from "@/lib/db/schema";
+import { pelanggaranUnik } from "@/lib/db/galat";
 import { wajibPengguna } from "@/lib/auth/dal";
 import { pemilikPunyaSepeda } from "@/lib/queries/owners";
 import { normalkanNoHp } from "@/lib/format";
@@ -29,6 +30,7 @@ const skema = z.object({
     .max(100, "Persentase maksimal 100"),
   catatan: z.string().trim().max(500).optional(),
   aktif: z.coerce.boolean().optional(),
+  milikSendiri: z.coerce.boolean().optional(),
 });
 
 function bacaForm(formData: FormData) {
@@ -45,6 +47,9 @@ function bacaForm(formData: FormData) {
     persentaseBagiHasil: formData.get("persentaseBagiHasil"),
     catatan: teks("catatan"),
     aktif: formData.get("aktif") === "on" || formData.get("aktif") === "true",
+    milikSendiri:
+      formData.get("milikSendiri") === "on" ||
+      formData.get("milikSendiri") === "true",
   };
 }
 
@@ -72,23 +77,44 @@ export async function simpanPemilik(
     return { galatField: z.flattenError(hasil.error).fieldErrors };
   }
 
+  const milikSendiri = hasil.data.milikSendiri ?? false;
+
   const data = {
     nama: hasil.data.nama,
     noHp: normalkanNoHp(hasil.data.noHp),
     alamat: hasil.data.alamat ?? null,
-    persentaseBagiHasil: hasil.data.persentaseBagiHasil,
+    // Milik sendiri wajib 0 persen, dan dipaksa di sini bukan hanya disarankan
+    // di formulir. Persentase apa pun selain nol berarti sebagian omzet sepeda
+    // sendiri dicatat sebagai hak pihak lain — utang kepada diri sendiri yang
+    // tidak pernah bisa dilunasi secara masuk akal, dan laba yang terbaca
+    // lebih kecil dari yang sebenarnya.
+    persentaseBagiHasil: milikSendiri ? 0 : hasil.data.persentaseBagiHasil,
+    milikSendiri,
     catatan: hasil.data.catatan ?? null,
     aktif: hasil.data.aktif ?? true,
   };
 
-  if (id) {
-    await db.update(owners).set(data).where(eq(owners.id, id));
-  } else {
-    await db.insert(owners).values(data);
+  try {
+    if (id) {
+      await db.update(owners).set(data).where(eq(owners.id, id));
+    } else {
+      await db.insert(owners).values(data);
+    }
+  } catch (galat) {
+    // Indeks unik parsial yang memutuskan, bukan pemeriksaan terpisah sebelumnya.
+    if (pelanggaranUnik(galat)) {
+      return {
+        galat:
+          "Sudah ada pemilik yang ditandai milik sendiri. Lepas dulu tandanya di " +
+          "pemilik itu sebelum memindahkannya ke sini.",
+      };
+    }
+    throw galat;
   }
 
   revalidatePath("/pemilik");
   revalidatePath("/sepeda");
+  revalidatePath("/laporan/pemilik");
   redirect("/pemilik");
 }
 

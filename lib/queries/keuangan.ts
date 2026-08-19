@@ -131,6 +131,13 @@ export type SaldoPemilik = {
   nama: string;
   noHp: string;
   persentaseBagiHasil: number;
+  /**
+   * Benar kalau baris ini mewakili rental itu sendiri, bukan pihak yang
+   * menitipkan sepeda. Haknya selalu nol, jadi ia tidak pernah menjadi utang —
+   * tapi tetap dibawa supaya tampilan bisa memisahkannya dari total yang harus
+   * disetorkan, bukan menyembunyikannya begitu saja.
+   */
+  milikSendiri: boolean;
   /** Total bagian pemilik dari seluruh rental yang pernah selesai. */
   totalHak: number;
   /** Total yang sudah benar-benar disetorkan. */
@@ -158,9 +165,12 @@ export async function saldoSemuaPemilik(): Promise<SaldoPemilik[]> {
         nama: owners.nama,
         noHp: owners.noHp,
         persentaseBagiHasil: owners.persentaseBagiHasil,
+        milikSendiri: owners.milikSendiri,
       })
       .from(owners)
-      .orderBy(owners.nama),
+      // Milik sendiri didahulukan: itulah baris yang paling sering dilihat, dan
+      // menaruhnya di antara nama-nama pemilik lain membuatnya mudah terlewat.
+      .orderBy(desc(owners.milikSendiri), owners.nama),
 
     db
       .select({

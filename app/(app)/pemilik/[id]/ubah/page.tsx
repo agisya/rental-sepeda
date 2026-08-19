@@ -38,6 +38,11 @@ export default async function HalamanUbahPemilik(
               noHp: pemilik.noHp,
               alamat: pemilik.alamat,
               persentaseBagiHasil: pemilik.persentaseBagiHasil,
+              // Wajib ikut. Tanpa ini, membuka halaman ubah lalu menyimpan akan
+              // melepas tanda "milik sendiri" diam-diam dan mengembalikannya
+              // jadi titipan 60% — seluruh omzet sepeda sendiri berpindah jadi
+              // hak pihak lain tanpa ada yang menyadarinya.
+              milikSendiri: pemilik.milikSendiri,
               catatan: pemilik.catatan,
               aktif: pemilik.aktif,
             }}

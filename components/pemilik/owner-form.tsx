@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { simpanPemilik, type StatusAksi } from "@/lib/actions/owners";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -15,6 +15,7 @@ type NilaiAwal = {
   noHp?: string;
   alamat?: string | null;
   persentaseBagiHasil?: number;
+  milikSendiri?: boolean;
   catatan?: string | null;
   aktif?: boolean;
 };
@@ -30,6 +31,7 @@ function TombolSimpan({ ubah }: { ubah: boolean }) {
 
 export function OwnerForm({ awal }: { awal?: NilaiAwal }) {
   const [status, aksi] = useActionState(simpanPemilik, AWAL);
+  const [milikSendiri, setMilikSendiri] = useState(awal?.milikSendiri ?? false);
   const ubah = Boolean(awal?.id);
 
   return (
@@ -62,26 +64,53 @@ export function OwnerForm({ awal }: { awal?: NilaiAwal }) {
         {(props) => <Input {...props} name="alamat" defaultValue={awal?.alamat ?? ""} />}
       </Field>
 
-      <Field
-        id="persentaseBagiHasil"
-        label="Bagian pemilik (%)"
-        petunjuk="Sisanya menjadi bagian Rental Sepeda Garut. Contoh: 60 berarti pemilik 60%, rental 40%."
-        galat={status.galatField?.persentaseBagiHasil}
-        wajib
-      >
-        {(props) => (
-          <Input
-            {...props}
-            name="persentaseBagiHasil"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={100}
-            defaultValue={awal?.persentaseBagiHasil ?? 60}
-            required
-          />
-        )}
-      </Field>
+      {/* Penanda milik sendiri ditaruh SEBELUM kolom persentase, karena ia
+          menentukan apakah kolom itu masih ada gunanya. Menaruhnya di bawah
+          membuat orang mengisi persentase dulu lalu bingung kenapa hilang. */}
+      <label className="flex items-start gap-2.5 rounded-control border border-line bg-surface-2 px-3.5 py-3 text-sm text-ink">
+        <input
+          type="checkbox"
+          name="milikSendiri"
+          checked={milikSendiri}
+          onChange={(e) => setMilikSendiri(e.target.checked)}
+          className="mt-0.5 size-4 accent-[var(--brand)]"
+        />
+        <span>
+          Ini sepeda milik rental sendiri
+          <span className="mt-0.5 block text-xs text-ink-muted">
+            Seluruh omzetnya menjadi pendapatan rental, tanpa bagi hasil. Hanya boleh
+            ada satu.
+          </span>
+        </span>
+      </label>
+
+      {milikSendiri ? (
+        <p className="rounded-control border border-brand/25 bg-brand-soft px-3.5 py-2.5 text-sm text-brand-soft-ink">
+          Bagian pemilik otomatis 0% — tidak ada yang perlu disetorkan, dan seluruh
+          omzetnya masuk ke laba rental.
+        </p>
+      ) : (
+        <Field
+          id="persentaseBagiHasil"
+          label="Bagian pemilik (%)"
+          petunjuk="Sisanya menjadi bagian Rental Sepeda Garut. Contoh: 60 berarti pemilik 60%, rental 40%."
+          galat={status.galatField?.persentaseBagiHasil}
+          wajib
+        >
+          {(props) => (
+            <Input
+              {...props}
+              name="persentaseBagiHasil"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={100}
+              defaultValue={awal?.persentaseBagiHasil ?? 60}
+              required
+            />
+          )}
+        </Field>
+      )}
 
       <Field id="catatan" label="Catatan" galat={status.galatField?.catatan}>
         {(props) => (

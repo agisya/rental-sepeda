@@ -88,20 +88,50 @@ export const users = pgTable("users", {
     .defaultNow(),
 });
 
-/** Pemilik sepeda titipan. Persentase bagi hasil diatur per pemilik. */
-export const owners = pgTable("owners", {
-  id: serial("id").primaryKey(),
-  nama: text("nama").notNull(),
-  noHp: text("no_hp").notNull(),
-  alamat: text("alamat"),
-  /** Bagian pemilik dalam persen bulat, mis. 60 berarti pemilik 60% / rental 40%. */
-  persentaseBagiHasil: integer("persentase_bagi_hasil").notNull().default(60),
-  catatan: text("catatan"),
-  aktif: boolean("aktif").notNull().default(true),
-  dibuatPada: timestamp("dibuat_pada", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+/**
+ * Pemilik sepeda. Umumnya pihak luar yang menitipkan sepedanya, tapi satu di
+ * antaranya mewakili rental itu sendiri untuk sepeda milik sendiri.
+ */
+export const owners = pgTable(
+  "owners",
+  {
+    id: serial("id").primaryKey(),
+    nama: text("nama").notNull(),
+    noHp: text("no_hp").notNull(),
+    alamat: text("alamat"),
+    /** Bagian pemilik dalam persen bulat, mis. 60 berarti pemilik 60% / rental 40%. */
+    persentaseBagiHasil: integer("persentase_bagi_hasil").notNull().default(60),
+
+    /**
+     * Menandai bahwa "pemilik" ini adalah rental itu sendiri.
+     *
+     * Sepeda milik sendiri tetap butuh baris pemilik supaya seluruh laporan dan
+     * kolom snapshot bekerja tanpa perubahan. Yang berbeda hanya artinya:
+     * persentasenya wajib 0, sehingga seluruh uangnya masuk ke bagian rental dan
+     * ikut terhitung sebagai laba — bukan menumpuk sebagai utang kepada diri
+     * sendiri di Laporan Pemilik.
+     *
+     * Sebelum kolom ini ada, sepeda milik sendiri dititipkan ke pemilik palsu
+     * berpersentase 100, yang artinya justru terbalik: seluruh omzetnya dihitung
+     * sebagai hak pihak lain dan sepeda milik sendiri menyumbang nol ke laba.
+     */
+    milikSendiri: boolean("milik_sendiri").notNull().default(false),
+
+    catatan: text("catatan"),
+    aktif: boolean("aktif").notNull().default(true),
+    dibuatPada: timestamp("dibuat_pada", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // Hanya boleh ada satu. Dua baris "milik sendiri" akan membuat omzet sepeda
+    // sendiri terpecah dua tanpa alasan, dan tidak ada cara memilih mana yang
+    // benar. Dijaga database, bukan hanya formulirnya.
+    uniqueIndex("owners_satu_milik_sendiri")
+      .on(t.milikSendiri)
+      .where(sql`${t.milikSendiri} = true`),
+  ],
+);
 
 export const bikes = pgTable(
   "bikes",

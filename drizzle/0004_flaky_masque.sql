@@ -1,0 +1,2 @@
+ALTER TABLE "owners" ADD COLUMN "milik_sendiri" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "owners_satu_milik_sendiri" ON "owners" USING btree ("milik_sendiri") WHERE "owners"."milik_sendiri" = true;

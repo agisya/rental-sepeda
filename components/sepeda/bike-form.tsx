@@ -9,7 +9,12 @@ import { PesanGalat } from "@/components/ui/card";
 
 const AWAL: StatusAksi = {};
 
-type PilihanPemilik = { id: number; nama: string; persentaseBagiHasil: number };
+type PilihanPemilik = {
+  id: number;
+  nama: string;
+  persentaseBagiHasil: number;
+  milikSendiri: boolean;
+};
 
 type NilaiAwal = {
   id?: number;
@@ -153,9 +158,14 @@ export function BikeForm({
             <option value="" disabled>
               Pilih pemilik
             </option>
+            {/* Sepeda milik sendiri ditulis apa adanya, bukan sebagai "0%".
+                Persentase nol menuntut orang menerjemahkannya sendiri; kalimat
+                ini menyebut langsung apa artinya. */}
             {pemilik.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.nama} ({p.persentaseBagiHasil}%)
+                {p.milikSendiri
+                  ? `Milik sendiri — ${p.nama} (tanpa bagi hasil)`
+                  : `${p.nama} (bagi hasil ${p.persentaseBagiHasil}%)`}
               </option>
             ))}
           </Select>
