@@ -7,6 +7,8 @@ import { ButtonLink } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { Ikon } from "@/components/ui/icons";
 import { BookingForm } from "@/components/booking/booking-form";
+import { ScannerInput } from "@/components/scan/scanner-input";
+import { normalkanKode } from "@/lib/format";
 import { awalHariWib, kunciTanggalWib } from "@/lib/waktu";
 
 export const metadata: Metadata = { title: "Booking Baru" };
@@ -37,8 +39,25 @@ export default async function HalamanBookingBaru(props: PageProps<"/booking/baru
   });
 
   const hariIni = kunciTanggalWib(sekarang);
-  const sepedaAwal =
-    typeof params.sepeda === "string" ? Number(params.sepeda) : undefined;
+  /*
+    Sepedanya ditentukan lewat barcode, bukan dipilih dari daftar.
+
+    Menerima dua bentuk: ?kode= dari hasil pemindaian, dan ?sepeda= dari tautan
+    di halaman scan. Keduanya menunjuk sepeda yang sama; yang berbeda hanya dari
+    mana petugas datang.
+  */
+  const kodeDicari =
+    typeof params.kode === "string" ? normalkanKode(params.kode) : undefined;
+  const idDicari = typeof params.sepeda === "string" ? Number(params.sepeda) : undefined;
+
+  const terpilih =
+    bisaDipesan.find((s) => (kodeDicari ? s.kode === kodeDicari : false)) ??
+    bisaDipesan.find((s) => Number.isInteger(idDicari) && s.id === idDicari);
+
+  // Kode yang dipindai tapi tidak ada di daftar yang bisa dipesan: entah
+  // sepedanya tidak terdaftar, entah sedang servis atau nonaktif. Keduanya perlu
+  // dijelaskan, bukan dibiarkan tampil sebagai formulir kosong.
+  const kodeTidakCocok = Boolean((kodeDicari || idDicari) && !terpilih);
 
   return (
     <div className="space-y-4">
@@ -56,7 +75,7 @@ export default async function HalamanBookingBaru(props: PageProps<"/booking/baru
             aksi={<ButtonLink href="/sepeda">Buka Data Sepeda</ButtonLink>}
           />
         </Card>
-      ) : (
+      ) : terpilih ? (
         <Card>
           <CardHeader
             judul="Data booking"
@@ -64,21 +83,41 @@ export default async function HalamanBookingBaru(props: PageProps<"/booking/baru
           />
           <CardBody>
             <BookingForm
-              sepeda={bisaDipesan.map((s) => ({
-                id: s.id,
-                kode: s.kode,
-                nama: s.nama,
-                tarifPerJam: s.tarifPerJam,
-              }))}
-              jamTerpakai={jamDipesan}
+              sepeda={{
+                id: terpilih.id,
+                kode: terpilih.kode,
+                nama: terpilih.nama,
+                tarifPerJam: terpilih.tarifPerJam,
+              }}
+              jamTerpakai={jamDipesan
+                .filter((j) => j.bikeId === terpilih.id)
+                .map((j) => ({ tanggal: j.tanggal, jam: j.jam }))}
               tanggalMinimal={hariIni}
               tanggalAwal={hariIni}
-              sepedaAwal={
-                Number.isInteger(sepedaAwal) && sepedaAwal! > 0 ? sepedaAwal : undefined
-              }
             />
           </CardBody>
         </Card>
+      ) : (
+        <>
+          {kodeTidakCocok && (
+            <Card className="border-warn/40 bg-warn-soft/40">
+              <KeadaanKosong
+                ikon={Ikon.peringatan}
+                judul="Sepeda itu tidak bisa dipesan"
+                keterangan="Kodenya tidak terdaftar, atau sepedanya sedang diservis atau ditandai tidak aktif. Coba scan sepeda lain."
+              />
+            </Card>
+          )}
+
+          {/* Pemindai yang sama dengan halaman scan, hanya tujuannya berbeda.
+              Sepedanya sudah di tangan petugas saat memesan, jadi mencarinya
+              lagi di daftar panjang hanya membuka peluang salah pilih. */}
+          <ScannerInput
+            tujuan="/booking/baru"
+            judul="Scan sepeda yang mau dipesan"
+            keterangan="Tembak barcode di sepedanya, atau ketik kodenya lalu tekan Enter."
+          />
+        </>
       )}
     </div>
   );

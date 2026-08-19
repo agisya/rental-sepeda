@@ -15,7 +15,19 @@ import { normalkanKode } from "@/lib/format";
  *  2. Kamera HP — dibuka lewat tombol, memuat pustaka pemindai sesuai kebutuhan.
  *  3. Ketik manual — cadangan kalau stiker barcode rusak atau kotor.
  */
-export function ScannerInput({ kodeAwal = "" }: { kodeAwal?: string }) {
+export function ScannerInput({
+  kodeAwal = "",
+  tujuan = "/scan",
+  judul = "Scan sepeda",
+  keterangan = "Tembak barcode dengan scanner, atau ketik kodenya lalu tekan Enter.",
+}: {
+  kodeAwal?: string;
+  /** Halaman yang dituju setelah kodenya didapat. Booking memakai pemindai yang
+   *  sama supaya petugas tidak perlu belajar dua cara memasukkan kode sepeda. */
+  tujuan?: string;
+  judul?: string;
+  keterangan?: string;
+}) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [kode, setKode] = useState(kodeAwal);
@@ -25,9 +37,9 @@ export function ScannerInput({ kodeAwal = "" }: { kodeAwal?: string }) {
     (nilai: string) => {
       const bersih = normalkanKode(nilai);
       if (!bersih) return;
-      router.push(`/scan?kode=${encodeURIComponent(bersih)}`);
+      router.push(`${tujuan}?kode=${encodeURIComponent(bersih)}`);
     },
-    [router],
+    [router, tujuan],
   );
 
   // Kembalikan fokus ke kolom ini setiap kali fokus lepas ke tempat kosong,
@@ -66,10 +78,10 @@ export function ScannerInput({ kodeAwal = "" }: { kodeAwal?: string }) {
     <div className="space-y-3 rounded-card border border-line bg-surface p-4">
       <div>
         <h2 className="text-[0.9375rem] font-semibold tracking-tight text-ink">
-          Scan sepeda
+          {judul}
         </h2>
         <p className="mt-0.5 text-xs text-ink-muted">
-          Tembak barcode dengan scanner, atau ketik kodenya lalu tekan Enter.
+          {keterangan}
         </p>
       </div>
 

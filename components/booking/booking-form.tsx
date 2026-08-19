@@ -33,18 +33,22 @@ export function BookingForm({
   sepeda,
   tanggalMinimal,
   tanggalAwal,
-  sepedaAwal,
   jamTerpakai,
 }: {
-  sepeda: PilihanSepeda[];
+  /**
+   * Sepeda yang sudah dipastikan lewat scan, bukan daftar untuk dipilih.
+   *
+   * Memilih dari dropdown berarti mencari kode sepeda yang justru sedang
+   * dipegang petugas — pekerjaan tambahan yang satu-satunya hasil mungkinnya
+   * adalah salah pilih.
+   */
+  sepeda: PilihanSepeda;
   tanggalMinimal: string;
   tanggalAwal: string;
-  sepedaAwal?: number;
-  /** Jam WIB yang sudah dipesan, per sepeda per tanggal. */
-  jamTerpakai: { bikeId: number; tanggal: string; jam: number }[];
+  /** Jam WIB yang sudah dipesan pada sepeda ini. */
+  jamTerpakai: { tanggal: string; jam: number }[];
 }) {
   const [status, aksi] = useActionState(buatBooking, AWAL);
-  const [bikeId, setBikeId] = useState(sepedaAwal ? String(sepedaAwal) : "");
   const [durasi, setDurasi] = useState(2);
   const [tanggal, setTanggal] = useState(tanggalAwal);
   const [jamMulai, setJamMulai] = useState(9);
@@ -56,9 +60,7 @@ export function BookingForm({
     menebak jam lain dan mencoba lagi — sambil penyewa menunggu di telepon.
   */
   const terpakai = new Set(
-    jamTerpakai
-      .filter((t) => String(t.bikeId) === bikeId && t.tanggal === tanggal)
-      .map((t) => t.jam),
+    jamTerpakai.filter((t) => t.tanggal === tanggal).map((t) => t.jam),
   );
 
   /*
@@ -72,33 +74,25 @@ export function BookingForm({
     terpakai.has(j),
   );
 
-  const dipilih = sepeda.find((s) => String(s.id) === bikeId);
-  const perkiraan = dipilih ? dipilih.tarifPerJam * durasi : 0;
+  const perkiraan = sepeda.tarifPerJam * durasi;
 
   return (
     <form action={aksi} className="space-y-4">
       {status.galat && <PesanGalat>{status.galat}</PesanGalat>}
 
-      <Field id="bikeId" label="Sepeda" galat={status.galatField?.bikeId} wajib>
-        {(props) => (
-          <Select
-            {...props}
-            name="bikeId"
-            value={bikeId}
-            onChange={(e) => setBikeId(e.target.value)}
-            required
-          >
-            <option value="" disabled>
-              Pilih sepeda
-            </option>
-            {sepeda.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.kode} — {s.nama} ({rupiah(s.tarifPerJam)}/jam)
-              </option>
-            ))}
-          </Select>
-        )}
-      </Field>
+      {/* Sepedanya ditampilkan, bukan dipilih. Nilainya dikirim lewat kolom
+          tersembunyi karena sudah dipastikan dari barcode yang dipindai. */}
+      <input type="hidden" name="bikeId" value={sepeda.id} />
+
+      <div className="rounded-control border border-line bg-surface-2 px-3.5 py-3">
+        <p className="text-xs text-ink-muted">Sepeda yang dipesan</p>
+        <p className="mt-0.5 text-sm font-semibold text-ink">
+          {sepeda.kode} — {sepeda.nama}
+        </p>
+        <p className="mt-0.5 text-xs text-ink-muted">
+          {rupiah(sepeda.tarifPerJam)}/jam
+        </p>
+      </div>
 
       <Field
         id="namaPenyewa"
@@ -221,13 +215,11 @@ export function BookingForm({
         </p>
       )}
 
-      {dipilih && (
-        <p className="rounded-control bg-surface-2 px-3.5 py-2.5 text-sm text-ink-muted">
-          Perkiraan biaya{" "}
-          <span className="font-semibold text-ink">{rupiah(perkiraan)}</span> untuk{" "}
-          {durasi} jam. Tagihan akhir dihitung dari jam kembali yang sebenarnya.
-        </p>
-      )}
+      <p className="rounded-control bg-surface-2 px-3.5 py-2.5 text-sm text-ink-muted">
+        Perkiraan biaya{" "}
+        <span className="font-semibold text-ink">{rupiah(perkiraan)}</span> untuk{" "}
+        {durasi} jam. Tagihan akhir dihitung dari jam kembali yang sebenarnya.
+      </p>
 
       <div className="flex gap-2">
         <ButtonLink href="/booking" variasi="kedua" ukuran="lg" className="flex-1">
