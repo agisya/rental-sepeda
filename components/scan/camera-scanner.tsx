@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { IScannerControls } from "@zxing/browser";
+// Tipe saja — dihapus saat kompilasi, jadi pustakanya tetap hanya diunduh
+// ketika kamera benar-benar dibuka.
+import type { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
 import { SwitchCamera } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Ikon } from "@/components/ui/icons";
 
 /**
  * Pemindai barcode lewat kamera. Pustaka @zxing/browser diimpor dinamis supaya
@@ -49,8 +52,46 @@ function Pratinjau({
   onGanti: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const pembacaRef = useRef<BrowserMultiFormatReader | null>(null);
   const [galat, setGalat] = useState<string | null>(null);
   const [siap, setSiap] = useState(false);
+  const [gagalAmbil, setGagalAmbil] = useState(false);
+
+  /**
+   * Membaca barcode dari bingkai yang sedang tampil, atas permintaan petugas.
+   *
+   * Pemindaian otomatis tetap berjalan di belakang dan biasanya lebih dulu
+   * menemukan. Tombol ini ada karena pemindaian yang belum berhasil terlihat
+   * persis seperti aplikasi yang menggantung: tidak ada yang bergerak, tidak ada
+   * yang bisa ditekan. Menekan sesuatu dan mendapat jawaban — walau jawabannya
+   * "belum terbaca" — jauh lebih baik daripada menunggu tanpa tanda.
+   */
+  function ambilSekarang() {
+    const video = videoRef.current;
+    const pembaca = pembacaRef.current;
+
+    // videoWidth masih nol sampai bingkai pertama tiba.
+    if (!video || !pembaca || !video.videoWidth) return;
+
+    setGagalAmbil(false);
+
+    const kanvas = document.createElement("canvas");
+    kanvas.width = video.videoWidth;
+    kanvas.height = video.videoHeight;
+
+    const konteks = kanvas.getContext("2d");
+    if (!konteks) return;
+    konteks.drawImage(video, 0, 0, kanvas.width, kanvas.height);
+
+    try {
+      const hasil = pembaca.decodeFromCanvas(kanvas);
+      onHasil(hasil.getText());
+    } catch {
+      // decodeFromCanvas melempar kalau tidak menemukan apa pun. Itu keadaan
+      // yang lumrah, bukan kerusakan, jadi tidak dicatat sebagai galat.
+      setGagalAmbil(true);
+    }
+  }
 
   useEffect(() => {
     let controls: IScannerControls | undefined;
@@ -113,6 +154,10 @@ function Pratinjau({
         video.srcObject = stream;
 
         const pembaca = new BrowserMultiFormatReader();
+        // Disimpan supaya tombol ambil bisa memakai pembaca yang sama, bukan
+        // membuat instance baru setiap kali ditekan.
+        pembacaRef.current = pembaca;
+
         controls = await pembaca.decodeFromVideoElement(video, (hasil) => {
           if (!hasil) return;
           lepaskan();
@@ -189,11 +234,23 @@ function Pratinjau({
         <p role="alert" className="text-sm text-danger">
           {galat}
         </p>
+      ) : gagalAmbil ? (
+        <p role="status" className="text-sm text-warn">
+          Barcode belum terbaca. Dekatkan kamera sampai stikernya memenuhi kotak,
+          pastikan cukup terang, lalu ambil lagi.
+        </p>
       ) : (
         <p className="text-sm text-ink-muted">
-          Arahkan kamera ke barcode pada sepeda. Memakai kamera{" "}
+          Arahkan ke barcode dan tunggu — biasanya terbaca sendiri. Kalau tidak,
+          tekan Ambil barcode. Memakai kamera{" "}
           {arah === "belakang" ? "belakang" : "depan"}.
         </p>
+      )}
+
+      {siap && (
+        <Button penuh ukuran="lg" ikon={Ikon.scan} onClick={ambilSekarang}>
+          Ambil barcode
+        </Button>
       )}
     </>
   );
