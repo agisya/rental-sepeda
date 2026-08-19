@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { mulaiRental, type StatusAksi } from "@/lib/actions/rental";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,24 @@ export function StartForm({
   tarifPerJam: number;
 }) {
   const [status, aksi] = useActionState(mulaiRental, AWAL);
+  const [estimasi, setEstimasi] = useState("");
+
+  /*
+    Perkiraan biaya dari durasi yang diketik.
+
+    Sebelumnya petugas hanya melihat tarif per jam, jadi saat penyewa bertanya
+    "kalau 3 jam berapa?" jawabannya harus dihitung di kepala di depan orangnya.
+    Angka ini menjawab itu.
+
+    Sengaja disebut perkiraan, bukan tagihan: yang menentukan tetap waktu sepeda
+    benar-benar kembali, dan menyebutnya "total" akan membuat penyewa merasa
+    sudah disepakati.
+  */
+  const jam = Number(estimasi);
+  const perkiraan =
+    estimasi.trim() === "" || !Number.isFinite(jam) || jam <= 0
+      ? null
+      : Math.round(jam) * tarifPerJam;
 
   return (
     <form action={aksi} className="space-y-4">
@@ -89,6 +107,9 @@ export function StartForm({
               inputMode="numeric"
               min={1}
               max={72}
+              step={1}
+              value={estimasi}
+              onChange={(e) => setEstimasi(e.target.value)}
               placeholder="2"
             />
           )}
@@ -126,10 +147,25 @@ export function StartForm({
         )}
       </Field>
 
-      <p className="rounded-control bg-surface-2 px-3.5 py-2.5 text-sm text-ink-muted">
-        Tarif <span className="font-medium text-ink">{rupiah(tarifPerJam)}</span>/jam.
-        Durasi dibulatkan ke atas per jam, minimum 1 jam.
-      </p>
+      {perkiraan === null ? (
+        <p className="rounded-control bg-surface-2 px-3.5 py-2.5 text-sm text-ink-muted">
+          Tarif <span className="font-medium text-ink">{rupiah(tarifPerJam)}</span>/jam.
+          Durasi dibulatkan ke atas per jam, minimum 1 jam.
+        </p>
+      ) : (
+        <div className="rounded-control border border-line bg-surface-2 px-3.5 py-3">
+          <p className="text-xs text-ink-muted">
+            Perkiraan biaya untuk {Math.round(jam)} jam
+          </p>
+          <p className="mt-0.5 text-xl font-semibold tabular-nums text-ink">
+            {rupiah(perkiraan)}
+          </p>
+          <p className="mt-1 text-xs text-ink-muted">
+            {rupiah(tarifPerJam)}/jam · yang ditagih nanti dihitung dari waktu sepeda
+            benar-benar kembali, bukan dari angka ini.
+          </p>
+        </div>
+      )}
 
       <TombolMulai />
     </form>

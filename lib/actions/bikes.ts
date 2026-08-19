@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { bikes } from "@/lib/db/schema";
 import { wajibPengguna } from "@/lib/auth/dal";
 import { kodeSudahDipakai, sepedaPunyaRiwayat } from "@/lib/queries/bikes";
+import { periksaFoto } from "@/lib/foto";
 import { normalkanKode } from "@/lib/format";
 import type { StatusAksi } from "./rental";
 
@@ -106,8 +107,32 @@ export async function simpanSepeda(
       .set({ ...data, status: hasil.data.status })
       .where(eq(bikes.id, id));
   } else {
+    /*
+      Foto ikut disimpan bersama sepedanya, bukan lewat langkah kedua.
+
+      Sebelumnya kolom foto hanya ada di halaman ubah, karena foto disimpan
+      terhadap id sepeda dan id itu baru lahir setelah tersimpan. Akibatnya foto
+      hampir selalu terlupakan: petugas menekan simpan, halaman pindah ke daftar
+      sepeda, dan tidak ada apa pun yang mengingatkan.
+
+      Insert bisa langsung memuat kolom fotonya, jadi langkah keduanya memang
+      tidak pernah diperlukan.
+    */
+    let foto: { fotoData: Buffer; fotoTipe: string; fotoVersi: number } | undefined;
+
+    const berkas = formData.get("foto");
+    if (berkas instanceof File && berkas.size > 0) {
+      const isi = new Uint8Array(await berkas.arrayBuffer());
+      const periksa = periksaFoto(berkas.type, berkas.size, isi);
+      if (!periksa.ok) {
+        return { galatField: { foto: [periksa.pesan] } };
+      }
+      foto = { fotoData: Buffer.from(isi), fotoTipe: periksa.tipe, fotoVersi: 1 };
+    }
+
     await db.insert(bikes).values({
       ...data,
+      ...foto,
       // Sepeda baru tidak boleh langsung berstatus disewa tanpa transaksi.
       status: hasil.data.status === "disewa" ? "tersedia" : hasil.data.status,
     });

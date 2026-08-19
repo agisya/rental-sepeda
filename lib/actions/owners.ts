@@ -10,18 +10,16 @@ import { pelanggaranUnik } from "@/lib/db/galat";
 import { wajibPengguna } from "@/lib/auth/dal";
 import { pemilikPunyaSepeda } from "@/lib/queries/owners";
 import { normalkanNoHp } from "@/lib/format";
+import { namaOrang, noHpKontak } from "@/lib/validasi";
 import type { StatusAksi } from "./rental";
 
 export type { StatusAksi };
 
 const skema = z.object({
-  nama: z.string().trim().min(2, "Nama minimal 2 huruf").max(100),
-  noHp: z
-    .string()
-    .trim()
-    .min(8, "Nomor HP minimal 8 angka")
-    .max(20)
-    .refine((v) => /^[\d+\s-]+$/.test(v), "Nomor HP hanya boleh berisi angka"),
+  nama: namaOrang,
+  // Pemilik sepeda boleh memakai telepon rumah — masih lazim di Garut, dan
+  // memaksa berawalan 08 akan menolak nomor yang benar-benar dipakai.
+  noHp: noHpKontak,
   alamat: z.string().trim().max(200).optional(),
   persentaseBagiHasil: z.coerce
     .number({ error: "Persentase harus berupa angka" })

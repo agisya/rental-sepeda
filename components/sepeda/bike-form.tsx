@@ -48,6 +48,9 @@ export function BikeForm({
   awal?: NilaiAwal;
   sedangDisewa?: boolean;
 }) {
+  // Kolom foto hanya pada sepeda baru. Di halaman ubah sudah ada kartu foto
+  // tersendiri yang bisa menampilkan foto sekarang dan menggantinya; dua kontrol
+  // untuk hal yang sama di satu halaman hanya membingungkan.
   const [status, aksi] = useActionState(simpanSepeda, AWAL);
   const ubah = Boolean(awal?.id);
 
@@ -211,6 +214,29 @@ export function BikeForm({
           />
         )}
       </Field>
+
+      {/* Foto ditaruh paling bawah, tepat sebelum tombol simpan. Kalau tombolnya
+          berada di atas kolom ini, orang menekan simpan lebih dulu dan fotonya
+          terlupakan — dan sesudah tersimpan tidak ada apa pun yang
+          mengingatkan. */}
+      {!ubah && (
+        <Field
+          id="foto"
+          label="Foto sepeda"
+          petunjuk="Boleh dilewati, tapi jauh lebih mudah dikenali kalau ada. JPG, PNG, atau WebP."
+          galat={status.galatField?.foto}
+        >
+          {(props) => (
+            <Input
+              {...props}
+              name="foto"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="py-2"
+            />
+          )}
+        </Field>
+      )}
 
       <div className="flex gap-2">
         <ButtonLink href="/sepeda" variasi="kedua" ukuran="lg" className="flex-1">

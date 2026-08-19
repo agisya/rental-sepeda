@@ -10,6 +10,7 @@ import { pelanggaranUnik } from "@/lib/db/galat";
 import { wajibPengguna } from "@/lib/auth/dal";
 import { hitungBiaya } from "@/lib/rental/pricing";
 import { normalkanNoHp } from "@/lib/format";
+import { namaOrang, noHpWa } from "@/lib/validasi";
 
 export type StatusAksi = {
   galat?: string;
@@ -29,13 +30,10 @@ function segarkanHalamanTerkait() {
 
 const skemaMulai = z.object({
   bikeId: z.coerce.number().int().positive("Sepeda tidak dikenali"),
-  namaPenyewa: z.string().trim().min(2, "Nama penyewa minimal 2 huruf").max(100),
-  noHp: z
-    .string()
-    .trim()
-    .min(8, "Nomor HP minimal 8 angka")
-    .max(20)
-    .refine((v) => /^[\d+\s-]+$/.test(v), "Nomor HP hanya boleh berisi angka"),
+  namaPenyewa: namaOrang,
+  // Penyewa harus bisa dihubungi kalau sepeda belum kembali, jadi aturannya
+  // menuntut nomor seluler sungguhan — bukan sekadar "berisi angka".
+  noHp: noHpWa,
   estimasiJam: z.coerce.number().int().min(1).max(72).optional(),
   metodeBayar: z.enum(["tunai", "qris", "transfer"]).optional(),
   jaminan: z.string().trim().max(200).optional(),

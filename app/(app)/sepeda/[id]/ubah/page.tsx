@@ -31,6 +31,26 @@ export default async function HalamanUbahSepeda(props: PageProps<"/sepeda/[id]/u
     <div className="space-y-4">
       <PageHeader judul="Ubah Sepeda" />
 
+      {/* Foto lebih dulu, data sepeda sesudahnya. Dengan begitu tombol "Simpan
+          perubahan" berada di bawah kolom foto, bukan di atasnya — kalau
+          tombolnya lebih dulu, orang menekannya sebelum sampai ke foto dan
+          fotonya terlupakan. Foto punya tombol unggah sendiri dan tersimpan
+          seketika, jadi urutannya tidak mengubah cara kerja apa pun. */}
+      <Card>
+        <CardHeader
+          judul="Foto sepeda"
+          keterangan="Muncul di daftar sepeda dan pada kartu hasil scan"
+        />
+        <CardBody>
+          <FormFotoSepeda
+            bikeId={sepeda.id}
+            punyaFoto={sepeda.punyaFoto}
+            fotoVersi={sepeda.fotoVersi}
+            nama={sepeda.nama}
+          />
+        </CardBody>
+      </Card>
+
       <Card>
         <CardHeader judul={`${sepeda.kode} — ${sepeda.nama}`} />
         <CardBody>
@@ -48,21 +68,6 @@ export default async function HalamanUbahSepeda(props: PageProps<"/sepeda/[id]/u
               status: sepeda.status,
               catatan: sepeda.catatan,
             }}
-          />
-        </CardBody>
-      </Card>
-
-      <Card>
-        <CardHeader
-          judul="Foto sepeda"
-          keterangan="Muncul di daftar sepeda dan pada kartu hasil scan"
-        />
-        <CardBody>
-          <FormFotoSepeda
-            bikeId={sepeda.id}
-            punyaFoto={sepeda.punyaFoto}
-            fotoVersi={sepeda.fotoVersi}
-            nama={sepeda.nama}
           />
         </CardBody>
       </Card>

@@ -11,6 +11,7 @@ import { wajibPengguna } from "@/lib/auth/dal";
 import { normalkanNoHp } from "@/lib/format";
 import { ambilPengaturan } from "@/lib/queries/pengaturan";
 import { daftarJamBooking, dariKunciTanggalWib } from "@/lib/waktu";
+import { namaOrang, noHpWa } from "@/lib/validasi";
 import type { StatusAksi } from "./rental";
 
 export type { StatusAksi };
@@ -32,13 +33,8 @@ function kosongJadiUndefined(nilai: FormDataEntryValue | null): string | undefin
 
 const skemaBuat = z.object({
   bikeId: z.coerce.number().int().positive("Pilih sepeda"),
-  namaPenyewa: z.string().trim().min(2, "Nama penyewa minimal 2 huruf").max(100),
-  noHp: z
-    .string()
-    .trim()
-    .min(8, "Nomor HP minimal 8 angka")
-    .max(20)
-    .refine((v) => /^[\d+\s-]+$/.test(v), "Nomor HP hanya boleh berisi angka"),
+  namaPenyewa: namaOrang,
+  noHp: noHpWa,
   tanggal: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tanggal tidak valid"),
   jam: z.coerce.number().int().min(0, "Jam tidak valid").max(23, "Jam tidak valid"),
   durasiJam: z.coerce
