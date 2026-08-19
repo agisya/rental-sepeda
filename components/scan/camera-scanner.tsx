@@ -57,6 +57,20 @@ function Pratinjau({
     let dibatalkan = false;
 
     async function mulai() {
+      // Peramban menolak kamera di alamat yang tidak aman, dan penolakannya
+      // muncul sebagai galat yang membingungkan. Diperiksa lebih dulu supaya
+      // pesannya menyebut sebab yang sebenarnya: alamatnya, bukan kameranya.
+      //
+      // Ini kejadian paling umum saat menguji dari HP lewat http://192.168.x.x.
+      if (!window.isSecureContext) {
+        setGalat(
+          "Kamera hanya bisa dibuka lewat HTTPS. Alamat http:// biasa ditolak " +
+            "peramban demi keamanan. Buka aplikasi lewat domain resminya, atau " +
+            "ketik kode sepedanya secara manual.",
+        );
+        return;
+      }
+
       try {
         const { BrowserMultiFormatReader } = await import("@zxing/browser");
         if (dibatalkan) return;
