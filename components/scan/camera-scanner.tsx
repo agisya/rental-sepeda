@@ -54,7 +54,19 @@ function Pratinjau({
 
   useEffect(() => {
     let controls: IScannerControls | undefined;
+    let stream: MediaStream | undefined;
     let dibatalkan = false;
+
+    /** Melepas kamera. Lampu indikator di perangkat baru padam setelah ini. */
+    function lepaskan() {
+      controls?.stop();
+      stream?.getTracks().forEach((track) => track.stop());
+
+      const video = videoRef.current;
+      if (video) {
+        video.srcObject = null;
+      }
+    }
 
     async function mulai() {
       // Peramban menolak kamera di alamat yang tidak aman, dan penolakannya
@@ -75,19 +87,40 @@ function Pratinjau({
         const { BrowserMultiFormatReader } = await import("@zxing/browser");
         if (dibatalkan) return;
 
+        // Stream diminta dan dilepas sendiri, tidak diserahkan ke pustaka.
+        //
+        // decodeFromConstraints memeriksa apakah kamera punya senter, lalu
+        // mematikannya lewat applyConstraints saat pemindaian berhenti. Pada
+        // banyak ponsel Chrome menolak permintaan itu dengan "setPhotoOptions
+        // failed", dan galatnya muncul sebagai galat runtime yang tidak bisa
+        // kita tangkap karena terjadi di dalam pustaka.
+        //
+        // Senter tidak dipakai aplikasi ini sama sekali, jadi jalur itu memang
+        // tidak perlu dilewati. decodeFromVideoElement hanya memindai bingkai
+        // dari elemen video dan tidak menyentuh kemampuan perangkat.
+        stream = await navigator.mediaDevices.getUserMedia(batasan(arah));
+        if (dibatalkan) {
+          lepaskan();
+          return;
+        }
+
+        const video = videoRef.current;
+        if (!video) {
+          lepaskan();
+          return;
+        }
+
+        video.srcObject = stream;
+
         const pembaca = new BrowserMultiFormatReader();
-        controls = await pembaca.decodeFromConstraints(
-          batasan(arah),
-          videoRef.current ?? undefined,
-          (hasil) => {
-            if (!hasil) return;
-            controls?.stop();
-            onHasil(hasil.getText());
-          },
-        );
+        controls = await pembaca.decodeFromVideoElement(video, (hasil) => {
+          if (!hasil) return;
+          lepaskan();
+          onHasil(hasil.getText());
+        });
 
         if (dibatalkan) {
-          controls.stop();
+          lepaskan();
           return;
         }
         setSiap(true);
@@ -108,7 +141,7 @@ function Pratinjau({
 
     return () => {
       dibatalkan = true;
-      controls?.stop();
+      lepaskan();
     };
   }, [onHasil, arah]);
 
