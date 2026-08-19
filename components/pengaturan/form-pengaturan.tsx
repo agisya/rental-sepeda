@@ -84,7 +84,7 @@ export function FormPengaturan({ awal }: { awal: Settings }) {
             inputMode="numeric"
             min={0}
             max={1440}
-            step={15}
+            step={1}
             defaultValue={awal.toleransiBookingMenit}
             required
           />

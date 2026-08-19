@@ -318,11 +318,6 @@ export async function setoranHari(
   return baris ?? null;
 }
 
-/** Pengeluaran ini bukan milik orang yang mencoba menghapusnya. */
-export class BukanMilikAnda extends Error {}
-
-/** Kas hari itu sudah ditutup; dasarnya tidak boleh diubah lagi. */
-export class KasSudahDitutup extends Error {}
 
 /**
  * Mencatat uang yang diambil kasir dari laci.
@@ -357,39 +352,18 @@ export async function catatPengeluaranLaci(input: {
   return baris;
 }
 
-/**
- * Membatalkan pengeluaran yang salah catat.
- *
- * Tanpa ini, satu salah ketik terkunci selamanya dan angka setorannya ikut
- * salah — jebakan yang justru diciptakan oleh fitur pencatatannya sendiri.
- *
- * Dua batas yang dijaga: hanya catatan sendiri, dan hanya selama kas hari itu
- * belum ditutup. Penutupan membekukan angkanya dan sudah disepakati dua pihak;
- * menghapus dasarnya membuat rincian tidak lagi menjumlah ke angka yang
- * ditandatangani.
- */
-export async function hapusPengeluaranLaci(id: number, kasirId: number): Promise<void> {
-  const [baris] = await db
-    .select({ tanggal: expenses.tanggal, dicatatOleh: expenses.dicatatOleh })
-    .from(expenses)
-    .where(and(eq(expenses.id, id), eq(expenses.metode, "tunai")))
-    .limit(1);
+/*
+  Sengaja tidak ada fungsi penghapus di berkas ini.
 
-  // Baris yang tidak ada dan baris milik orang lain sengaja dibalas sama.
-  // Membedakannya akan memberi tahu penebak bahwa suatu id itu ada.
-  if (!baris || baris.dicatatOleh !== kasirId) {
-    throw new BukanMilikAnda("Pengeluaran itu bukan catatan Anda.");
-  }
+  Riwayat pengeluaran adalah catatan uang. Baris yang bisa lenyap membuat seluruh
+  pembukuan kehilangan gunanya sebagai pertanggungjawaban — dan justru di sinilah
+  ia paling dibutuhkan, karena inilah tempat selisih laci dipersoalkan.
 
-  const sudah = await setoranHari(kasirId, baris.tanggal);
-  if (sudah) {
-    throw new KasSudahDitutup(
-      "Kas hari itu sudah ditutup, jadi catatannya tidak bisa diubah lagi. Minta admin memperbaikinya.",
-    );
-  }
-
-  await db.delete(expenses).where(eq(expenses.id, id));
-}
+  Salah catat diperbaiki dengan mencatat koreksinya, bukan dengan menghilangkan
+  jejaknya. Pola yang dipakai penutupan kas — dibatalkan, bukan dihapus, dengan
+  alasan yang tersimpan — adalah bentuk yang benar kalau suatu saat pengeluaran
+  juga perlu bisa dikoreksi.
+*/
 
 export type BarisRental = {
   id: number;

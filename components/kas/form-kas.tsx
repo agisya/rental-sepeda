@@ -5,7 +5,6 @@ import { useFormStatus } from "react-dom";
 import {
   batalkanSetoranKas,
   catatPengeluaranDariLaci,
-  hapusPengeluaranDariLaci,
   terimaSetoranKas,
   tutupKas,
   type StatusAksi,
@@ -177,7 +176,7 @@ export function FormPengeluaranLaci({ tanggal }: { tanggal: string }) {
               type="number"
               inputMode="numeric"
               min={1}
-              step={1000}
+              step={1}
               placeholder="25000"
               required
             />
@@ -198,33 +197,6 @@ export function FormPengeluaranLaci({ tanggal }: { tanggal: string }) {
       </div>
 
       <TombolCatat />
-    </form>
-  );
-}
-
-function TombolHapus() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" ukuran="sm" variasi="halus" disabled={pending}>
-      {pending ? "…" : "Hapus"}
-    </Button>
-  );
-}
-
-/** Membatalkan pengeluaran yang salah catat, selama kas belum ditutup. */
-export function FormHapusPengeluaran({ id }: { id: number }) {
-  const [status, aksi] = useActionState(hapusPengeluaranDariLaci, AWAL);
-
-  return (
-    <form action={aksi}>
-      <input type="hidden" name="id" value={id} />
-      {status.galat ? (
-        <p role="alert" className="text-xs text-danger">
-          {status.galat}
-        </p>
-      ) : (
-        <TombolHapus />
-      )}
     </form>
   );
 }

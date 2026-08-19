@@ -6,8 +6,6 @@ import { wajibPengguna, wajibPeran } from "@/lib/auth/dal";
 import { dariKunciTanggalWib } from "@/lib/waktu";
 import { kategoriPengeluaranEnum } from "@/lib/db/schema";
 import {
-  BukanMilikAnda,
-  KasSudahDitutup,
   SetoranTidakAda,
   SudahDibatalkan,
   SudahDiterima,
@@ -15,7 +13,6 @@ import {
   batalkanSetoran,
   buatSetoran,
   catatPengeluaranLaci,
-  hapusPengeluaranLaci,
   terimaSetoran,
 } from "@/lib/kas/kelola";
 import type { StatusAksi } from "./rental";
@@ -147,37 +144,6 @@ export async function catatPengeluaranDariLaci(
   revalidatePath("/pengeluaran");
 
   return { berhasil: "Pengeluaran dicatat dan sudah dikurangkan dari setoran Anda." };
-}
-
-const skemaHapusPengeluaran = z.object({
-  id: z.coerce.number({ error: "Catatan tidak dikenali" }).int().positive(),
-});
-
-/** Membatalkan pengeluaran yang salah catat, selama kas belum ditutup. */
-export async function hapusPengeluaranDariLaci(
-  _sebelumnya: StatusAksi,
-  formData: FormData,
-): Promise<StatusAksi> {
-  const pengguna = await wajibPengguna();
-
-  const hasil = skemaHapusPengeluaran.safeParse({ id: formData.get("id") });
-  if (!hasil.success) return { galat: "Catatan yang dimaksud tidak dikenali." };
-
-  try {
-    await hapusPengeluaranLaci(hasil.data.id, pengguna.id);
-  } catch (galat) {
-    if (galat instanceof KasSudahDitutup) return { galat: galat.message };
-    if (galat instanceof BukanMilikAnda) {
-      return { galat: "Itu bukan catatan Anda, jadi tidak bisa dihapus dari sini." };
-    }
-    console.error("Gagal menghapus pengeluaran dari laci:", galat);
-    return { galat: "Tidak bisa menghapus catatan. Coba lagi." };
-  }
-
-  revalidatePath("/kas");
-  revalidatePath("/pengeluaran");
-
-  return { berhasil: "Catatan dihapus." };
 }
 
 const skemaBatal = z.object({

@@ -21,7 +21,6 @@ import { StatUtama } from "@/components/ui/stat";
 import { Ikon } from "@/components/ui/icons";
 import {
   FormBatalkanSetoran,
-  FormHapusPengeluaran,
   FormPengeluaranLaci,
   FormTerimaSetoran,
   FormTutupKas,
@@ -220,9 +219,6 @@ export default async function HalamanKas() {
                   waktu={p.waktu}
                   utama={p.keterangan}
                   nominal={`−${rupiah(p.jumlah)}`}
-                  // Tombol hapus hanya selama kas belum ditutup. Sesudah itu
-                  // angkanya sudah dibekukan dan disepakati dua pihak.
-                  aksi={!punyaHariIni && <FormHapusPengeluaran id={p.id} />}
                 />
               ))}
             </Lipatan>

@@ -8,7 +8,6 @@ import {
   pengeluaranPerKategori,
   totalPengeluaran,
 } from "@/lib/queries/keuangan";
-import { hapusPengeluaran } from "@/lib/actions/keuangan";
 import { Card, CardBody, CardHeader, KeadaanKosong } from "@/components/ui/card";
 import { Stat } from "@/components/ui/stat";
 import { PageHeader } from "@/components/ui/page-header";
@@ -144,22 +143,15 @@ export default async function HalamanPengeluaran(props: PageProps<"/pengeluaran"
                   )}
                 </div>
 
+                {/* Tidak ada tombol hapus, dan itu disengaja. Riwayat
+                    pengeluaran adalah catatan uang; baris yang bisa lenyap
+                    membuat seluruh pembukuan kehilangan gunanya sebagai
+                    pertanggungjawaban. Salah catat diperbaiki dengan mencatat
+                    koreksinya, bukan dengan menghilangkan jejaknya. */}
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="font-semibold tabular-nums text-ink">
                     {rupiah(p.jumlah)}
                   </span>
-                  {!p.maintenanceId && (
-                    <form action={hapusPengeluaran}>
-                      <input type="hidden" name="id" value={p.id} />
-                      <button
-                        type="submit"
-                        aria-label={`Hapus pengeluaran ${p.keterangan}`}
-                        className="flex size-8 items-center justify-center rounded-control text-ink-faint transition-colors hover:bg-danger-soft hover:text-danger"
-                      >
-                        <Ikon.batal className="size-4" strokeWidth={2} aria-hidden="true" />
-                      </button>
-                    </form>
-                  )}
                 </div>
               </li>
             ))}

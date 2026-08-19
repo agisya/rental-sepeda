@@ -2,14 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { buatDbUji, type DbUji } from "./db-uji";
 import { cashDeposits, expenses, ownerPayments, users } from "@/lib/db/schema";
-import {
-  BukanMilikAnda,
-  KasSudahDitutup,
-  buatSetoran,
-  catatPengeluaranLaci,
-  hapusPengeluaranLaci,
-  rekapKasHarian,
-} from "@/lib/kas/kelola";
+import { catatPengeluaranLaci, rekapKasHarian } from "@/lib/kas/kelola";
 
 /**
  * Pengeluaran yang diambil kasir dari laci.
@@ -95,49 +88,5 @@ describe("mencatat pengeluaran dari laci", () => {
     await pengeluaran(idRina, 30000);
 
     expect((await rekapKasHarian(idBudi, HARI)).pengeluaranTunai).toBe(0);
-  });
-});
-
-describe("membatalkan pengeluaran yang salah catat", () => {
-  it("bisa dihapus selama kas belum ditutup", async () => {
-    const { id } = await pengeluaran(idRina);
-
-    await hapusPengeluaranLaci(id, idRina);
-
-    expect(await uji.db.select().from(expenses)).toHaveLength(0);
-    expect((await rekapKasHarian(idRina, HARI)).pengeluaranTunai).toBe(0);
-  });
-
-  it("tidak bisa menghapus catatan kasir lain", async () => {
-    const { id } = await pengeluaran(idRina);
-
-    await expect(hapusPengeluaranLaci(id, idBudi)).rejects.toThrow(BukanMilikAnda);
-
-    expect(await uji.db.select().from(expenses)).toHaveLength(1);
-  });
-
-  it("tidak bisa dihapus setelah kas hari itu ditutup", async () => {
-    // Angka penutupan sudah dibekukan dan sudah disepakati. Menghapus dasarnya
-    // membuat rincian tidak lagi menjumlah ke angka yang ditandatangani —
-    // persis jaminan yang membuat rincian itu ada gunanya.
-    const { id } = await pengeluaran(idRina);
-    await buatSetoran({ kasirId: idRina, hari: HARI, jumlahDiserahkan: 0 });
-
-    await expect(hapusPengeluaranLaci(id, idRina)).rejects.toThrow(KasSudahDitutup);
-
-    expect(await uji.db.select().from(expenses)).toHaveLength(1);
-  });
-
-  it("penutupan kasir lain tidak ikut mengunci", async () => {
-    const { id } = await pengeluaran(idRina);
-    await buatSetoran({ kasirId: idBudi, hari: HARI, jumlahDiserahkan: 0 });
-
-    await hapusPengeluaranLaci(id, idRina);
-
-    expect(await uji.db.select().from(expenses)).toHaveLength(0);
-  });
-
-  it("menolak id yang tidak ada", async () => {
-    await expect(hapusPengeluaranLaci(9999, idRina)).rejects.toThrow(BukanMilikAnda);
   });
 });

@@ -81,7 +81,11 @@ export function FormPengeluaran({ tanggalHariIni }: { tanggalHariIni: string }) 
             type="number"
             inputMode="numeric"
             min={1}
-            step={1000}
+            // step wajib 1. Peramban hanya menerima nilai berjarak kelipatan
+            // step dari min, jadi step 1000 dengan min 1 membuat 9.000 ditolak
+            // sementara 9.001 diterima — penolakan yang tidak masuk akal bagi
+            // orang yang mengetik dan tidak menjelaskan apa pun.
+            step={1}
             placeholder="250000"
             required
           />

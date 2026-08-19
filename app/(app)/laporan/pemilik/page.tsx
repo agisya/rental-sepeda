@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { wajibPengguna } from "@/lib/auth/dal";
 import { daftarPembayaranPemilik, saldoSemuaPemilik } from "@/lib/queries/keuangan";
-import { hapusPembayaranPemilik } from "@/lib/actions/keuangan";
 import {
   Card,
   CardBody,
@@ -174,22 +173,14 @@ export default async function HalamanLaporanPemilik(
                   )}
                 </div>
 
+                {/* Tidak ada tombol hapus. Setoran ke pemilik sepeda adalah
+                    bukti uang yang sudah berpindah tangan — kalau barisnya bisa
+                    dihilangkan, pemilik tidak punya apa pun untuk dipegang saat
+                    jumlahnya dipersoalkan. */}
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="font-semibold tabular-nums text-ink">
                     {rupiah(p.jumlah)}
                   </span>
-                  {bolehCatat && (
-                    <form action={hapusPembayaranPemilik}>
-                      <input type="hidden" name="id" value={p.id} />
-                      <button
-                        type="submit"
-                        aria-label={`Hapus setoran ${rupiah(p.jumlah)} untuk ${p.namaPemilik}`}
-                        className="flex size-8 items-center justify-center rounded-control text-ink-faint transition-colors hover:bg-danger-soft hover:text-danger"
-                      >
-                        <Ikon.batal className="size-4" strokeWidth={2} aria-hidden="true" />
-                      </button>
-                    </form>
-                  )}
                 </div>
               </li>
             ))}

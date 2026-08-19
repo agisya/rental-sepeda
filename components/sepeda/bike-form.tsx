@@ -134,7 +134,7 @@ export function BikeForm({
             type="number"
             inputMode="numeric"
             min={0}
-            step={500}
+            step={1}
             defaultValue={awal?.tarifPerJam ?? 15000}
             required
           />
