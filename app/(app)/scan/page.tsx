@@ -4,6 +4,7 @@ import { wajibPengguna } from "@/lib/auth/dal";
 import { sepedaByKode, statistikBulananSepeda } from "@/lib/queries/bikes";
 import { rentalBerjalanUntukSepeda } from "@/lib/queries/rentals";
 import { ScannerInput } from "@/components/scan/scanner-input";
+import { ButtonLink } from "@/components/ui/button";
 import { BikeCard } from "@/components/rental/bike-card";
 import { StartForm } from "@/components/rental/start-form";
 import { FinishPanel } from "@/components/rental/finish-panel";
@@ -144,6 +145,37 @@ async function IsiSepeda({
           />
           <CardBody>
             <StartForm bikeId={sepeda.id} tarifPerJam={sepeda.tarifPerJam} />
+          </CardBody>
+        </Card>
+      )}
+
+      {/* Booking lewat scan, bukan lewat memilih dari daftar panjang.
+          Sepedanya sudah di tangan petugas saat ia menempelkan kamera, jadi
+          menyuruh mencari kodenya lagi di dropdown hanya membuka peluang salah
+          pilih. Sepeda yang sedang disewa tetap boleh dipesan untuk jam
+          berikutnya, jadi tautan ini muncul juga di situ. */}
+      {(sepeda.status === "tersedia" ||
+        sepeda.status === "disewa" ||
+        sepeda.status === "booking") && (
+        <Card>
+          <CardHeader
+            judul="Pesan untuk nanti"
+            keterangan={
+              sepeda.status === "tersedia"
+                ? "Kalau penyewa mau memakainya di jam lain, bukan sekarang"
+                : "Sepeda ini boleh dipesan untuk jam yang belum terpakai"
+            }
+          />
+          <CardBody>
+            <ButtonLink
+              href={`/booking/baru?sepeda=${sepeda.id}`}
+              variasi="kedua"
+              ukuran="lg"
+              penuh
+              ikon={Ikon.booking}
+            >
+              Booking {sepeda.kode}
+            </ButtonLink>
           </CardBody>
         </Card>
       )}

@@ -239,3 +239,45 @@ export async function bookingPenyewa(renterId: number): Promise<BookingLengkap[]
     .orderBy(desc(bookings.waktuMulai))
     .limit(50) as Promise<BookingLengkap[]>;
 }
+
+export type JamTerpakai = {
+  bikeId: number;
+  /** Kunci tanggal WIB, mis. "2026-08-20". */
+  tanggal: string;
+  /** Jam WIB 0–23 yang sudah dipesan pada tanggal itu. */
+  jam: number;
+};
+
+/**
+ * Jam-jam yang sudah dipesan, untuk ditandai di formulir booking.
+ *
+ * Tanpa ini petugas baru tahu jamnya bentrok setelah menekan simpan, lalu harus
+ * menebak jam lain dan mencoba lagi — sambil penyewa menunggu di telepon.
+ *
+ * Dikembalikan sebagai jam WIB, bukan timestamp, karena yang dipilih di formulir
+ * adalah angka jam. Menyerahkan penerjemahan zona waktu ke sisi peramban berarti
+ * ponsel yang zonanya tidak WIB akan menandai jam yang salah.
+ */
+export async function jamTerpakai(rentang: {
+  mulai: Date;
+  selesai: Date;
+}): Promise<JamTerpakai[]> {
+  const baris = await db
+    .select({
+      bikeId: bookingSlots.bikeId,
+      // Dihitung di database memakai zona Asia/Jakarta supaya hasilnya tidak
+      // bergantung pada zona waktu server maupun perangkat petugas.
+      tanggal: sql<string>`to_char(${bookingSlots.jam} at time zone 'Asia/Jakarta', 'YYYY-MM-DD')`,
+      jam: sql<number>`extract(hour from ${bookingSlots.jam} at time zone 'Asia/Jakarta')::int`,
+    })
+    .from(bookingSlots)
+    .where(
+      and(
+        eq(bookingSlots.aktif, true),
+        gte(bookingSlots.jam, rentang.mulai),
+        lt(bookingSlots.jam, rentang.selesai),
+      ),
+    );
+
+  return baris.map((b) => ({ bikeId: b.bikeId, tanggal: b.tanggal, jam: Number(b.jam) }));
+}

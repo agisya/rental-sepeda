@@ -34,15 +34,43 @@ export function BookingForm({
   tanggalMinimal,
   tanggalAwal,
   sepedaAwal,
+  jamTerpakai,
 }: {
   sepeda: PilihanSepeda[];
   tanggalMinimal: string;
   tanggalAwal: string;
   sepedaAwal?: number;
+  /** Jam WIB yang sudah dipesan, per sepeda per tanggal. */
+  jamTerpakai: { bikeId: number; tanggal: string; jam: number }[];
 }) {
   const [status, aksi] = useActionState(buatBooking, AWAL);
   const [bikeId, setBikeId] = useState(sepedaAwal ? String(sepedaAwal) : "");
   const [durasi, setDurasi] = useState(2);
+  const [tanggal, setTanggal] = useState(tanggalAwal);
+  const [jamMulai, setJamMulai] = useState(9);
+
+  /*
+    Jam yang sudah dipesan untuk sepeda dan tanggal yang sedang dipilih.
+
+    Sebelumnya bentrok baru ketahuan setelah menekan simpan, lalu petugas harus
+    menebak jam lain dan mencoba lagi — sambil penyewa menunggu di telepon.
+  */
+  const terpakai = new Set(
+    jamTerpakai
+      .filter((t) => String(t.bikeId) === bikeId && t.tanggal === tanggal)
+      .map((t) => t.jam),
+  );
+
+  /*
+    Bentrok karena durasi, bukan karena jam mulainya.
+
+    Mematikan jam mulai yang terpakai saja tidak cukup: mulai 09:00 selama 3 jam
+    tetap menabrak kalau jam 10 sudah dipesan. Jam-jam itu diperiksa di sini
+    supaya terlihat sebelum disimpan, bukan setelah ditolak.
+  */
+  const bentrok = Array.from({ length: durasi }, (_, i) => jamMulai + i).filter((j) =>
+    terpakai.has(j),
+  );
 
   const dipilih = sepeda.find((s) => String(s.id) === bikeId);
   const perkiraan = dipilih ? dipilih.tarifPerJam * durasi : 0;
@@ -102,19 +130,30 @@ export function BookingForm({
               {...props}
               name="tanggal"
               type="date"
-              defaultValue={tanggalAwal}
+              value={tanggal}
+              onChange={(e) => setTanggal(e.target.value)}
               min={tanggalMinimal}
               required
             />
           )}
         </Field>
 
+        {/* Jam yang sudah dipesan dimatikan, bukan hanya diberi tanda. Pilihan
+            yang bisa dipilih tapi pasti ditolak sama saja dengan menyuruh orang
+            menebak. */}
         <Field id="jam" label="Jam mulai" galat={status.galatField?.jam} wajib>
           {(props) => (
-            <Select {...props} name="jam" defaultValue="9" required>
+            <Select
+              {...props}
+              name="jam"
+              value={jamMulai}
+              onChange={(e) => setJamMulai(Number(e.target.value))}
+              required
+            >
               {JAM_PILIHAN.map((j) => (
-                <option key={j} value={j}>
+                <option key={j} value={j} disabled={terpakai.has(j)}>
                   {String(j).padStart(2, "0")}:00
+                  {terpakai.has(j) ? " — sudah dipesan" : ""}
                 </option>
               ))}
             </Select>
@@ -162,6 +201,25 @@ export function BookingForm({
       <Field id="catatan" label="Catatan" galat={status.galatField?.catatan}>
         {(props) => <Textarea {...props} name="catatan" rows={2} placeholder="Opsional" />}
       </Field>
+
+      {bentrok.length > 0 && (
+        <p role="status" className="rounded-control border border-warn/25 bg-warn-soft px-3.5 py-2.5 text-sm text-warn">
+          Jam {bentrok.map((j) => `${String(j).padStart(2, "0")}:00`).join(", ")} sudah
+          dipesan orang lain untuk sepeda ini. Kurangi durasinya, geser jam mulainya,
+          atau pilih sepeda lain.
+        </p>
+      )}
+
+      {terpakai.size > 0 && bentrok.length === 0 && (
+        <p className="text-sm text-ink-muted">
+          Sudah dipesan pada tanggal ini:{" "}
+          {[...terpakai]
+            .sort((a, b) => a - b)
+            .map((j) => `${String(j).padStart(2, "0")}:00`)
+            .join(", ")}
+          .
+        </p>
+      )}
 
       {dipilih && (
         <p className="rounded-control bg-surface-2 px-3.5 py-2.5 text-sm text-ink-muted">
