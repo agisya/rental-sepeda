@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 // Tipe saja — dihapus saat kompilasi, jadi pustakanya tetap hanya diunduh
 // ketika kamera benar-benar dibuka.
 import type { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
+import type { DecodeHintType } from "@zxing/library";
 import { SwitchCamera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Ikon } from "@/components/ui/icons";
@@ -32,9 +33,26 @@ type Arah = "belakang" | "depan";
  * memakainya daripada gagal total.
  */
 function batasan(arah: Arah): MediaStreamConstraints {
-  return {
-    video: { facingMode: { ideal: arah === "belakang" ? "environment" : "user" } },
+  const video: MediaTrackConstraints = {
+    facingMode: { ideal: arah === "belakang" ? "environment" : "user" },
+
+    // Resolusi diminta setinggi mungkin, dan ini bukan soal ketajaman gambar.
+    // Code 128 memuat puluhan garis tipis berdampingan. Pada resolusi bawaan
+    // yang sering hanya 640×480, tiap garis cuma kebagian beberapa piksel dan
+    // batas antar-garis melebur — barcode-nya terlihat jelas oleh mata tapi
+    // tidak akan pernah terbaca mesin. Peramban menurunkan sendiri kalau
+    // perangkatnya tidak sanggup.
+    width: { ideal: 1920 },
+    height: { ideal: 1080 },
   };
+
+  // focusMode belum masuk tipe standar TypeScript, padahal justru inilah yang
+  // membuat kamera ponsel mau memfokus ulang pada stiker jarak dekat. Nilai di
+  // dalam "advanced" diabaikan diam-diam kalau perangkatnya tidak mendukung,
+  // jadi aman diminta.
+  (video as { advanced?: unknown[] }).advanced = [{ focusMode: "continuous" }];
+
+  return { video };
 }
 
 /**
@@ -125,7 +143,13 @@ function Pratinjau({
       }
 
       try {
-        const { BrowserMultiFormatReader } = await import("@zxing/browser");
+        // Keduanya diimpor dinamis. @zxing/library adalah bagian terbesarnya;
+        // mengimpornya secara statis hanya untuk dua konstanta akan menariknya
+        // ke bundel utama dan membebani petugas yang tidak pernah buka kamera.
+        // DecodeHintType diberi nama lain supaya tidak menutupi impor tipenya
+        // di atas, yang masih dibutuhkan untuk menyebut tipe Map di bawah.
+        const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType: Petunjuk }] =
+          await Promise.all([import("@zxing/browser"), import("@zxing/library")]);
         if (dibatalkan) return;
 
         // Stream diminta dan dilepas sendiri, tidak diserahkan ke pustaka.
@@ -153,7 +177,30 @@ function Pratinjau({
 
         video.srcObject = stream;
 
-        const pembaca = new BrowserMultiFormatReader();
+        /*
+          Pemindai diberi tahu apa yang dicari, bukan dibiarkan menebak.
+
+          Tanpa petunjuk, pembaca mencoba semua format yang ia kenal — QR,
+          Data Matrix, PDF417, belasan jenis barcode garis — pada setiap
+          bingkai. Waktu yang seharusnya dipakai memeriksa lebih banyak baris
+          pada barcode yang benar justru habis untuk format yang tidak pernah
+          dicetak aplikasi ini.
+
+          Stiker yang dicetak selalu Code 128 (lihat halaman cetak barcode).
+          Code 39 ikut disebut supaya stiker lama buatan alat lain tetap
+          terbaca, tanpa membuka pintu terlalu lebar.
+
+          TRY_HARDER menyuruh pembaca memeriksa lebih teliti: lebih banyak
+          baris, dan gambar yang dibalik. Lebih lambat per bingkai, tapi
+          barcode yang agak miring atau kurang tajam jadi terbaca — dan barcode
+          di stiker sepeda jarang tegak lurus sempurna.
+        */
+        const petunjuk = new Map<DecodeHintType, unknown>([
+          [Petunjuk.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128, BarcodeFormat.CODE_39]],
+          [Petunjuk.TRY_HARDER, true],
+        ]);
+
+        const pembaca = new BrowserMultiFormatReader(petunjuk);
         // Disimpan supaya tombol ambil bisa memakai pembaca yang sama, bukan
         // membuat instance baru setiap kali ditekan.
         pembacaRef.current = pembaca;
