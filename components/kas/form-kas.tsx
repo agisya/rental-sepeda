@@ -12,16 +12,37 @@ import {
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { PesanBerhasil, PesanGalat } from "@/components/ui/card";
+import { KonfirmasiAksi } from "@/components/ui/konfirmasi";
 import { rupiah } from "@/lib/format";
 
 const AWAL: StatusAksi = {};
 
-function TombolTutup() {
-  const { pending } = useFormStatus();
+/**
+ * Penutupan kas ditanyakan dulu.
+ *
+ * Sekali tersimpan, angkanya dibekukan dan hanya admin yang bisa membatalkannya.
+ * Kasir yang menekan ini terlalu cepat — sebelum menghitung uangnya, atau sebelum
+ * mencatat pengeluaran laci terakhir — harus meminta tolong orang lain untuk
+ * membuka lagi.
+ */
+function TombolTutup({ jumlahSeharusnya }: { jumlahSeharusnya: number }) {
   return (
-    <Button type="submit" ukuran="lg" penuh disabled={pending}>
-      {pending ? "Menyimpan…" : "Tutup kas hari ini"}
-    </Button>
+    <KonfirmasiAksi
+      label="Tutup kas hari ini"
+      judul="Tutup kas hari ini?"
+      keterangan={
+        <>
+          Angka {rupiah(jumlahSeharusnya)} akan dibekukan sebagai dasar setoran hari
+          ini, dan hanya admin yang bisa membatalkannya. Pastikan uangnya sudah
+          dihitung dan semua pengeluaran dari laci sudah dicatat.
+        </>
+      }
+      labelYa="Tutup kas"
+      labelSedang="Menyimpan…"
+      variasi="utama"
+      ukuran="lg"
+      penuh
+    />
   );
 }
 
@@ -105,17 +126,29 @@ export function FormTutupKas({
         )}
       </Field>
 
-      <TombolTutup />
+      <TombolTutup jumlahSeharusnya={jumlahSeharusnya} />
     </form>
   );
 }
 
+/**
+ * Penerimaan setoran ditanyakan dulu.
+ *
+ * Ini titik yang tidak bisa dikembalikan: begitu ditandai diterima, penutupannya
+ * tidak bisa dibatalkan lagi — dua pihak dianggap sudah menyepakati angkanya.
+ * Tombolnya kecil dan berada di dalam daftar, jadi mudah tertekan pada baris
+ * yang salah.
+ */
 function TombolTerima() {
-  const { pending } = useFormStatus();
   return (
-    <Button type="submit" ukuran="sm" variasi="sukses" disabled={pending}>
-      {pending ? "Menyimpan…" : "Tandai diterima"}
-    </Button>
+    <KonfirmasiAksi
+      label="Tandai diterima"
+      judul="Sudah menerima uangnya?"
+      keterangan="Setelah ditandai diterima, penutupan ini tidak bisa dibatalkan lagi. Tandai hanya kalau uangnya benar-benar sudah Anda terima dan sudah dihitung."
+      labelYa="Sudah diterima"
+      variasi="sukses"
+      ukuran="sm"
+    />
   );
 }
 

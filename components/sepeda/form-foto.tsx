@@ -9,6 +9,7 @@ import { Field } from "@/components/ui/field";
 import { PesanBerhasil, PesanGalat } from "@/components/ui/card";
 import { FotoSepeda } from "./foto-sepeda";
 import { Ikon } from "@/components/ui/icons";
+import { KonfirmasiAksi } from "@/components/ui/konfirmasi";
 import { UKURAN_MAKS_FOTO } from "@/lib/foto";
 
 const AWAL: StatusAksi = {};
@@ -87,12 +88,14 @@ export function FormFotoSepeda({
       {punyaFoto && (
         <form action={hapusFotoSepeda}>
           <input type="hidden" name="bikeId" value={bikeId} />
-          <button
-            type="submit"
-            className="w-full rounded-control border border-line-strong px-4 py-2.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
-          >
-            Hapus foto
-          </button>
+          <KonfirmasiAksi
+            label="Hapus foto"
+            judul="Hapus foto sepeda ini?"
+            keterangan="Fotonya hilang dari daftar sepeda dan dari kartu hasil scan. Tidak bisa dikembalikan — perlu diunggah lagi dari berkas aslinya."
+            labelYa="Hapus foto"
+            variasi="kedua"
+            penuh
+          />
         </form>
       )}
     </div>

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { keluar } from "@/lib/actions/auth";
 import type { PenggunaAktif } from "@/lib/auth/dal";
 import { Ikon } from "@/components/ui/icons";
+import { KonfirmasiAksi } from "@/components/ui/konfirmasi";
 import { judulHalaman } from "./menu";
 
 const LABEL_PERAN: Record<PenggunaAktif["peran"], string> = {
@@ -53,15 +54,26 @@ export function Topbar({ pengguna }: { pengguna: PenggunaAktif }) {
             {inisial(pengguna.nama)}
           </span>
 
+          {/* Tombolnya kecil dan berdekatan dengan lencana pengguna, jadi paling
+              mudah tersenggol — dan keluar di tengah shift berarti petugas harus
+              mencari kata sandinya lagi sambil ada pelanggan menunggu. */}
           <form action={keluar}>
-            <button
-              type="submit"
-              aria-label="Keluar dari akun"
-              title="Keluar"
-              className="flex size-9 items-center justify-center rounded-control text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
-            >
-              <Ikon.keluar className="size-[18px]" strokeWidth={1.8} aria-hidden="true" />
-            </button>
+            <KonfirmasiAksi
+              label="Keluar"
+              judul="Keluar dari akun?"
+              keterangan="Anda perlu memasukkan username dan kata sandi lagi untuk masuk kembali."
+              labelYa="Keluar"
+              variasi="bahaya"
+              pemicuLabel="Keluar dari akun"
+              pemicuKelas="flex size-9 items-center justify-center rounded-control text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-50"
+              pemicuAnak={
+                <Ikon.keluar
+                  className="size-[18px]"
+                  strokeWidth={1.8}
+                  aria-hidden="true"
+                />
+              }
+            />
           </form>
         </div>
       </div>

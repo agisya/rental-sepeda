@@ -12,6 +12,7 @@ import type { RingkasanPengguna } from "@/lib/pengguna/kelola";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { PesanBerhasil, PesanGalat } from "@/components/ui/card";
+import { KonfirmasiAksi } from "@/components/ui/konfirmasi";
 import { cn } from "@/lib/cn";
 
 const AWAL: StatusAksi = {};
@@ -150,11 +151,22 @@ function FormStatus({ anggota }: { anggota: RingkasanPengguna }) {
         </div>
       )}
 
-      <TombolKecil
-        label={anggota.aktif ? "Nonaktifkan" : "Aktifkan"}
-        sedang="Menyimpan…"
-        variasi={anggota.aktif ? "bahaya" : "kedua"}
-      />
+      {/* Hanya penonaktifan yang ditanyakan. Mengaktifkan kembali tidak merugikan
+          siapa pun dan mudah dibatalkan; menonaktifkan langsung mengunci orangnya
+          keluar pada permintaan berikutnya — termasuk kalau ia sedang di tengah
+          mencatat rental. */}
+      {anggota.aktif ? (
+        <KonfirmasiAksi
+          label="Nonaktifkan"
+          judul={`Nonaktifkan akun ${anggota.nama}?`}
+          keterangan="Aksesnya terputus segera, bahkan kalau sedang membuka aplikasi. Semua catatan yang pernah ia buat tetap utuh, dan akunnya bisa diaktifkan lagi kapan saja."
+          labelYa="Nonaktifkan"
+          variasi="bahaya"
+          ukuran="sm"
+        />
+      ) : (
+        <TombolKecil label="Aktifkan" sedang="Menyimpan…" variasi="kedua" />
+      )}
     </form>
   );
 }

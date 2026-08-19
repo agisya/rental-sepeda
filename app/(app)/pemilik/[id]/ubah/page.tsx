@@ -6,6 +6,7 @@ import { hapusPemilik } from "@/lib/actions/owners";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { OwnerForm } from "@/components/pemilik/owner-form";
+import { KonfirmasiAksi } from "@/components/ui/konfirmasi";
 
 export const metadata: Metadata = { title: "Ubah Pemilik" };
 
@@ -62,12 +63,22 @@ export default async function HalamanUbahPemilik(
         <CardBody>
           <form action={hapusPemilik}>
             <input type="hidden" name="id" value={pemilik.id} />
-            <button
-              type="submit"
-              className="w-full rounded-control border border-danger px-4 py-2.5 text-sm font-medium text-danger hover:bg-danger-soft"
-            >
-              {punyaSepeda ? "Nonaktifkan pemilik" : "Hapus pemilik"}
-            </button>
+            <KonfirmasiAksi
+              label={punyaSepeda ? "Nonaktifkan pemilik" : "Hapus pemilik"}
+              judul={
+                punyaSepeda
+                  ? `Nonaktifkan ${pemilik.nama}?`
+                  : `Hapus ${pemilik.nama}?`
+              }
+              keterangan={
+                punyaSepeda
+                  ? "Pemilik ini masih punya sepeda, jadi tidak dihapus melainkan dinonaktifkan — seluruh riwayat bagi hasilnya tetap utuh. Ia hilang dari pilihan saat menambah sepeda, dan bisa diaktifkan lagi kapan saja."
+                  : "Pemilik ini belum punya sepeda, jadi datanya benar-benar dihapus dan tidak bisa dikembalikan."
+              }
+              labelYa={punyaSepeda ? "Nonaktifkan" : "Hapus"}
+              variasi="bahaya"
+              penuh
+            />
           </form>
         </CardBody>
       </Card>

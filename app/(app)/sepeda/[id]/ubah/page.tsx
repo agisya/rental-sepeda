@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { BikeForm } from "@/components/sepeda/bike-form";
 import { FormFotoSepeda } from "@/components/sepeda/form-foto";
+import { KonfirmasiAksi } from "@/components/ui/konfirmasi";
 
 export const metadata: Metadata = { title: "Ubah Sepeda" };
 
@@ -85,12 +86,22 @@ export default async function HalamanUbahSepeda(props: PageProps<"/sepeda/[id]/u
           <CardBody>
             <form action={hapusSepeda}>
               <input type="hidden" name="id" value={sepeda.id} />
-              <button
-                type="submit"
-                className="w-full rounded-control border border-danger px-4 py-2.5 text-sm font-medium text-danger hover:bg-danger-soft"
-              >
-                {punyaRiwayat ? "Tandai tidak aktif" : "Hapus sepeda"}
-              </button>
+              <KonfirmasiAksi
+                label={punyaRiwayat ? "Tandai tidak aktif" : "Hapus sepeda"}
+                judul={
+                  punyaRiwayat
+                    ? `Tandai ${sepeda.kode} tidak aktif?`
+                    : `Hapus ${sepeda.kode}?`
+                }
+                keterangan={
+                  punyaRiwayat
+                    ? "Sepeda ini punya riwayat transaksi, jadi tidak dihapus melainkan ditandai tidak aktif — laporan lama tetap utuh. Ia hilang dari daftar pilihan saat menyewakan, dan bisa diaktifkan lagi kapan saja."
+                    : "Sepeda ini belum pernah dipakai transaksi, jadi datanya benar-benar dihapus dan tidak bisa dikembalikan. Termasuk fotonya."
+                }
+                labelYa={punyaRiwayat ? "Tandai tidak aktif" : "Hapus"}
+                variasi="bahaya"
+                penuh
+              />
             </form>
           </CardBody>
         </Card>
