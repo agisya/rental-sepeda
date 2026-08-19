@@ -3,75 +3,159 @@
 /*
   Sistem warna Rental Sepeda Garut.
 
-  Warna merek sengaja teal tua, bukan hijau, supaya tidak tertukar dengan lencana
-  status "Tersedia" yang juga hijau. Latar dibuat putih hangat karena aplikasi ini
-  banyak dipakai di luar ruangan pada siang hari — putih murni terlalu menyilaukan.
+  Diambil dari materi promosi komunitas goweser: navy tua, hijau zaitun, dan
+  latar krem. Navy dipakai sebagai warna merek — tombol utama dan penanda aktif.
+  Hijau zaitun dipakai untuk status "Tersedia", bukan untuk merek, supaya dua
+  hal yang berbeda tidak diberi warna yang sama.
+
+  Krem juga menjawab kebutuhan lapangan: aplikasi ini banyak dipakai di luar
+  ruangan pada siang hari, dan putih murni terlalu menyilaukan di sana.
+
+  Tiga keadaan tema, bukan dua. Pengguna yang belum memilih apa pun mengikuti
+  setelan sistemnya; yang sudah memilih ditandai lewat data-theme pada elemen
+  html, dan pilihan itu harus menang atas setelan sistem ke dua arah.
 */
 
 :root {
-  --bg: #f6f5f2;
-  --surface: #ffffff;
-  --surface-2: #f0efeb;
-  --line: #e2e0da;
-  --line-strong: #cbc8bf;
+  color-scheme: light;
 
-  --ink: #1c1917;
-  --ink-muted: #6b6660;
-  --ink-faint: #9a948c;
+  --bg: #f7f4e7;
+  --surface: #fffdf7;
+  --surface-2: #efead8;
+  --line: #e3ddc7;
+  --line-strong: #c9bf9f;
 
-  --brand: #0f5c5b;
-  --brand-hover: #0c4a49;
+  --ink: #16233d;
+  --ink-muted: #5a6376;
+  --ink-faint: #8b8f9a;
+
+  --brand: #14305b;
+  --brand-hover: #0e2447;
   --brand-ink: #ffffff;
-  --brand-soft: #e2f0ef;
-  --brand-soft-ink: #0b3f3e;
+  --brand-soft: #e3e9f3;
+  --brand-soft-ink: #14305b;
 
   /* Status sepeda. Setiap status selalu ditemani teks dan ikon, tidak pernah
      hanya dibedakan lewat warna. */
-  --ok: #147a3d;
-  --ok-soft: #e3f4e9;
+  --ok: #5c7a17;
+  --ok-soft: #ecf1da;
   --danger: #b3261e;
   --danger-soft: #fce9e7;
   --warn: #a15c00;
   --warn-soft: #fdf0dc;
   --info: #1d4ed8;
   --info-soft: #e6ecfd;
-  --idle: #5d5a55;
-  --idle-soft: #eceae6;
+  --idle: #6b6a5f;
+  --idle-soft: #eeeade;
 
-  --ring: #0f5c5b;
+  --ring: #14305b;
+
+  /*
+    Palet gelap disimpan sekali di sini, lalu dipetakan di dua tempat di bawah.
+    Nilai heksanya tidak boleh ditulis dua kali: itulah cara tema terang dan
+    gelap perlahan berbeda tanpa ada yang menyadarinya.
+
+    Latar gelapnya navy, bukan abu-abu netral, dan tulisannya krem — supaya
+    identitas yang sama tetap terbaca saat malam.
+  */
+  --d-bg: #0d1729;
+  --d-surface: #13203a;
+  --d-surface-2: #1a2b48;
+  --d-line: #26385a;
+  --d-line-strong: #3b527a;
+
+  --d-ink: #f2eee0;
+  --d-ink-muted: #a8b2c4;
+  --d-ink-faint: #7a8598;
+
+  /* Navy tidak terbaca di atas latar navy, jadi mereknya dicerahkan ke biru
+     dari keluarga yang sama. */
+  --d-brand: #7aa7e8;
+  --d-brand-hover: #92b8ef;
+  --d-brand-ink: #0a1428;
+  --d-brand-soft: #1c2f4f;
+  --d-brand-soft-ink: #b7d0f0;
+
+  --d-ok: #9dbe4a;
+  --d-ok-soft: #22301a;
+  --d-danger: #f28b82;
+  --d-danger-soft: #3a1c1a;
+  --d-warn: #e8b465;
+  --d-warn-soft: #362614;
+  --d-info: #8fb2f7;
+  --d-info-soft: #1a2440;
+  --d-idle: #a2a99b;
+  --d-idle-soft: #202c3f;
 }
 
+/* Dipakai dua kali: sekali untuk yang mengikuti sistem, sekali untuk yang
+   memilih gelap sendiri. Isinya hanya pemetaan, tidak ada nilai warna baru. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #14161a;
-    --surface: #1c1f24;
-    --surface-2: #23272d;
-    --line: #31363e;
-    --line-strong: #454b55;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
 
-    --ink: #f1efec;
-    --ink-muted: #a8a49d;
-    --ink-faint: #7c7871;
+    --bg: var(--d-bg);
+    --surface: var(--d-surface);
+    --surface-2: var(--d-surface-2);
+    --line: var(--d-line);
+    --line-strong: var(--d-line-strong);
 
-    --brand: #2fa39f;
-    --brand-hover: #3fb8b3;
-    --brand-ink: #06211f;
-    --brand-soft: #16332f;
-    --brand-soft-ink: #8fded9;
+    --ink: var(--d-ink);
+    --ink-muted: var(--d-ink-muted);
+    --ink-faint: var(--d-ink-faint);
 
-    --ok: #52c07c;
-    --ok-soft: #16301f;
-    --danger: #f28b82;
-    --danger-soft: #3a1c1a;
-    --warn: #e8b465;
-    --warn-soft: #362614;
-    --info: #8fb2f7;
-    --info-soft: #1a2440;
-    --idle: #a6a29b;
-    --idle-soft: #292d33;
+    --brand: var(--d-brand);
+    --brand-hover: var(--d-brand-hover);
+    --brand-ink: var(--d-brand-ink);
+    --brand-soft: var(--d-brand-soft);
+    --brand-soft-ink: var(--d-brand-soft-ink);
 
-    --ring: #2fa39f;
+    --ok: var(--d-ok);
+    --ok-soft: var(--d-ok-soft);
+    --danger: var(--d-danger);
+    --danger-soft: var(--d-danger-soft);
+    --warn: var(--d-warn);
+    --warn-soft: var(--d-warn-soft);
+    --info: var(--d-info);
+    --info-soft: var(--d-info-soft);
+    --idle: var(--d-idle);
+    --idle-soft: var(--d-idle-soft);
+
+    --ring: var(--d-brand);
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: var(--d-bg);
+  --surface: var(--d-surface);
+  --surface-2: var(--d-surface-2);
+  --line: var(--d-line);
+  --line-strong: var(--d-line-strong);
+
+  --ink: var(--d-ink);
+  --ink-muted: var(--d-ink-muted);
+  --ink-faint: var(--d-ink-faint);
+
+  --brand: var(--d-brand);
+  --brand-hover: var(--d-brand-hover);
+  --brand-ink: var(--d-brand-ink);
+  --brand-soft: var(--d-brand-soft);
+  --brand-soft-ink: var(--d-brand-soft-ink);
+
+  --ok: var(--d-ok);
+  --ok-soft: var(--d-ok-soft);
+  --danger: var(--d-danger);
+  --danger-soft: var(--d-danger-soft);
+  --warn: var(--d-warn);
+  --warn-soft: var(--d-warn-soft);
+  --info: var(--d-info);
+  --info-soft: var(--d-info-soft);
+  --idle: var(--d-idle);
+  --idle-soft: var(--d-idle-soft);
+
+  --ring: var(--d-brand);
 }
 
 @theme inline {

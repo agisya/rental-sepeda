@@ -23,20 +23,39 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f5f2" },
-    { media: "(prefers-color-scheme: dark)", color: "#14161a" },
+    { media: "(prefers-color-scheme: light)", color: "#f7f4e7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d1729" },
   ],
   // Zoom tidak dikunci: petugas harus tetap bisa memperbesar teks.
   width: "device-width",
   initialScale: 1,
 };
 
+/**
+ * Menerapkan tema pilihan sebelum halaman digambar.
+ *
+ * Harus berjalan lebih dulu daripada React, karena kalau tidak, halaman sempat
+ * tampil terang sekejap lalu berubah gelap. Kedipan itu paling terasa justru
+ * bagi orang yang memilih gelap karena silau.
+ *
+ * Sengaja sekecil mungkin dan dibungkus try: peramban dengan penyimpanan
+ * diblokir cukup mengabaikannya dan mengikuti setelan sistem.
+ */
+const SKRIP_TEMA = `try{var t=localStorage.getItem("tema");if(t==="gelap")document.documentElement.dataset.theme="dark";else if(t==="terang")document.documentElement.dataset.theme="light"}catch(e){}`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      // Skrip di bawah mengubah atribut elemen ini sebelum React sempat
+      // membandingkannya dengan hasil server. Tanpa penanda ini, React
+      // melaporkan ketidakcocokan yang sebenarnya memang disengaja.
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SKRIP_TEMA }} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

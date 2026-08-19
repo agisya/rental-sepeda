@@ -8,6 +8,7 @@ import {
   FormPengaturan,
 } from "@/components/pengaturan/form-pengaturan";
 import { DaftarTim, FormTambahAnggota } from "@/components/pengaturan/form-tim";
+import { PemilihTema } from "@/components/ui/pemilih-tema";
 import { daftarPengguna } from "@/lib/pengguna/kelola";
 
 export const metadata: Metadata = { title: "Pengaturan" };
@@ -38,6 +39,16 @@ export default async function HalamanPengaturan(props: PageProps<"/pengaturan">)
       {params.sandi === "1" && <PesanBerhasil>Kata sandi berhasil diganti.</PesanBerhasil>}
 
       <PageHeader judul="Pengaturan" keterangan="Identitas usaha dan aturan operasional" />
+
+      <Card>
+        <CardHeader
+          judul="Tampilan"
+          keterangan="Tersimpan di perangkat ini saja, tidak ikut akun Anda"
+        />
+        <CardBody>
+          <PemilihTema />
+        </CardBody>
+      </Card>
 
       <Card>
         <CardHeader judul="Akun Anda" />
