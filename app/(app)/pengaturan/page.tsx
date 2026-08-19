@@ -25,9 +25,12 @@ export default async function HalamanPengaturan(props: PageProps<"/pengaturan">)
 
   const bolehUbah = pengguna.peran !== "kasir";
 
-  // Pengelolaan akun hanya untuk admin — owner boleh melihat keuangan, tapi
-  // menambah dan menonaktifkan akun adalah kewenangan yang berbeda.
-  const tim = pengguna.peran === "admin" ? await daftarPengguna() : null;
+  // Owner dan admin. Owner adalah pemilik usahanya, jadi membatasi pengelolaan
+  // akun ke admin saja membuat pemilik harus meminta tolong pegawainya hanya
+  // untuk menambah orang. Kasir tetap di luar: peran operasional yang bisa
+  // membuat akun berarti satu akun kasir cukup untuk mengangkat diri jadi admin.
+  const bolehKelolaTim = pengguna.peran === "admin" || pengguna.peran === "owner";
+  const tim = bolehKelolaTim ? await daftarPengguna() : null;
 
   return (
     <div className="space-y-5">

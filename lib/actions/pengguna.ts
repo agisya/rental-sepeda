@@ -127,12 +127,21 @@ const skemaAnggotaBaru = z.object({
   kataSandi: skemaSandiBaru,
 });
 
-/** Menambah anggota tim. Hanya admin. */
+/**
+ * Menambah anggota tim. Owner dan admin.
+ *
+ * Owner adalah pemilik usahanya sendiri — jabatan tertinggi di aplikasi ini —
+ * jadi ia justru yang paling berhak menambah orang. Membatasinya ke admin saja
+ * membuat pemilik usaha harus meminta tolong pegawainya untuk membuat akun.
+ * Kasir tetap tidak boleh: memberi kewenangan membuat akun kepada peran
+ * operasional berarti siapa pun yang memegang satu akun kasir bisa membuat
+ * akun admin untuk dirinya sendiri.
+ */
 export async function tambahAnggota(
   _sebelumnya: StatusAksi,
   formData: FormData,
 ): Promise<StatusAksi> {
-  await wajibPeran("admin");
+  await wajibPeran("admin", "owner");
 
   const hasil = skemaAnggotaBaru.safeParse({
     username: formData.get("username"),
@@ -169,12 +178,12 @@ const skemaStatus = z.object({
   aktif: z.enum(["0", "1"]),
 });
 
-/** Mengaktifkan atau menonaktifkan akun orang lain. Hanya admin. */
+/** Mengaktifkan atau menonaktifkan akun orang lain. Owner dan admin. */
 export async function ubahStatusAnggota(
   _sebelumnya: StatusAksi,
   formData: FormData,
 ): Promise<StatusAksi> {
-  const admin = await wajibPeran("admin");
+  const pengelola = await wajibPeran("admin", "owner");
 
   const hasil = skemaStatus.safeParse({
     id: formData.get("id"),
@@ -190,7 +199,7 @@ export async function ubahStatusAnggota(
 
   // Menonaktifkan diri sendiri langsung mengunci orang itu keluar pada permintaan
   // berikutnya, karena lib/auth/dal.ts memeriksa kolom aktif setiap kali.
-  if (!jadikanAktif && id === admin.id) {
+  if (!jadikanAktif && id === pengelola.id) {
     return { galat: "Anda tidak bisa menonaktifkan akun Anda sendiri." };
   }
 
@@ -223,12 +232,12 @@ const skemaSetelUlang = z.object({
   kataSandi: skemaSandiBaru,
 });
 
-/** Menyetel ulang kata sandi anggota yang lupa. Hanya admin. */
+/** Menyetel ulang kata sandi anggota yang lupa. Owner dan admin. */
 export async function setelUlangSandiAnggota(
   _sebelumnya: StatusAksi,
   formData: FormData,
 ): Promise<StatusAksi> {
-  await wajibPeran("admin");
+  await wajibPeran("admin", "owner");
 
   const hasil = skemaSetelUlang.safeParse({
     id: formData.get("id"),
