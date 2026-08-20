@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 // Lewat ekspor bawaan, bukan ekspor bernama: data mentah matriks hanya ada
 // sebagai metode pada ekspor bawaan, sedangkan toSVG diekspor bernama.
 import bwipjs, { toSVG } from "bwip-js/node";
-import { OPSI_QR } from "@/lib/qr";
+import { OPSI_QR, SUNYI_MODUL } from "@/lib/qr";
 import { bacaQr, gambarQr } from "./qr-uji";
 
 /**
@@ -72,5 +72,43 @@ describe("halaman cetak", () => {
 
     expect(svg).toContain("<svg");
     expect(svg).toContain("viewBox");
+  });
+
+  /** Sisi bujur sangkar SVG, dalam satuan viewBox. */
+  function sisiSvg(opsi: Record<string, unknown>): number {
+    const svg = toSVG({ ...OPSI_QR, text: "MTB-023", scale: 4, ...opsi } as never);
+    const kotak = /viewBox="([^"]+)"/.exec(svg)?.[1];
+    if (!kotak) throw new Error("SVG tanpa viewBox");
+
+    return Number(kotak.split(" ")[2]);
+  }
+
+  /*
+    Zona sunyi harus ikut tercetak di dalam gambarnya sendiri, bukan diserahkan
+    kepada tata letak halaman.
+
+    bwip-js memancarkan QR tanpa zona sunyi sama sekali: viewBox-nya menutup
+    persis matriks modulnya. Di stiker, kiri dan kanan kebetulan masih kebagian
+    ruang putih dari lebar kolomnya, tapi atas dan bawah langsung berbatasan
+    dengan tulisan — kurang dari satu modul, sedangkan spesifikasi QR menuntut
+    empat. Akibatnya bukan gagal total melainkan "kadang terbaca, kadang harus
+    diutak-atik dulu", gejala yang paling mahal ditelusuri.
+
+    Karena ikut di dalam SVG, ruang itu tetap terbawa ke mana pun gambarnya
+    dipakai, walau tata letaknya nanti diubah orang lain.
+  */
+  it("menyisakan zona sunyi minimal empat modul di keempat sisi", () => {
+    const [bagian] = bwipjs.raw({ ...OPSI_QR, text: "MTB-023" });
+    if (!("pixs" in bagian)) throw new Error("bukan matriks");
+
+    const modul = bagian.pixx;
+
+    // Diukur terhadap keluaran tanpa padding, bukan terhadap angka ajaib, agar
+    // tetap sahih kalau satuan internal bwip-js berubah.
+    const tanpaSunyi = sisiSvg({ padding: 0 });
+    const satuanPerModul = tanpaSunyi / modul;
+    const sunyiModul = (sisiSvg({}) - tanpaSunyi) / 2 / satuanPerModul;
+
+    expect(sunyiModul).toBeGreaterThanOrEqual(SUNYI_MODUL);
   });
 });

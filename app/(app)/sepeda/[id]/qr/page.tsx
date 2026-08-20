@@ -56,8 +56,13 @@ export default async function HalamanQr(props: PageProps<"/sepeda/[id]/qr">) {
             <p className="text-[10px] font-semibold uppercase tracking-wider text-black/60">
               Rental Sepeda Garut
             </p>
+            {/* Selebar kartu, bukan tiga perempatnya. Zona sunyi sekarang ikut
+                di dalam SVG dan memakan sekitar seperempat lebarnya, jadi modul
+                QR-nya tetap sebesar sebelumnya — yang berubah hanya siapa yang
+                menyediakan ruang putih itu, dan kini ia tidak bisa hilang gara-
+                gara tata letak. */}
             <div
-              className="mx-auto mt-1 w-3/4 [&_svg]:h-auto [&_svg]:w-full"
+              className="mt-1 w-full [&_svg]:h-auto [&_svg]:w-full"
               // SVG dihasilkan di server dari kode sepeda sendiri, bukan dari
               // masukan bebas pengguna.
               dangerouslySetInnerHTML={{ __html: svg }}

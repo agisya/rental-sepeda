@@ -26,6 +26,25 @@ export const OPSI_QR = {
     yang ditukar untuk mendapatkannya.
   */
   eclevel: "H",
+
+  /*
+    Zona sunyi ikut dicetak di dalam gambarnya sendiri.
+
+    bwip-js tidak menambahkannya: keluaran bawaannya menutup persis matriks
+    modul, nol ruang putih. Tanpa ini, stiker tetap terbaca — tapi hanya kalau
+    sudutnya pas dan cahayanya baik. Gejalanya "kadang bisa, kadang harus
+    diutak-atik dulu", bentuk kegagalan yang paling mahal ditelusuri karena
+    tidak pernah salah dengan cara yang sama dua kali.
+
+    Menyerahkannya ke tata letak halaman tidak cukup, dan itu sudah terbukti
+    sekali: di stiker, kiri dan kanan kebetulan kebagian ruang dari lebar
+    kolomnya, sementara atas dan bawah langsung berbatasan dengan tulisan —
+    kurang dari satu modul. Karena ikut di dalam SVG, ruang ini terbawa ke mana
+    pun gambarnya dipakai, walau tata letaknya nanti diubah orang lain.
+
+    Satuan padding bwip-js adalah setengah modul, tidak bergantung pada scale.
+  */
+  padding: 4 * 2,
 } as const;
 
 /** Zona sunyi yang dituntut spesifikasi QR, dihitung dalam modul. */

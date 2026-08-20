@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 // Tipe saja — dihapus saat kompilasi, jadi pustakanya tetap hanya diunduh
 // ketika kamera benar-benar dibuka.
-import type { BrowserMultiFormatReader } from "@zxing/browser";
+import type { BrowserQRCodeReader } from "@zxing/browser";
 import type { DecodeHintType } from "@zxing/library";
 import { SwitchCamera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Ikon } from "@/components/ui/icons";
 import { JANGKAUAN } from "@/lib/scan/jangkauan";
+import { pesanGalatKamera } from "@/lib/scan/galat-kamera";
 
 /**
  * Pemindai QR lewat kamera. Pustaka @zxing/browser diimpor dinamis supaya
@@ -76,7 +77,7 @@ function Pratinjau({
   onGanti: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const pembacaRef = useRef<BrowserMultiFormatReader | null>(null);
+  const pembacaRef = useRef<BrowserQRCodeReader | null>(null);
   const kanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [galat, setGalat] = useState<string | null>(null);
   const [siap, setSiap] = useState(false);
@@ -174,13 +175,15 @@ function Pratinjau({
 
       try {
         // Keduanya diimpor dinamis. @zxing/library adalah bagian terbesarnya;
-        // mengimpornya secara statis hanya untuk dua konstanta akan menariknya
+        // mengimpornya secara statis hanya untuk satu konstanta akan menariknya
         // ke bundel utama dan membebani petugas yang tidak pernah buka kamera.
         //
         // DecodeHintType diberi nama lain supaya tidak menutupi impor tipenya
         // di atas, yang masih dibutuhkan untuk menyebut tipe Map di bawah.
-        const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType: Petunjuk }] =
-          await Promise.all([import("@zxing/browser"), import("@zxing/library")]);
+        const [{ BrowserQRCodeReader }, { DecodeHintType: Petunjuk }] = await Promise.all([
+          import("@zxing/browser"),
+          import("@zxing/library"),
+        ]);
         if (dibatalkan) return;
 
         // Stream dikelola sendiri, tidak diserahkan ke pustaka. Jalur
@@ -208,28 +211,28 @@ function Pratinjau({
         }
 
         /*
-          Pemindai diberi tahu apa yang dicari, bukan dibiarkan menebak.
+          Pembaca QR langsung, bukan pembaca multi-format yang dibatasi ke QR.
 
-          Tanpa petunjuk ia mencoba semua format yang ia kenal — Data Matrix,
-          PDF417, belasan barcode garis — pada setiap bingkai. Waktu yang
-          seharusnya dipakai memeriksa QR habis untuk format yang tidak pernah
-          dicetak aplikasi ini.
+          Keduanya sama-sama hanya membaca QR, tapi yang multi-format
+          membungkusnya dengan MultiFormatReader — dan pembungkus itu punya
+          salah paham yang mahal. Bingkai tanpa QR adalah keadaan normal, bukan
+          galat, dan pembaca menyatakannya dengan melempar NotFoundException.
+          MultiFormatReader menelan lemparan itu lewat pemeriksaan
+          `instanceof ReaderException`, padahal di pustaka versi ini
+          NotFoundException tidak mewarisi ReaderException. Akibatnya setiap
+          bingkai kosong dicatat lewat console.warn — sekitar tujuh kali sedetik
+          selama kamera terbuka, sampai galat yang sungguhan tenggelam.
 
-          Hanya QR yang disebut. Stiker Code 128 lama sengaja tidak lagi
-          diterima: selama keduanya terbaca, stiker lama yang belum diganti
-          tetap bekerja diam-diam, dan tidak akan pernah ada yang tahu mana
-          sepeda yang stikernya masih ketinggalan. Menolaknya membuat sisa
-          pekerjaan itu terlihat pada hari pertama, bukan berbulan kemudian.
+          Stiker Code 128 lama sengaja ikut tidak terbaca: selama keduanya
+          diterima, stiker lama yang belum diganti tetap bekerja diam-diam, dan
+          tidak akan pernah ada yang tahu mana sepeda yang masih ketinggalan.
 
           TRY_HARDER menyuruh pembaca memeriksa lebih teliti, termasuk gambar
-          yang dibalik.
+          yang dibalik. Sebabnya dipakukan di test/pembaca-qr.test.ts.
         */
-        const petunjuk = new Map<DecodeHintType, unknown>([
-          [Petunjuk.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]],
-          [Petunjuk.TRY_HARDER, true],
-        ]);
+        const petunjuk = new Map<DecodeHintType, unknown>([[Petunjuk.TRY_HARDER, true]]);
 
-        pembacaRef.current = new BrowserMultiFormatReader(petunjuk);
+        pembacaRef.current = new BrowserQRCodeReader(petunjuk);
         setSiap(true);
 
         // Putaran pemindaian: satu jangkauan per putaran, bergantian. Memakai
@@ -256,13 +259,12 @@ function Pratinjau({
         periksa();
       } catch (e) {
         if (dibatalkan) return;
-        const namaGalat = e instanceof Error ? e.name : "";
+
         setGalat(
-          namaGalat === "NotAllowedError"
-            ? "Izin kamera ditolak. Aktifkan izin kamera di pengaturan browser, atau ketik kode sepedanya secara manual."
-            : namaGalat === "NotFoundError" || namaGalat === "OverconstrainedError"
-              ? "Kamera itu tidak ada di perangkat ini. Coba tombol ganti kamera."
-              : "Kamera tidak bisa dibuka. Coba lagi atau ketik kode sepedanya secara manual.",
+          pesanGalatKamera(e instanceof Error ? e.name : "", {
+            protokol: window.location.protocol,
+            hostname: window.location.hostname,
+          }),
         );
       }
     }
