@@ -5,6 +5,7 @@ import { keluar } from "@/lib/actions/auth";
 import type { PenggunaAktif } from "@/lib/auth/dal";
 import { Ikon } from "@/components/ui/icons";
 import { KonfirmasiAksi } from "@/components/ui/konfirmasi";
+import { TombolTema } from "@/components/ui/tema";
 import { judulHalaman } from "./menu";
 
 const LABEL_PERAN: Record<PenggunaAktif["peran"], string> = {
@@ -53,6 +54,8 @@ export function Topbar({ pengguna }: { pengguna: PenggunaAktif }) {
           >
             {inisial(pengguna.nama)}
           </span>
+
+          <TombolTema />
 
           {/* Tombolnya kecil dan berdekatan dengan lencana pengguna, jadi paling
               mudah tersenggol — dan keluar di tengah shift berarti petugas harus

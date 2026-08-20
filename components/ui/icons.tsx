@@ -27,6 +27,8 @@ import {
   Landmark,
   LayoutDashboard,
   LogOut,
+  Monitor,
+  Moon,
   Palette,
   Phone,
   Plus,
@@ -36,6 +38,7 @@ import {
   Search,
   Settings2,
   SquareUserRound,
+  Sun,
   Tag,
   TrendingDown,
   TrendingUp,
@@ -84,6 +87,9 @@ export const Ikon = {
   arsip: ClipboardList,
   keuangan: Landmark,
   tampilan: Palette,
+  temaSistem: Monitor,
+  temaTerang: Sun,
+  temaGelap: Moon,
 } as const satisfies Record<string, LucideIcon>;
 
 export type NamaIkon = keyof typeof Ikon;
