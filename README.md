@@ -1,7 +1,7 @@
 # Rental Sepeda Garut
 
 Aplikasi pencatatan rental sepeda per jam dengan bagi hasil pemilik. Alur kerjanya:
-scan barcode → mulai rental → scan lagi saat kembali → sistem menghitung durasi,
+scan QR → mulai rental → scan lagi saat kembali → sistem menghitung durasi,
 biaya, dan bagi hasil → semuanya masuk laporan harian.
 
 Dibangun dengan Next.js 16 (App Router), TypeScript, Tailwind 4, Postgres, dan Drizzle ORM.
@@ -87,18 +87,32 @@ maupun bagi hasil bulan lalu.
 **Tanggal berarti tanggal WIB.** Transaksi pukul 23:30 masuk hari itu, bukan hari
 berikutnya. Batas hari dihitung pada 00:00 Asia/Jakarta.
 
-## Cara scan barcode
+## Cara scan QR
 
 Tiga cara, semuanya bermuara ke halaman yang sama:
 
-1. **Scanner USB/Bluetooth** — paling cepat di meja kasir. Alatnya bekerja seperti
-   keyboard; kolom pencarian menjaga fokus sendiri, jadi petugas cukup menembak.
-2. **Kamera HP** — tombol "Scan pakai kamera". Butuh HTTPS (otomatis di Vercel;
-   di localhost juga jalan).
-3. **Ketik manual** — cadangan kalau stiker rusak.
+1. **Kamera HP** — tombol "Scan pakai kamera". Ini cara yang dipakai sehari-hari.
+   Butuh HTTPS (otomatis di Vercel; di localhost juga jalan).
+2. **Scanner USB/Bluetooth** — bekerja seperti keyboard; kolom pencarian menjaga
+   fokus sendiri, jadi petugas cukup menembak. Perlu tipe **2D imager**: scanner
+   laser bergaris merah secara fisik tidak bisa membaca QR.
+3. **Ketik manual** — cadangan kalau stiker rusak. Kodenya ikut tercetak sebagai
+   teks di stiker untuk keadaan ini.
 
-Stiker barcode dicetak dari **Data Sepeda → pilih sepeda → Cetak barcode**
-(format Code128, empat stiker per halaman).
+Stiker QR dicetak dari **Data Sepeda → pilih sepeda → Cetak QR** (empat stiker
+per halaman).
+
+Kode sepedanya ditulis apa adanya ke dalam QR — `MTB-023`, bukan tautan. Stiker
+menempel bertahun-tahun di rangka sepeda, sedangkan alamat situs bisa berubah;
+alamat yang tertanam di stiker akan mati lebih dulu daripada stikernya.
+
+Tingkat koreksi galatnya **H**, yang tertinggi: sekitar sepertiga modul boleh
+rusak dan kodenya tetap terbaca. Untuk kode sepanjang `MTB-023` tingkat ini
+gratis — ukurannya tetap 21×21 modul, sama seperti tingkat bawaan.
+
+Peralihan dari Code 128: stiker lama **tidak lagi dibaca**. Pemindai sengaja
+hanya menerima QR, supaya sepeda yang stikernya belum diganti ketahuan pada hari
+pertama, bukan berbulan kemudian.
 
 ## Struktur kode
 
@@ -316,10 +330,10 @@ di sana. Siapkan Neon lebih dulu.
 | Menu | Isi |
 | --- | --- |
 | **Dashboard** | Total sepeda, tersedia, disewa, booking, servis, tidak aktif, transaksi & omzet hari ini |
-| **Scan Barcode** | Kartu sepeda, mulai rental, selesaikan rental, jemput booking |
+| **Scan QR** | Kartu sepeda, mulai rental, selesaikan rental, jemput booking |
 | **Booking** | Catat pesanan, konfirmasi, batalkan, tandai hangus |
 | **Transaksi** | Daftar dan rincian seluruh rental |
-| **Data Sepeda** | CRUD, foto, status, cetak stiker barcode |
+| **Data Sepeda** | CRUD, foto, status, cetak stiker QR |
 | **Data Pemilik** | CRUD, persentase bagi hasil, rekap bulan berjalan |
 | **Data Penyewa** | Terdata otomatis dari transaksi |
 | **Maintenance** | Servis, sparepart, biaya, jam pakai, jadwal servis berikutnya |

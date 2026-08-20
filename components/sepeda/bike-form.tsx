@@ -62,7 +62,7 @@ export function BikeForm({
 
       <Field
         id="kode"
-        label="Kode / isi barcode"
+        label="Kode / isi QR"
         petunjuk="Dicetak jadi stiker dan dibaca scanner. Contoh: MTB-023."
         galat={status.galatField?.kode}
         wajib

@@ -39,7 +39,7 @@ export const KELOMPOK_MENU: KelompokMenu[] = [
     selaluTampil: true,
     item: [
       { href: "/dashboard", label: "Dashboard", labelPendek: "Beranda", ikon: "dashboard" },
-      { href: "/scan", label: "Scan Barcode", labelPendek: "Scan", ikon: "scan" },
+      { href: "/scan", label: "Scan QR", labelPendek: "Scan", ikon: "scan" },
       { href: "/booking", label: "Booking", labelPendek: "Booking", ikon: "booking" },
       { href: "/transaksi", label: "Transaksi", labelPendek: "Transaksi", ikon: "transaksi" },
     ],

@@ -81,7 +81,7 @@ export function BookingForm({
       {status.galat && <PesanGalat>{status.galat}</PesanGalat>}
 
       {/* Sepedanya ditampilkan, bukan dipilih. Nilainya dikirim lewat kolom
-          tersembunyi karena sudah dipastikan dari barcode yang dipindai. */}
+          tersembunyi karena sudah dipastikan dari QR yang dipindai. */}
       <input type="hidden" name="bikeId" value={sepeda.id} />
 
       <div className="rounded-control border border-line bg-surface-2 px-3.5 py-3">

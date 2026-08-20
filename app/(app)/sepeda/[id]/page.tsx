@@ -42,12 +42,12 @@ export default async function HalamanDetailSepeda(props: PageProps<"/sepeda/[id]
           Buka di Scan
         </ButtonLink>
         <ButtonLink
-          href={`/sepeda/${bikeId}/barcode`}
+          href={`/sepeda/${bikeId}/qr`}
           variasi="kedua"
           ukuran="sm"
           ikon={Ikon.label}
         >
-          Cetak barcode
+          Cetak QR
         </ButtonLink>
         {bolehKelola && (
           <ButtonLink href={`/sepeda/${bikeId}/ubah`} variasi="kedua" ukuran="sm">

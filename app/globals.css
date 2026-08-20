@@ -264,7 +264,7 @@ body {
   }
 }
 
-/* Halaman cetak stiker barcode: hilangkan semua kromo aplikasi. */
+/* Halaman cetak stiker QR: hilangkan semua kromo aplikasi. */
 @media print {
   .no-print {
     display: none !important;

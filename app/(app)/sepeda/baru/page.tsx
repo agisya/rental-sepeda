@@ -37,7 +37,7 @@ export default async function HalamanSepedaBaru() {
         <Card>
           <CardHeader
             judul="Data sepeda"
-            keterangan="Kode yang diisi di sini menjadi isi barcode yang dicetak jadi stiker."
+            keterangan="Kode yang diisi di sini menjadi isi QR yang dicetak jadi stiker."
           />
           <CardBody>
             <BikeForm pemilik={pemilik} />

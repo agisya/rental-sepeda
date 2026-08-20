@@ -4,14 +4,14 @@
  *
  * Kenapa lebih dari satu: bingkai kamera sungguhan tidak bersih. Ada bayangan,
  * pantulan, rangka sepeda, dan tangan di sekitar stiker. Pembaca menentukan
- * ambang hitam-putih dari isi gambar, jadi apa yang mengelilingi barcode ikut
- * menentukan apakah garis-garisnya masih terbaca sebagai garis. Membaca
- * potongan tengah memberi kesempatan kedua dengan latar yang jauh lebih sedikit.
+ * ambang hitam-putih dari isi gambar, jadi apa yang mengelilingi QR ikut
+ * menentukan apakah modulnya masih terbaca sebagai modul. Membaca potongan
+ * tengah memberi kesempatan kedua dengan latar yang jauh lebih sedikit.
  *
- * Yang TIDAK terbukti: dugaan bahwa barcode kecil di bingkai besar meleset dari
- * sapuan baris pembaca. Pada gambar bersih, bingkai 20 kali lebih tinggi dari
- * barcode-nya tetap terbaca utuh. Jadi pemotongan ini bukan keharusan
- * geometris — ia kesempatan tambahan yang murah, bukan penyelamat.
+ * Yang TIDAK diklaim: bahwa pemotongan ini perlu. Pada gambar bersih, QR yang
+ * hanya mengisi seperdelapan tinggi bingkai tetap terbaca utuh tanpa dipotong.
+ * Jadi pemotongan bukan keharusan geometris — ia kesempatan tambahan yang
+ * murah, bukan penyelamat.
  *
  * Dipisah dari komponennya supaya angkanya bisa diuji tanpa memuat React dan
  * seluruh pustaka kamera.
@@ -28,14 +28,22 @@ export type Jangkauan = {
 };
 
 /**
- * Urutannya disengaja: bingkai penuh lebih dulu.
+ * Potongannya mendekati persegi, mengikuti bentuk QR.
  *
- * Dari dekat, memotong justru berisiko memangkas ujung barcode beserta ruang
- * putih di sisinya — dan Code 128 tanpa ruang putih itu tidak terbaca sama
- * sekali. Potongan yang makin sempit baru dicoba sesudahnya.
+ * Ini yang berubah saat stiker beralih dari Code 128 ke QR. Barcode garis itu
+ * lebar dan pendek, jadi potongan yang masuk akal untuknya juga berbentuk pita.
+ * QR persegi: pita selebar 0,6 bingkai tapi setinggi 0,32 akan memangkas atas
+ * dan bawah QR berukuran sedang, sementara kelebihan lebarnya tidak menolong
+ * sedikit pun. Angka di bawah dipilih supaya setiap potongan mendekati persegi
+ * pada bingkai 16:9 yang diminta aplikasi — 0,45 × 16/9 ≈ 0,8, dan
+ * 0,28 × 16/9 ≈ 0,5.
+ *
+ * Urutannya disengaja: bingkai penuh lebih dulu. Dari dekat, QR-nya lebih besar
+ * daripada potongan mana pun, dan hanya bingkai penuh yang memuatnya. Potongan
+ * yang makin sempit baru berguna saat stikernya justru terlihat kecil.
  */
 export const JANGKAUAN: Jangkauan[] = [
   { x: 0, y: 0, w: 1, h: 1 },
-  { x: 0.05, y: 0.28, w: 0.9, h: 0.44 },
-  { x: 0.2, y: 0.34, w: 0.6, h: 0.32 },
+  { x: 0.275, y: 0.1, w: 0.45, h: 0.8 },
+  { x: 0.36, y: 0.25, w: 0.28, h: 0.5 },
 ];

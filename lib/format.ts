@@ -26,7 +26,7 @@ export function normalkanNoHp(input: string): string {
   return bersih;
 }
 
-/** Kode barcode selalu disimpan huruf besar tanpa spasi supaya scan selalu cocok. */
+/** Kode sepeda selalu disimpan huruf besar tanpa spasi supaya scan selalu cocok. */
 export function normalkanKode(input: string): string {
   return input.trim().toUpperCase().replace(/\s+/g, "");
 }

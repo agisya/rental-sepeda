@@ -133,7 +133,7 @@ describe("skema database", () => {
 });
 
 describe("query yang dipakai halaman", () => {
-  it("menemukan sepeda dari kode barcode beserta data pemiliknya", async () => {
+  it("menemukan sepeda dari kode QR beserta data pemiliknya", async () => {
     const sepeda = await sepedaByKode("mtb-023");
 
     expect(sepeda).not.toBeNull();

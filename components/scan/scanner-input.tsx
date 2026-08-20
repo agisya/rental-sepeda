@@ -10,16 +10,20 @@ import { normalkanKode } from "@/lib/format";
 /**
  * Satu pintu masuk untuk tiga cara memasukkan kode sepeda:
  *
- *  1. Scanner USB/Bluetooth — bekerja seperti keyboard. Kolom ini menjaga fokus
- *     sendiri, jadi petugas cukup menembak barcode tanpa menyentuh layar.
- *  2. Kamera HP — dibuka lewat tombol, memuat pustaka pemindai sesuai kebutuhan.
- *  3. Ketik manual — cadangan kalau stiker barcode rusak atau kotor.
+ *  1. Kamera HP — dibuka lewat tombol, memuat pustaka pemindai sesuai kebutuhan.
+ *     Ini cara yang dipakai sehari-hari.
+ *  2. Scanner USB/Bluetooth yang bisa membaca QR — bekerja seperti keyboard,
+ *     dan kolom ini menjaga fokus sendiri supaya petugas tidak perlu menyentuh
+ *     layar. Perlu tipe 2D imager; scanner laser bergaris merah secara fisik
+ *     tidak bisa membaca QR, hanya barcode garis.
+ *  3. Ketik manual — cadangan kalau stiker rusak atau kotor. Kodenya juga
+ *     tercetak sebagai teks di stiker untuk keadaan ini.
  */
 export function ScannerInput({
   kodeAwal = "",
   tujuan = "/scan",
   judul = "Scan sepeda",
-  keterangan = "Tembak barcode dengan scanner, atau ketik kodenya lalu tekan Enter.",
+  keterangan = "Buka kamera untuk scan QR, atau ketik kodenya lalu tekan Enter.",
 }: {
   kodeAwal?: string;
   /** Halaman yang dituju setelah kodenya didapat. Booking memakai pemindai yang
@@ -103,7 +107,7 @@ export function ScannerInput({
             value={kode}
             onChange={(e) => setKode(e.target.value)}
             name="kode"
-            aria-label="Kode atau barcode sepeda"
+            aria-label="Kode sepeda"
             placeholder="Kode sepeda"
             autoComplete="off"
             autoCapitalize="characters"

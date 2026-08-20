@@ -5,7 +5,7 @@ import { StatusSepedaBadge } from "@/components/ui/status-badge";
 import { FotoSepeda } from "@/components/sepeda/foto-sepeda";
 import { rupiah } from "@/lib/format";
 
-/** Kartu identitas sepeda yang muncul tepat setelah barcode dibaca. */
+/** Kartu identitas sepeda yang muncul tepat setelah QR dibaca. */
 export function BikeCard({
   sepeda,
   statistik,

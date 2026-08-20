@@ -11,7 +11,7 @@ import { Ikon } from "@/components/ui/icons";
 import { JANGKAUAN } from "@/lib/scan/jangkauan";
 
 /**
- * Pemindai barcode lewat kamera. Pustaka @zxing/browser diimpor dinamis supaya
+ * Pemindai QR lewat kamera. Pustaka @zxing/browser diimpor dinamis supaya
  * tidak ikut diunduh petugas yang memakai scanner USB — pustakanya cukup besar
  * dan sebagian besar sesi tidak pernah membuka kamera.
  *
@@ -36,10 +36,13 @@ function batasan(arah: Arah): MediaStreamConstraints {
     facingMode: { ideal: arah === "belakang" ? "environment" : "user" },
 
     // Resolusi diminta setinggi mungkin, dan ini bukan soal ketajaman gambar.
-    // Code 128 memuat puluhan garis tipis berdampingan. Pada resolusi bawaan
-    // yang sering hanya 640×480, tiap garis cuma kebagian beberapa piksel dan
-    // batas antar-garis melebur — barcode-nya terlihat jelas oleh mata tapi
-    // tidak akan pernah terbaca mesin.
+    // QR memuat matriks modul kecil-kecil; pada resolusi bawaan yang sering
+    // hanya 640×480, stiker yang dilihat dari jarak sedang menyisakan satu-dua
+    // piksel per modul dan batas antar-modul melebur — QR-nya terlihat jelas
+    // oleh mata tapi tidak akan pernah terbaca mesin.
+    //
+    // Perbandingan 16:9 juga yang diandaikan oleh angka di lib/scan/jangkauan.ts
+    // saat menghitung potongan yang mendekati persegi.
     width: { ideal: 1920 },
     height: { ideal: 1080 },
   };
@@ -207,18 +210,22 @@ function Pratinjau({
         /*
           Pemindai diberi tahu apa yang dicari, bukan dibiarkan menebak.
 
-          Tanpa petunjuk ia mencoba semua format yang ia kenal — QR, Data
-          Matrix, PDF417, belasan barcode garis — pada setiap bingkai. Waktu
-          yang seharusnya dipakai memeriksa barcode yang benar habis untuk
-          format yang tidak pernah dicetak aplikasi ini.
+          Tanpa petunjuk ia mencoba semua format yang ia kenal — Data Matrix,
+          PDF417, belasan barcode garis — pada setiap bingkai. Waktu yang
+          seharusnya dipakai memeriksa QR habis untuk format yang tidak pernah
+          dicetak aplikasi ini.
 
-          Stiker yang dicetak selalu Code 128. Code 39 ikut disebut supaya
-          stiker lama buatan alat lain tetap terbaca, tanpa membuka pintu
-          terlalu lebar. TRY_HARDER menyuruh pembaca memeriksa lebih teliti —
-          lebih banyak baris, dan gambar yang dibalik.
+          Hanya QR yang disebut. Stiker Code 128 lama sengaja tidak lagi
+          diterima: selama keduanya terbaca, stiker lama yang belum diganti
+          tetap bekerja diam-diam, dan tidak akan pernah ada yang tahu mana
+          sepeda yang stikernya masih ketinggalan. Menolaknya membuat sisa
+          pekerjaan itu terlihat pada hari pertama, bukan berbulan kemudian.
+
+          TRY_HARDER menyuruh pembaca memeriksa lebih teliti, termasuk gambar
+          yang dibalik.
         */
         const petunjuk = new Map<DecodeHintType, unknown>([
-          [Petunjuk.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128, BarcodeFormat.CODE_39]],
+          [Petunjuk.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]],
           [Petunjuk.TRY_HARDER, true],
         ]);
 
@@ -287,13 +294,15 @@ function Pratinjau({
           </p>
         )}
 
-        {/* Kotak bantu menandai pita tengah — jangkauan yang paling sering
-            berhasil. Barcode tidak wajib pas di dalamnya, karena seluruh
-            bingkai juga tetap diperiksa bergantian. */}
+        {/* Kotak bantu berbentuk persegi, mengikuti bentuk QR — kotak berupa
+            pita lebar akan membuat orang mengarahkan HP terlalu jauh supaya
+            stikernya "muat melebar", padahal yang menentukan justru tingginya.
+            QR tidak wajib pas di dalamnya, karena seluruh bingkai juga tetap
+            diperiksa bergantian. */}
         {siap && (
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-6 top-1/2 h-24 -translate-y-1/2 rounded-control border-2 border-white/70"
+            className="pointer-events-none absolute left-1/2 top-1/2 aspect-square h-3/5 -translate-x-1/2 -translate-y-1/2 rounded-control border-2 border-white/70"
           />
         )}
 
@@ -317,20 +326,19 @@ function Pratinjau({
         </p>
       ) : gagalAmbil ? (
         <p role="status" className="text-sm text-warn">
-          Barcode belum terbaca. Sisakan sedikit ruang putih di kiri dan kanan
-          stiker, pastikan cukup terang, dan tahan agar tidak goyang sebentar.
+          QR belum terbaca. Sisakan sedikit ruang putih di sekeliling stiker,
+          pastikan cukup terang, dan tahan agar tidak goyang sebentar.
         </p>
       ) : (
         <p className="text-sm text-ink-muted">
-          Arahkan ke barcode dan tunggu — biasanya terbaca sendiri. Kalau tidak,
-          tekan Ambil barcode. Memakai kamera{" "}
-          {arah === "belakang" ? "belakang" : "depan"}.
+          Arahkan ke QR dan tunggu — biasanya terbaca sendiri. Kalau tidak, tekan
+          Ambil QR. Memakai kamera {arah === "belakang" ? "belakang" : "depan"}.
         </p>
       )}
 
       {siap && (
         <Button penuh ukuran="lg" ikon={Ikon.scan} onClick={ambilSekarang}>
-          Ambil barcode
+          Ambil QR
         </Button>
       )}
     </>

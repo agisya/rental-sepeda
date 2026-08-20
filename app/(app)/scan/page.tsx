@@ -25,7 +25,7 @@ import { ambilPengaturan } from "@/lib/queries/pengaturan";
 import { kodeBooking } from "@/lib/booking/kode";
 import { formatJamWib, formatTanggalWib } from "@/lib/waktu";
 
-export const metadata: Metadata = { title: "Scan Barcode" };
+export const metadata: Metadata = { title: "Scan QR" };
 
 export default async function HalamanScan(props: PageProps<"/scan">) {
   await wajibPengguna();
@@ -51,7 +51,7 @@ export default async function HalamanScan(props: PageProps<"/scan">) {
           <KeadaanKosong
             ikon={Ikon.scan}
             judul="Belum ada sepeda yang di-scan"
-            keterangan="Tembak barcode, buka kamera, atau ketik kode sepeda (mis. MTB-023)."
+            keterangan="Buka kamera untuk scan QR, atau ketik kode sepeda (mis. MTB-023)."
           />
         </Card>
       )}

@@ -38,7 +38,7 @@ export default async function HalamanDashboard() {
       {/* Aksi utama sengaja besar dan paling atas: inilah yang ditekan puluhan
           kali sehari, sering sambil berdiri memegang sepeda. */}
       <ButtonLink href="/scan" ukuran="lg" penuh ikon={Ikon.scan}>
-        Scan Barcode Sepeda
+        Scan QR Sepeda
       </ButtonLink>
 
       <Bagian judul="Hari ini">

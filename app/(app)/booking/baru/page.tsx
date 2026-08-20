@@ -40,7 +40,7 @@ export default async function HalamanBookingBaru(props: PageProps<"/booking/baru
 
   const hariIni = kunciTanggalWib(sekarang);
   /*
-    Sepedanya ditentukan lewat barcode, bukan dipilih dari daftar.
+    Sepedanya ditentukan lewat scan QR, bukan dipilih dari daftar.
 
     Menerima dua bentuk: ?kode= dari hasil pemindaian, dan ?sepeda= dari tautan
     di halaman scan. Keduanya menunjuk sepeda yang sama; yang berbeda hanya dari
@@ -115,7 +115,7 @@ export default async function HalamanBookingBaru(props: PageProps<"/booking/baru
           <ScannerInput
             tujuan="/booking/baru"
             judul="Scan sepeda yang mau dipesan"
-            keterangan="Tembak barcode di sepedanya, atau ketik kodenya lalu tekan Enter."
+            keterangan="Scan QR di sepedanya, atau ketik kodenya lalu tekan Enter."
           />
         </>
       )}

@@ -137,7 +137,7 @@ export const bikes = pgTable(
   "bikes",
   {
     id: serial("id").primaryKey(),
-    /** Isi barcode yang ditempel di sepeda, mis. "MTB-023". */
+    /** Isi QR yang ditempel di sepeda, mis. "MTB-023". */
     kode: text("kode").notNull().unique(),
     nama: text("nama").notNull(),
     jenis: text("jenis").notNull(),
