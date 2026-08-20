@@ -92,7 +92,7 @@ berikutnya. Batas hari dihitung pada 00:00 Asia/Jakarta.
 Tiga cara, semuanya bermuara ke halaman yang sama:
 
 1. **Kamera HP** — tombol "Scan pakai kamera". Ini cara yang dipakai sehari-hari.
-   Butuh HTTPS (otomatis di Vercel; di localhost juga jalan).
+   Butuh HTTPS (otomatis di alamat produksi; di localhost juga jalan).
 2. **Scanner USB/Bluetooth** — bekerja seperti keyboard; kolom pencarian menjaga
    fokus sendiri, jadi petugas cukup menembak. Perlu tipe **2D imager**: scanner
    laser bergaris merah secara fisik tidak bisa membaca QR.
@@ -113,6 +113,17 @@ gratis — ukurannya tetap 21×21 modul, sama seperti tingkat bawaan.
 Peralihan dari Code 128: stiker lama **tidak lagi dibaca**. Pemindai sengaja
 hanya menerima QR, supaya sepeda yang stikernya belum diganti ketahuan pada hari
 pertama, bukan berbulan kemudian.
+
+### Menguji kamera dari HP
+
+`npm run dev:hp` menyalakan HTTPS bersertifikat buatan sendiri. Halamannya bisa
+dibuka setelah peringatan sertifikat dilewati, **tapi kameranya tetap ditolak** —
+peramban tidak mengizinkan kamera pada sertifikat yang tidak dipercaya, dan
+penolakannya datang sebagai `NotAllowedError`, galat yang sama persis dengan izin
+yang pernah ditolak petugas.
+
+Jadi `dev:hp` berguna untuk menguji tata letak di layar HP, bukan untuk menguji
+kameranya. **Uji kamera lewat alamat produksi** yang sertifikatnya sah.
 
 ## Struktur kode
 
