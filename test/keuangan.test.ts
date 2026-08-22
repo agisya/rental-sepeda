@@ -92,6 +92,7 @@ async function rentalSelesai(opsi: {
     waktuSelesai,
     tarifPerJam: opsi.tarif,
     persentasePemilik: opsi.persen,
+    toleransiMenit: 5,
   });
 
   await uji.db.insert(rentals).values({

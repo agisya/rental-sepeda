@@ -174,19 +174,24 @@ describe("satu rental selesai, dari mulai sampai masuk laporan", () => {
     expect(berjalan?.namaKasir).toBe("Rina");
   });
 
-  it("menghitung dan menyimpan biaya sesuai aturan pembulatan", async () => {
+  it("menghitung dan menyimpan biaya sesuai aturan pokok + tambahan", async () => {
     const biaya = hitungBiaya({
       waktuMulai: mulai,
       waktuSelesai: selesai,
       tarifPerJam: TARIF,
       persentasePemilik: PERSEN,
+      toleransiMenit: 5,
     });
 
-    // 1 jam 10 menit dibulatkan menjadi 2 jam.
-    expect(biaya.durasiJamDitagih).toBe(2);
-    expect(biaya.totalBiaya).toBe(30_000);
-    expect(biaya.bagianPemilik).toBe(18_000);
-    expect(biaya.bagianRental).toBe(12_000);
+    // 1 jam 10 menit: pokoknya 1 jam, dan 10 menit sisanya melewati toleransi
+    // sehingga disarankan satu blok setengah jam. Dulu durasi ini ditagih 2 jam
+    // penuh — perilaku itulah yang sengaja dibuang.
+    expect(biaya.durasiJamDitagih).toBe(1);
+    expect(biaya.sisaMenit).toBe(10);
+    expect(biaya.tambahanSaran).toBe(7_500);
+    expect(biaya.totalBiaya).toBe(22_500);
+    expect(biaya.bagianPemilik).toBe(13_500);
+    expect(biaya.bagianRental).toBe(9_000);
 
     await uji.db
       .update(rentals)
@@ -195,6 +200,11 @@ describe("satu rental selesai, dari mulai sampai masuk laporan", () => {
         waktuSelesai: selesai,
         durasiMenit: biaya.durasiMenit,
         durasiJamDitagih: biaya.durasiJamDitagih,
+        // Ikut disimpan supaya baris ini tetap masuk akal dibaca: totalBiaya
+        // sudah memuat denda, jadi tanpa kedua kolom ini rincian rentalnya
+        // tidak akan pernah berjumlah sama dengan totalnya.
+        tambahanSaran: biaya.tambahanSaran,
+        tambahanDitagih: biaya.tambahanDitagih,
         totalBiaya: biaya.totalBiaya,
         bagianPemilik: biaya.bagianPemilik,
         bagianRental: biaya.bagianRental,
@@ -210,10 +220,13 @@ describe("satu rental selesai, dari mulai sampai masuk laporan", () => {
 
     expect(ringkasan.jumlahTransaksi).toBe(1);
     expect(ringkasan.jumlahSepedaDipakai).toBe(1);
-    expect(ringkasan.totalJam).toBe(2);
-    expect(ringkasan.totalOmzet).toBe(30_000);
-    expect(ringkasan.totalBagianPemilik).toBe(18_000);
-    expect(ringkasan.totalBagianRental).toBe(12_000);
+    // Jam pokok, bukan pembulatan ke atas. Sewa 1 jam 10 menit menyumbang 1 jam
+    // ke laporan, dan 10 menit sisanya masuk sebagai uang denda — bukan sebagai
+    // satu jam pemakaian yang tidak pernah terjadi.
+    expect(ringkasan.totalJam).toBe(1);
+    expect(ringkasan.totalOmzet).toBe(22_500);
+    expect(ringkasan.totalBagianPemilik).toBe(13_500);
+    expect(ringkasan.totalBagianRental).toBe(9_000);
   });
 
   it("menjaga omzet sama dengan jumlah kedua bagian", async () => {
@@ -238,8 +251,8 @@ describe("satu rental selesai, dari mulai sampai masuk laporan", () => {
 
     expect(rekap).toHaveLength(1);
     expect(rekap[0].namaPemilik).toBe("Budi Santoso");
-    expect(rekap[0].omzetKotor).toBe(30_000);
-    expect(rekap[0].bagianPemilik).toBe(18_000);
+    expect(rekap[0].omzetKotor).toBe(22_500);
+    expect(rekap[0].bagianPemilik).toBe(13_500);
 
     const perPemilik = await bagiHasilPemilik(idPemilik, rentangHariWib(selesai));
     expect(perPemilik.bagianPemilik).toBe(rekap[0].bagianPemilik);
@@ -249,8 +262,8 @@ describe("satu rental selesai, dari mulai sampai masuk laporan", () => {
     const statistik = await statistikBulananSepeda(idSepeda, selesai);
 
     expect(statistik.jumlahRental).toBe(1);
-    expect(statistik.totalJam).toBe(2);
-    expect(statistik.totalOmzet).toBe(30_000);
+    expect(statistik.totalJam).toBe(1);
+    expect(statistik.totalOmzet).toBe(22_500);
   });
 
   it("muncul di daftar transaksi lengkap dengan relasinya", async () => {
@@ -259,7 +272,7 @@ describe("satu rental selesai, dari mulai sampai masuk laporan", () => {
     expect(daftar).toHaveLength(1);
     expect(daftar[0].kodeSepeda).toBe("MTB-023");
     expect(daftar[0].namaPenyewa).toBe("Asep");
-    expect(daftar[0].totalBiaya).toBe(30_000);
+    expect(daftar[0].totalBiaya).toBe(22_500);
   });
 
   it("terhitung pada ringkasan penyewa", async () => {
@@ -268,7 +281,7 @@ describe("satu rental selesai, dari mulai sampai masuk laporan", () => {
     expect(penyewa).toHaveLength(1);
     expect(penyewa[0].nama).toBe("Asep");
     expect(penyewa[0].jumlahRental).toBe(1);
-    expect(penyewa[0].totalBelanja).toBe(30_000);
+    expect(penyewa[0].totalBelanja).toBe(22_500);
     expect(penyewa[0].sedangMenyewa).toBe(0);
   });
 
@@ -287,7 +300,7 @@ describe("satu rental selesai, dari mulai sampai masuk laporan", () => {
     expect(dashboard.status.tersedia).toBe(1);
     expect(dashboard.status.disewa).toBe(0);
     expect(dashboard.rentalBerjalan).toBe(0);
-    expect(dashboard.hariIni.totalOmzet).toBe(30_000);
+    expect(dashboard.hariIni.totalOmzet).toBe(22_500);
   });
 });
 
@@ -419,6 +432,7 @@ describe("uang tidak pernah hilang karena pembulatan", () => {
         waktuSelesai: selesai,
         tarifPerJam: 17_777,
         persentasePemilik: k.persen,
+        toleransiMenit: 5,
       });
 
       await uji.db.insert(rentals).values({

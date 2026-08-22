@@ -17,7 +17,9 @@ import { ButtonLink } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { Ikon } from "@/components/ui/icons";
 import { FormBatalBooking, TombolJemput } from "@/components/booking/booking-aksi";
+import { BarisKontak } from "@/components/ui/tombol-kontak";
 import { kodeBooking } from "@/lib/booking/kode";
+import { pesanWa } from "@/lib/kontak";
 import { rupiah } from "@/lib/format";
 import { formatJamWib, formatTanggalWib } from "@/lib/waktu";
 
@@ -66,14 +68,26 @@ export default async function HalamanDetailBooking(props: PageProps<"/booking/[i
 
         <DaftarData className="border-t border-line">
           <BarisData label="Penyewa">{booking.namaPenyewa}</BarisData>
-          <BarisData label="No. HP">
-            <a
-              href={`tel:${booking.noHpPenyewa}`}
-              className="text-brand underline-offset-2 hover:underline"
-            >
-              {booking.noHpPenyewa}
-            </a>
-          </BarisData>
+          <BarisKontak
+            noHp={booking.noHpPenyewa}
+            nama={booking.namaPenyewa}
+            // Halaman ini dibuka justru saat penyewanya perlu dihubungi soal
+            // booking itu, jadi pesannya sudah menyebut kode dan jamnya.
+            pesan={
+              terlewat
+                ? pesanWa.bookingHangus(
+                    booking.namaPenyewa,
+                    kodeBooking(booking.id),
+                    formatJamWib(booking.waktuMulai),
+                  )
+                : pesanWa.bookingJemput(
+                    booking.namaPenyewa,
+                    kodeBooking(booking.id),
+                    booking.kodeSepeda,
+                    formatJamWib(booking.waktuMulai),
+                  )
+            }
+          />
           <BarisData label="Sepeda">
             <Link
               href={`/sepeda/${booking.bikeId}`}

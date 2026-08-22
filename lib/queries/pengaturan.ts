@@ -12,6 +12,7 @@ export const PENGATURAN_BAWAAN: Omit<Settings, "diperbaruiPada"> = {
   noHp: null,
   batasJamRental: 12,
   toleransiBookingMenit: 60,
+  toleransiTelatMenit: 5,
 };
 
 /**

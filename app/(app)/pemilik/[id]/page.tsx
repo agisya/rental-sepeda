@@ -19,6 +19,8 @@ import { ButtonLink } from "@/components/ui/button";
 import { StatusSepedaBadge } from "@/components/ui/status-badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { Ikon } from "@/components/ui/icons";
+import { TombolKontak } from "@/components/ui/tombol-kontak";
+import { pesanWa } from "@/lib/kontak";
 import { rupiah } from "@/lib/format";
 import { formatTanggalWib } from "@/lib/waktu";
 
@@ -46,13 +48,14 @@ export default async function HalamanDetailPemilik(props: PageProps<"/pemilik/[i
         judul={pemilik.nama}
         keterangan={
           <>
-            <a
-              href={`tel:${pemilik.noHp}`}
-              className="text-brand underline-offset-2 hover:underline"
-            >
-              {pemilik.noHp}
-            </a>
+            <span className="tabular-nums">{pemilik.noHp}</span>
             {pemilik.alamat && ` · ${pemilik.alamat}`}
+            <TombolKontak
+              noHp={pemilik.noHp}
+              nama={pemilik.nama}
+              pesan={pesanWa.sapaan(pemilik.nama)}
+              className="mt-2"
+            />
           </>
         }
         aksi={

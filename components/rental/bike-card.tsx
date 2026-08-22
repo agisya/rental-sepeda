@@ -3,6 +3,8 @@ import type { SepedaDenganPemilik, StatistikBulanan } from "@/lib/queries/bikes"
 import { BarisData, DaftarData } from "@/components/ui/card";
 import { StatusSepedaBadge } from "@/components/ui/status-badge";
 import { FotoSepeda } from "@/components/sepeda/foto-sepeda";
+import { BarisKontak } from "@/components/ui/tombol-kontak";
+import { pesanWa } from "@/lib/kontak";
 import { rupiah } from "@/lib/format";
 
 /** Kartu identitas sepeda yang muncul tepat setelah QR dibaca. */
@@ -59,14 +61,12 @@ export function BikeCard({
             ({sepeda.persentasePemilik}%)
           </span>
         </BarisData>
-        <BarisData label="No. HP pemilik">
-          <a
-            href={`tel:${sepeda.noHpPemilik}`}
-            className="text-brand underline-offset-2 hover:underline"
-          >
-            {sepeda.noHpPemilik}
-          </a>
-        </BarisData>
+        <BarisKontak
+          label="No. HP pemilik"
+          noHp={sepeda.noHpPemilik}
+          nama={sepeda.namaPemilik}
+          pesan={pesanWa.sapaan(sepeda.namaPemilik)}
+        />
         <BarisData label="Rental bulan ini">{statistik.jumlahRental} kali</BarisData>
         <BarisData label="Jam bulan ini">{statistik.totalJam} jam</BarisData>
         <BarisData label="Omzet bulan ini">{rupiah(statistik.totalOmzet)}</BarisData>

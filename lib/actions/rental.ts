@@ -9,6 +9,7 @@ import { bikes, owners, renters, rentals } from "@/lib/db/schema";
 import { pelanggaranUnik } from "@/lib/db/galat";
 import { wajibPengguna } from "@/lib/auth/dal";
 import { hitungBiaya } from "@/lib/rental/pricing";
+import { ambilPengaturan } from "@/lib/queries/pengaturan";
 import { normalkanNoHp } from "@/lib/format";
 import { namaOrang, noHpWa } from "@/lib/validasi";
 
@@ -164,6 +165,16 @@ const skemaSelesai = z.object({
     error: "Pilih metode pembayaran",
   }),
   catatan: z.string().trim().max(500).optional(),
+  /**
+   * Tambahan keterlambatan yang dipilih kasir. Boleh kosong — artinya kasir
+   * tidak mengubah saran sistem, jalur yang paling sering terjadi.
+   */
+  tambahanDitagih: z.coerce
+    .number({ error: "Tambahan harus berupa angka" })
+    .int("Tambahan harus rupiah bulat")
+    .min(0, "Tambahan tidak boleh negatif")
+    .optional(),
+  alasanPotongan: z.string().trim().max(200).optional(),
 });
 
 export async function selesaikanRental(
@@ -176,6 +187,8 @@ export async function selesaikanRental(
     rentalId: formData.get("rentalId"),
     metodeBayar: formData.get("metodeBayar"),
     catatan: kosongJadiUndefined(formData.get("catatan")),
+    tambahanDitagih: kosongJadiUndefined(formData.get("tambahanDitagih")),
+    alasanPotongan: kosongJadiUndefined(formData.get("alasanPotongan")),
   });
 
   if (!hasil.success) {
@@ -183,6 +196,7 @@ export async function selesaikanRental(
   }
 
   const data = hasil.data;
+  const pengaturan = await ambilPengaturan();
   let idTransaksi: number;
 
   try {
@@ -201,12 +215,40 @@ export async function selesaikanRental(
       }
 
       const waktuSelesai = new Date();
-      const biaya = hitungBiaya({
-        waktuMulai: rental.waktuMulai,
-        waktuSelesai,
-        tarifPerJam: rental.tarifPerJamSnapshot,
-        persentasePemilik: rental.persentasePemilikSnapshot,
-      });
+
+      // Biaya dihitung ULANG di sini dari jam server, bukan dipercayakan pada
+      // angka yang dikirim formulir. Yang datang dari kasir hanyalah keputusan
+      // menurunkan denda — batas atasnya tetap ditentukan sistem.
+      //
+      // Penolakan "tambahan melebihi saran" datang dari sini sebagai Error
+      // biasa. Diterjemahkan jadi GagalRental supaya kasir melihat pesannya di
+      // formulir, bukan halaman galat — ini kesalahan yang wajar terjadi kalau
+      // sepeda dikembalikan tepat saat blok setengah jam berikutnya berganti.
+      let biaya;
+      try {
+        biaya = hitungBiaya({
+          waktuMulai: rental.waktuMulai,
+          waktuSelesai,
+          tarifPerJam: rental.tarifPerJamSnapshot,
+          persentasePemilik: rental.persentasePemilikSnapshot,
+          toleransiMenit: pengaturan.toleransiTelatMenit,
+          tambahanDitagih: data.tambahanDitagih,
+        });
+      } catch (galat) {
+        throw new GagalRental(
+          galat instanceof Error ? galat.message : "Perhitungan biaya gagal.",
+        );
+      }
+
+      // Keringanan harus punya nama dan alasan. Tanpa syarat ini, seluruh jejak
+      // yang dikumpulkan tidak bisa dipakai menjawab ke mana uang kelebihan jam
+      // itu perginya.
+      const memberiPotongan = biaya.tambahanDitagih < biaya.tambahanSaran;
+      if (memberiPotongan && !data.alasanPotongan) {
+        throw new GagalRental(
+          "Tambahan diturunkan dari saran sistem, jadi alasannya wajib diisi.",
+        );
+      }
 
       await tx
         .update(rentals)
@@ -214,6 +256,9 @@ export async function selesaikanRental(
           waktuSelesai,
           durasiMenit: biaya.durasiMenit,
           durasiJamDitagih: biaya.durasiJamDitagih,
+          tambahanSaran: biaya.tambahanSaran,
+          tambahanDitagih: biaya.tambahanDitagih,
+          alasanPotongan: memberiPotongan ? (data.alasanPotongan ?? null) : null,
           totalBiaya: biaya.totalBiaya,
           bagianPemilik: biaya.bagianPemilik,
           bagianRental: biaya.bagianRental,

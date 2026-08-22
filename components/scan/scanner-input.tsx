@@ -41,7 +41,16 @@ export function ScannerInput({
     (nilai: string) => {
       const bersih = normalkanKode(nilai);
       if (!bersih) return;
-      router.push(`${tujuan}?kode=${encodeURIComponent(bersih)}`);
+      // Penanda "pindai" membedakan kode yang masuk lewat kotak ini dari kode
+      // yang datang karena sebuah daftar diketuk. Hanya yang lewat sini boleh
+      // menampilkan tombol penyelesaian rental, supaya menutup rental menjadi
+      // tindakan yang disengaja dengan sepedanya ada di depan mata.
+      //
+      // Ini disiplin kerja, bukan pagar keamanan: scanner USB pada dasarnya
+      // mengetik, jadi kode yang dihafal tetap bisa diketik manual, dan alamat
+      // halaman bisa disunting siapa pun. Pertanggungjawaban yang sesungguhnya
+      // ada pada jejak waktu dan nama petugas yang tersimpan tiap transaksi.
+      router.push(`${tujuan}?kode=${encodeURIComponent(bersih)}&pindai=1`);
     },
     [router, tujuan],
   );

@@ -87,7 +87,9 @@ export function Stat({
       </div>
       <p
         className={cn(
-          "mt-1.5 text-2xl font-semibold tracking-tight tabular-nums",
+          // font-display disebut manual di sini karena varian ini tidak memakai
+          // kelas .angka-utama seperti saudaranya di atas.
+          "mt-1.5 font-display text-2xl font-semibold tracking-tight tabular-nums",
           warnaNada[nada],
         )}
       >

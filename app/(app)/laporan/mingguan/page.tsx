@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import { wajibPengguna } from "@/lib/auth/dal";
-import { laporanPeriode, penggunaanSepeda } from "@/lib/queries/laporan";
+import {
+  laporanPeriode,
+  penggunaanSepeda,
+  potonganPerKasir,
+  rincianPotongan,
+} from "@/lib/queries/laporan";
 import { bagiHasilSemuaPemilik } from "@/lib/queries/rentals";
 import { Card, CardHeader, KeadaanKosong } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Ikon } from "@/components/ui/icons";
 import { RingkasanPeriodeLaporan } from "@/components/laporan/ringkasan-periode";
+import { PotonganKeterlambatan } from "@/components/laporan/potongan-keterlambatan";
 import { rupiah } from "@/lib/format";
 import {
   dariKunciTanggalWib,
@@ -31,10 +37,12 @@ export default async function HalamanLaporanMingguan(
     sekarang;
   const rentang = rentangMingguWib(acuan);
 
-  const [laporan, penggunaan, perPemilik] = await Promise.all([
+  const [laporan, penggunaan, perPemilik, potongan, rincian] = await Promise.all([
     laporanPeriode(rentang),
     penggunaanSepeda(rentang),
     bagiHasilSemuaPemilik(rentang),
+    potonganPerKasir(rentang),
+    rincianPotongan(rentang),
   ]);
 
   const mingguLalu = kunciTanggalWib(new Date(rentang.mulai.getTime() - SEMINGGU));
@@ -80,6 +88,8 @@ export default async function HalamanLaporanMingguan(
         penggunaan={penggunaan}
         judulPenggunaan="Penggunaan sepeda"
       />
+
+      <PotonganKeterlambatan perKasir={potongan} rincian={rincian} />
 
       <Card>
         <CardHeader

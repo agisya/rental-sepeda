@@ -32,6 +32,15 @@ const skema = z.object({
     .int()
     .min(0, "Tidak boleh negatif")
     .max(24 * 60, "Maksimal 1440 menit"),
+  // Dibatasi 59 menit, bukan lebih. Toleransi 60 menit ke atas akan menelan
+  // seluruh sisa menit yang mungkin ada, sehingga denda keterlambatan tidak
+  // akan pernah disarankan sama sekali — pengaturan yang diam-diam mematikan
+  // fiturnya lebih membingungkan daripada pengaturan yang menolak diisi.
+  toleransiTelatMenit: z.coerce
+    .number({ error: "Harus berupa angka" })
+    .int()
+    .min(0, "Tidak boleh negatif")
+    .max(59, "Maksimal 59 menit"),
 });
 
 export async function simpanPengaturan(
@@ -49,6 +58,7 @@ export async function simpanPengaturan(
     noHp: teks(formData, "noHp"),
     batasJamRental: formData.get("batasJamRental"),
     toleransiBookingMenit: formData.get("toleransiBookingMenit"),
+    toleransiTelatMenit: formData.get("toleransiTelatMenit"),
   });
 
   if (!hasil.success) {
@@ -61,6 +71,7 @@ export async function simpanPengaturan(
     noHp: hasil.data.noHp ?? null,
     batasJamRental: hasil.data.batasJamRental,
     toleransiBookingMenit: hasil.data.toleransiBookingMenit,
+    toleransiTelatMenit: hasil.data.toleransiTelatMenit,
     diperbaruiPada: new Date(),
   };
 

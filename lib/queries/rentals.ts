@@ -13,6 +13,18 @@ const kolomRental = {
   estimasiJam: rentals.estimasiJam,
   durasiMenit: rentals.durasiMenit,
   durasiJamDitagih: rentals.durasiJamDitagih,
+  tambahanSaran: rentals.tambahanSaran,
+  tambahanDitagih: rentals.tambahanDitagih,
+  alasanPotongan: rentals.alasanPotongan,
+
+  // Petugas yang menyelesaikan, dan karena itu yang memutuskan denda serta
+  // menulis alasan keringanannya. Berbeda dari namaKasir di bawah, yang hanya
+  // mencatat keberangkatan — menampilkan alasan atas nama orang yang salah
+  // membuat jejak ini justru menyesatkan. Sub-kueri, bukan join, karena
+  // kolomnya kosong selama rental masih berjalan.
+  namaPenyelesai: sql<string | null>`(
+    select ${users.nama} from ${users} where ${users.id} = ${rentals.diselesaikanOleh}
+  )`,
   totalBiaya: rentals.totalBiaya,
   bagianPemilik: rentals.bagianPemilik,
   bagianRental: rentals.bagianRental,
@@ -52,6 +64,10 @@ export type RentalLengkap = {
   estimasiJam: number | null;
   durasiMenit: number | null;
   durasiJamDitagih: number | null;
+  tambahanSaran: number | null;
+  tambahanDitagih: number | null;
+  alasanPotongan: string | null;
+  namaPenyelesai: string | null;
   totalBiaya: number | null;
   bagianPemilik: number | null;
   bagianRental: number | null;

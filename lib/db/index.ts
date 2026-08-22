@@ -56,9 +56,29 @@ function buatDb(): Database {
       schema,
     });
   } else {
-    instance = drizzlePg(new PoolPg({ connectionString: mode.connectionString }), {
-      schema,
-    }) as unknown as Database;
+    // Setelan bawaan pg dibuat untuk database yang berada di mesin yang sama.
+    // Postgres aplikasi ini bisa berada di VPS lain, dan dua bawaan itu berubah
+    // menjadi bencana ketika jaringannya tersendat:
+    //
+    //  - connectionTimeoutMillis bawaannya 0, artinya menunggu SELAMANYA. Satu
+    //    permintaan halaman pernah tercatat menggantung 56 menit karena ini.
+    //    Lebih baik gagal cepat dan menampilkan galat daripada menggantung
+    //    tanpa ujung.
+    //  - idleTimeoutMillis bawaannya 10 detik, sedangkan notifikasi menjajaki
+    //    server tiap 60 detik. Koneksinya selalu keburu ditutup, sehingga tiap
+    //    penjajakan membuka koneksi baru lengkap dengan jabat tangan TLS lintas
+    //    internet — dan itulah yang memunculkan ECONNRESET berulang.
+    instance = drizzlePg(
+      new PoolPg({
+        connectionString: mode.connectionString,
+        connectionTimeoutMillis: 10_000,
+        idleTimeoutMillis: 90_000,
+        // Menjaga sambungan TCP tetap hidup, supaya perangkat jaringan di
+        // tengah tidak diam-diam memutus koneksi yang sedang menganggur.
+        keepAlive: true,
+      }),
+      { schema },
+    ) as unknown as Database;
   }
 
   globalForDb.__rentalDb = instance;

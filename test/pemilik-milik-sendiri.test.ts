@@ -89,6 +89,7 @@ describe("uang dari sepeda milik sendiri", () => {
       waktuSelesai: new Date("2026-08-14T08:00:00.000Z"),
       tarifPerJam: 15000,
       persentasePemilik: 0,
+      toleransiMenit: 5,
     });
 
     expect(hasil.totalBiaya).toBe(45000);
@@ -104,6 +105,7 @@ describe("uang dari sepeda milik sendiri", () => {
       waktuSelesai: new Date("2026-08-14T08:00:00.000Z"),
       tarifPerJam: 15000,
       persentasePemilik: 100,
+      toleransiMenit: 5,
     });
 
     expect(hasil.bagianPemilik).toBe(45000);

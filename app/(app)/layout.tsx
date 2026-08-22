@@ -2,6 +2,7 @@ import { wajibPengguna } from "@/lib/auth/dal";
 import { Sidebar } from "@/components/nav/sidebar";
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { Topbar } from "@/components/nav/topbar";
+import { PusatNotifikasi } from "@/components/notifikasi/pusat-notifikasi";
 
 export default async function LayoutAplikasi({
   children,
@@ -26,6 +27,11 @@ export default async function LayoutAplikasi({
       </div>
 
       <BottomNav />
+
+      {/* Ditaruh di layout, bukan di tiap halaman: layar konter bisa sedang
+          terbuka di mana saja, dan sepeda yang telat tidak menunggu petugas
+          kebetulan membuka dashboard. */}
+      <PusatNotifikasi />
     </div>
   );
 }

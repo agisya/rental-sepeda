@@ -91,6 +91,28 @@ export function FormPengaturan({ awal }: { awal: Settings }) {
         )}
       </Field>
 
+      <Field
+        id="toleransiTelatMenit"
+        label="Toleransi keterlambatan pengembalian (menit)"
+        petunjuk="Sepeda yang telat kembali di bawah batas ini tidak dikenai tambahan. Lewat batas ini, sistem menyarankan tambahan per setengah jam."
+        galat={status.galatField?.toleransiTelatMenit}
+        wajib
+      >
+        {(props) => (
+          <Input
+            {...props}
+            name="toleransiTelatMenit"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={59}
+            step={1}
+            defaultValue={awal.toleransiTelatMenit}
+            required
+          />
+        )}
+      </Field>
+
       <TombolSimpan label="Simpan pengaturan" />
     </form>
   );

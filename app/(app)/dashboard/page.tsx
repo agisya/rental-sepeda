@@ -9,6 +9,8 @@ import { Stat, StatUtama } from "@/components/ui/stat";
 import { Bagian, PageHeader } from "@/components/ui/page-header";
 import { Ikon } from "@/components/ui/icons";
 import { AutoRefresh } from "@/components/dashboard/auto-refresh";
+import { TombolKontak } from "@/components/ui/tombol-kontak";
+import { pesanWa } from "@/lib/kontak";
 import { rupiah } from "@/lib/format";
 import { formatHariTanggalWib, formatJamWib } from "@/lib/waktu";
 
@@ -107,7 +109,7 @@ export default async function HalamanDashboard() {
             ikon={Ikon.booking}
             nada="warn"
             nilai={ringkasan.bookingAktif}
-            href="/booking?status=booking"
+            href="/booking?status=dibooking"
           />
           <Stat
             label="Servis"
@@ -148,14 +150,12 @@ export default async function HalamanDashboard() {
                     {r.namaPenyewa} · sejak {formatJamWib(r.waktuMulai)}
                   </p>
                 </div>
-                <a
-                  href={`tel:${r.noHpPenyewa}`}
-                  aria-label={`Telepon ${r.namaPenyewa}`}
-                  className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line-strong bg-surface px-3 text-xs font-medium text-ink hover:bg-surface-2"
-                >
-                  <Ikon.telepon className="size-3.5" strokeWidth={2} aria-hidden="true" />
-                  Telepon
-                </a>
+                <TombolKontak
+                  noHp={r.noHpPenyewa}
+                  nama={r.namaPenyewa}
+                  pesan={pesanWa.sepedaTelat(r.namaPenyewa, r.kodeSepeda)}
+                  ringkas
+                />
               </li>
             ))}
           </ul>

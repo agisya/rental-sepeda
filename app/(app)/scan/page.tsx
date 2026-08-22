@@ -3,7 +3,9 @@ import Link from "next/link";
 import { wajibPengguna } from "@/lib/auth/dal";
 import { sepedaByKode, statistikBulananSepeda } from "@/lib/queries/bikes";
 import { rentalBerjalanUntukSepeda } from "@/lib/queries/rentals";
+import { daftarAktivitas } from "@/lib/queries/aktivitas";
 import { ScannerInput } from "@/components/scan/scanner-input";
+import { DaftarAktivitas } from "@/components/aktivitas/daftar-aktivitas";
 import { ButtonLink } from "@/components/ui/button";
 import { BikeCard } from "@/components/rental/bike-card";
 import { StartForm } from "@/components/rental/start-form";
@@ -22,6 +24,8 @@ import { Ikon } from "@/components/ui/icons";
 import { TombolJemput } from "@/components/booking/booking-aksi";
 import { bookingSiapJemput } from "@/lib/queries/bookings";
 import { ambilPengaturan } from "@/lib/queries/pengaturan";
+import { BarisKontak } from "@/components/ui/tombol-kontak";
+import { pesanWa } from "@/lib/kontak";
 import { kodeBooking } from "@/lib/booking/kode";
 import { formatJamWib, formatTanggalWib } from "@/lib/waktu";
 
@@ -33,6 +37,11 @@ export default async function HalamanScan(props: PageProps<"/scan">) {
   const params = await props.searchParams;
   const kode = typeof params.kode === "string" ? params.kode : "";
   const baruMulai = params.mulai === "1";
+  // Hanya kode yang masuk lewat kotak scan yang membawa penanda ini. Tautan
+  // dari daftar mana pun — di sini maupun di dashboard — tidak membawanya,
+  // sehingga mengetuk sebuah baris tidak pernah langsung sampai ke tombol
+  // yang menutup rental dan menerima uang.
+  const dariPindai = params.pindai === "1";
 
   const sepeda = kode ? await sepedaByKode(kode) : null;
 
@@ -46,15 +55,7 @@ export default async function HalamanScan(props: PageProps<"/scan">) {
         </PesanBerhasil>
       )}
 
-      {!kode && (
-        <Card>
-          <KeadaanKosong
-            ikon={Ikon.scan}
-            judul="Belum ada sepeda yang di-scan"
-            keterangan="Buka kamera untuk scan QR, atau ketik kode sepeda (mis. MTB-023)."
-          />
-        </Card>
-      )}
+      {!kode && <SepedaDiLuar />}
 
       {kode && !sepeda && (
         <Card>
@@ -74,17 +75,46 @@ export default async function HalamanScan(props: PageProps<"/scan">) {
         </Card>
       )}
 
-      {sepeda && <IsiSepeda sepedaId={sepeda.id} sepeda={sepeda} />}
+      {sepeda && (
+        <IsiSepeda sepedaId={sepeda.id} sepeda={sepeda} dariPindai={dariPindai} />
+      )}
     </div>
+  );
+}
+
+/**
+ * Isi halaman selama belum ada sepeda yang di-scan.
+ *
+ * Daftarnya sama persis dengan yang ada di halaman Booking — booking maupun
+ * rental langsung, keduanya. Petugas tidak perlu menebak halaman mana yang
+ * memuat sebuah sepeda; yang membedakan tiap baris cuma lencana tahapnya.
+ *
+ * Kuerinya sengaja hanya dijalankan di cabang ini, jadi alur scan yang sudah
+ * ada tidak jadi lebih lambat.
+ */
+async function SepedaDiLuar() {
+  const pengaturan = await ambilPengaturan();
+  const sekarang = new Date();
+  const daftar = await daftarAktivitas(sekarang, pengaturan.toleransiBookingMenit);
+
+  return (
+    <DaftarAktivitas
+      aktivitas={daftar}
+      sekarang={sekarang}
+      judulKosong="Belum ada sepeda yang di-scan"
+      keteranganKosong="Buka kamera untuk scan QR, atau ketik kode sepeda (mis. MTB-023)."
+    />
   );
 }
 
 async function IsiSepeda({
   sepedaId,
   sepeda,
+  dariPindai,
 }: {
   sepedaId: number;
   sepeda: NonNullable<Awaited<ReturnType<typeof sepedaByKode>>>;
+  dariPindai: boolean;
 }) {
   const pengaturan = await ambilPengaturan();
   const sekarang = new Date();
@@ -119,7 +149,16 @@ async function IsiSepeda({
           <CardBody className="space-y-3">
             <DaftarData className="rounded-card border border-line">
               <BarisData label="Penyewa">{siapJemput.namaPenyewa}</BarisData>
-              <BarisData label="No. HP">{siapJemput.noHpPenyewa}</BarisData>
+              <BarisKontak
+                noHp={siapJemput.noHpPenyewa}
+                nama={siapJemput.namaPenyewa}
+                pesan={pesanWa.bookingJemput(
+                  siapJemput.namaPenyewa,
+                  kodeBooking(siapJemput.id),
+                  sepeda.kode,
+                  formatJamWib(siapJemput.waktuMulai),
+                )}
+              />
               <BarisData label="Dipesan untuk">
                 {formatJamWib(siapJemput.waktuMulai)} · {siapJemput.durasiJam} jam
               </BarisData>
@@ -189,14 +228,11 @@ async function IsiSepeda({
           <CardBody className="space-y-4">
             <DaftarData className="rounded-card border border-line">
               <BarisData label="Penyewa">{rentalBerjalan.namaPenyewa}</BarisData>
-              <BarisData label="No. HP">
-                <a
-                  href={`tel:${rentalBerjalan.noHpPenyewa}`}
-                  className="text-brand underline underline-offset-2"
-                >
-                  {rentalBerjalan.noHpPenyewa}
-                </a>
-              </BarisData>
+              <BarisKontak
+                noHp={rentalBerjalan.noHpPenyewa}
+                nama={rentalBerjalan.namaPenyewa}
+                pesan={pesanWa.sepedaTelat(rentalBerjalan.namaPenyewa, sepeda.kode)}
+              />
               <BarisData label="Jam mulai">
                 {formatJamWib(rentalBerjalan.waktuMulai)}
               </BarisData>
@@ -206,13 +242,33 @@ async function IsiSepeda({
               <BarisData label="Dicatat oleh">{rentalBerjalan.namaKasir}</BarisData>
             </DaftarData>
 
-            <FinishPanel
-              rentalId={rentalBerjalan.id}
-              waktuMulaiISO={rentalBerjalan.waktuMulai.toISOString()}
-              tarifPerJam={rentalBerjalan.tarifPerJamSnapshot}
-              persentasePemilik={rentalBerjalan.persentasePemilikSnapshot}
-              metodeBayarAwal={rentalBerjalan.metodeBayar}
-            />
+            {dariPindai ? (
+              <FinishPanel
+                rentalId={rentalBerjalan.id}
+                waktuMulaiISO={rentalBerjalan.waktuMulai.toISOString()}
+                tarifPerJam={rentalBerjalan.tarifPerJamSnapshot}
+                persentasePemilik={rentalBerjalan.persentasePemilikSnapshot}
+                metodeBayarAwal={rentalBerjalan.metodeBayar}
+                toleransiTelatMenit={pengaturan.toleransiTelatMenit}
+              />
+            ) : (
+              <div className="rounded-card border border-dashed border-line-strong px-4 py-6 text-center">
+                <span
+                  className="mx-auto mb-3 flex size-11 items-center justify-center rounded-full bg-surface-2 text-ink-faint"
+                  aria-hidden="true"
+                >
+                  <Ikon.scan className="size-5" strokeWidth={1.8} />
+                </span>
+                <p className="text-sm font-semibold text-ink">
+                  Pindai sepedanya untuk menyelesaikan
+                </p>
+                <p className="mx-auto mt-1.5 max-w-sm text-sm leading-relaxed text-ink-muted">
+                  Halaman ini dibuka dari daftar, jadi hanya menampilkan keterangan.
+                  Scan QR {sepeda.kode} atau ketik kodenya di kotak paling atas untuk
+                  menghitung biaya dan menutup rental.
+                </p>
+              </div>
+            )}
           </CardBody>
         </Card>
       )}

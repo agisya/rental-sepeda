@@ -5,6 +5,8 @@ import { Card, KeadaanKosong } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { SearchForm } from "@/components/ui/search-form";
 import { Ikon } from "@/components/ui/icons";
+import { TombolKontak } from "@/components/ui/tombol-kontak";
+import { pesanWa } from "@/lib/kontak";
 import { rupiah } from "@/lib/format";
 import { formatTanggalWib } from "@/lib/waktu";
 
@@ -57,13 +59,13 @@ export default async function HalamanPenyewa(props: PageProps<"/penyewa">) {
                       </span>
                     )}
                   </p>
-                  <a
-                    href={`tel:${p.noHp}`}
-                    className="mt-1 inline-flex items-center gap-1.5 text-sm text-brand underline-offset-2 hover:underline"
-                  >
-                    <Ikon.telepon className="size-3.5" strokeWidth={2} aria-hidden="true" />
-                    {p.noHp}
-                  </a>
+                  <p className="mt-1 text-sm tabular-nums text-ink-muted">{p.noHp}</p>
+                  <TombolKontak
+                    noHp={p.noHp}
+                    nama={p.nama}
+                    pesan={pesanWa.sapaan(p.nama)}
+                    className="mt-2"
+                  />
                 </div>
 
                 <div className="shrink-0 text-right">

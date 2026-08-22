@@ -48,6 +48,12 @@ export default async function HalamanPengaturanUmum(props: PageProps<"/pengatura
                 {pengaturan.toleransiBookingMenit} menit
               </span>
             </p>
+            <p>
+              Toleransi keterlambatan pengembalian:{" "}
+              <span className="font-medium text-ink">
+                {pengaturan.toleransiTelatMenit} menit
+              </span>
+            </p>
           </CardBody>
         </Card>
       )}

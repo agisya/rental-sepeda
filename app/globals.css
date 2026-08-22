@@ -203,8 +203,13 @@
 
   --color-ring: var(--ring);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* Isi halaman yang dibaca lama dan teliti: tabel, form, menu samping. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Yang dilirik sekilas: judul, label bagian, angka utama. Inter jadi
+     cadangan pertama supaya bentuk halaman tidak berubah drastis kalau
+     berkas Plus Jakarta Sans gagal dimuat. */
+  --font-display: var(--font-jakarta), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   /* Satu tangga radius, dipakai konsisten: kontrol kecil, kartu, lalu panel. */
   --radius-control: 0.5rem;
@@ -215,6 +220,18 @@
      melayang di atas isi halaman, bukan untuk setiap kartu. */
   --shadow-angkat: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 12px rgb(0 0 0 / 0.06);
   --shadow-tempel: 0 1px 0 rgb(0 0 0 / 0.04);
+}
+
+/* Huruf display diterapkan lewat pemilih elemen, bukan lewat kelas yang harus
+   ditempel satu per satu. Judul di aplikasi ini semuanya sudah memakai h1/h2/h3
+   yang benar demi pembaca layar, jadi penanda yang sama bisa sekalian dipakai
+   untuk tipografi — komponen baru ikut otomatis tanpa perlu diingatkan. */
+h1,
+h2,
+h3,
+.label-bagian,
+.angka-utama {
+  font-family: var(--font-display);
 }
 
 /* Label bagian: huruf kecil berjarak, dipakai sebagai judul kelompok informasi.

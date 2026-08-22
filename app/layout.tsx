@@ -1,14 +1,34 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+/**
+ * Tiga peran huruf, bukan satu.
+ *
+ * Dashboard ini dibaca dengan dua cara yang berbeda: judul dan angka besar
+ * dilirik sekilas, sedangkan tabel dibaca lama dan teliti. Satu huruf untuk
+ * keduanya selalu berkompromi. Jadi yang dilirik memakai huruf berkarakter,
+ * yang dibaca lama memakai huruf yang paling tidak melelahkan.
+ */
+
+/* Judul, label, dan angka besar. Huruf buatan Tokotype, punya bentuk yang
+   lebih berkarakter daripada Inter tanpa jadi kurang formal. */
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+/* Badan halaman: tabel padat, form, dan menu samping. Dipilih justru karena
+   netral — huruf yang tidak menarik perhatian ke dirinya sendiri. */
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+/* Kode sepeda. Nolnya bertitik, sehingga SPD-004 tidak pernah terbaca
+   SPD-OO4 saat petugas mengetik ulang dari stiker yang tercetak. */
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains",
   subsets: ["latin"],
 });
 
@@ -47,7 +67,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="id"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${jakarta.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
       // Skrip di bawah mengubah atribut elemen ini sebelum React sempat
       // membandingkannya dengan hasil server. Tanpa penanda ini, React
       // melaporkan ketidakcocokan yang sebenarnya memang disengaja.

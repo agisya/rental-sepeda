@@ -217,7 +217,25 @@ export const rentals = pgTable(
 
     // --- Hasil perhitungan, diisi saat rental diselesaikan ---
     durasiMenit: integer("durasi_menit"),
+    /** Jam pokok: durasi dibulatkan ke BAWAH, minimum 1. Sisanya jadi tambahan. */
     durasiJamDitagih: integer("durasi_jam_ditagih"),
+
+    /**
+     * Denda keterlambatan, disimpan dua angka.
+     *
+     * Yang disarankan sistem dan yang benar-benar ditagih sengaja dipisah. Kalau
+     * hanya yang ditagih yang disimpan, tidak ada cara mengetahui bahwa kasir
+     * pernah memberi keringanan — dan pertanyaan "ke mana uang kelebihan jam
+     * itu" jadi tidak bisa dijawab berbulan-bulan kemudian.
+     *
+     * Selisih keduanya tidak disimpan sebagai kolom sendiri: ia murni turunan,
+     * dan menyimpan turunan hanya membuka peluang dua angka yang bertentangan.
+     */
+    tambahanSaran: integer("tambahan_saran"),
+    tambahanDitagih: integer("tambahan_ditagih"),
+    /** Wajib diisi kalau yang ditagih lebih kecil daripada yang disarankan. */
+    alasanPotongan: text("alasan_potongan"),
+
     totalBiaya: integer("total_biaya"),
     bagianPemilik: integer("bagian_pemilik"),
     bagianRental: integer("bagian_rental"),
@@ -523,6 +541,12 @@ export const settings = pgTable("settings", {
   batasJamRental: integer("batas_jam_rental").notNull().default(12),
   /** Toleransi keterlambatan penjemputan booking, dalam menit. */
   toleransiBookingMenit: integer("toleransi_booking_menit").notNull().default(60),
+  /**
+   * Toleransi keterlambatan PENGEMBALIAN sepeda, dalam menit. Berbeda dari
+   * toleransiBookingMenit di atas: yang itu soal penyewa telat menjemput, yang
+   * ini soal sepeda telat kembali. Lewat batas ini barulah denda disarankan.
+   */
+  toleransiTelatMenit: integer("toleransi_telat_menit").notNull().default(5),
   diperbaruiPada: timestamp("diperbarui_pada", { withTimezone: true })
     .notNull()
     .defaultNow(),

@@ -14,6 +14,8 @@ import { ButtonLink } from "@/components/ui/button";
 import { StatusRentalBadge } from "@/components/ui/status-badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { Ikon } from "@/components/ui/icons";
+import { BarisKontak } from "@/components/ui/tombol-kontak";
+import { pesanWa } from "@/lib/kontak";
 import { rupiah } from "@/lib/format";
 import {
   formatDurasi,
@@ -74,6 +76,26 @@ export default async function HalamanDetailTransaksi(
         </div>
 
         <DaftarData className="border-t border-line">
+          {/* Rincian denda hanya muncul kalau sepeda ini memang telat. Yang
+              ditampilkan saran DAN yang ditagih — kalau hanya yang ditagih,
+              keringanan yang pernah diberikan jadi tidak terlihat sama sekali
+              saat transaksi ini dibuka kembali berbulan-bulan kemudian. */}
+          {rental.tambahanSaran !== null && rental.tambahanSaran > 0 && (
+            <>
+              <BarisData label="Tambahan keterlambatan">
+                {rupiah(rental.tambahanDitagih ?? 0)}
+              </BarisData>
+              {(rental.tambahanDitagih ?? 0) < rental.tambahanSaran && (
+                <BarisData
+                  label={`Keringanan dari ${rupiah(rental.tambahanSaran)}`}
+                >
+                  <span className="text-warn">
+                    −{rupiah(rental.tambahanSaran - (rental.tambahanDitagih ?? 0))}
+                  </span>
+                </BarisData>
+              )}
+            </>
+          )}
           <BarisData label={`Bagian pemilik (${rental.persentasePemilikSnapshot}%)`}>
             {rental.bagianPemilik === null ? "—" : rupiah(rental.bagianPemilik)}
           </BarisData>
@@ -85,9 +107,19 @@ export default async function HalamanDetailTransaksi(
           </BarisData>
         </DaftarData>
 
+        {rental.alasanPotongan && (
+          <p className="border-t border-line px-4 py-3 text-sm italic leading-relaxed text-ink-muted">
+            “{rental.alasanPotongan}”
+            <span className="mt-0.5 block text-xs not-italic">
+              Alasan keringanan, ditulis {rental.namaPenyelesai ?? "petugas"}
+            </span>
+          </p>
+        )}
+
         {rental.status === "selesai" && (
           <p className="border-t border-line px-4 py-3 text-xs leading-relaxed text-ink-muted">
-            Durasi dibulatkan ke atas per jam dengan minimum 1 jam. Persentase yang
+            Jam pokok dibulatkan ke bawah dengan minimum 1 jam; sisa menit di luar
+            toleransi ditagih terpisah sebagai tambahan keterlambatan. Persentase yang
             dipakai adalah persentase pemilik saat rental dimulai.
           </p>
         )}
@@ -97,14 +129,11 @@ export default async function HalamanDetailTransaksi(
         <CardHeader judul="Rincian" />
         <DaftarData>
           <BarisData label="Penyewa">{rental.namaPenyewa}</BarisData>
-          <BarisData label="No. HP">
-            <a
-              href={`tel:${rental.noHpPenyewa}`}
-              className="text-brand underline-offset-2 hover:underline"
-            >
-              {rental.noHpPenyewa}
-            </a>
-          </BarisData>
+          <BarisKontak
+            noHp={rental.noHpPenyewa}
+            nama={rental.namaPenyewa}
+            pesan={pesanWa.sapaan(rental.namaPenyewa)}
+          />
           <BarisData label="Sepeda">
             <Link
               href={`/sepeda/${rental.bikeId}`}
@@ -130,6 +159,11 @@ export default async function HalamanDetailTransaksi(
           </BarisData>
           {rental.jaminan && <BarisData label="Jaminan">{rental.jaminan}</BarisData>}
           <BarisData label="Dicatat oleh">{rental.namaKasir}</BarisData>
+          {/* Penerima uangnya, yang bisa berbeda dari pencatat keberangkatan
+              kalau shift berganti saat sepeda masih di jalan. */}
+          {rental.namaPenyelesai && (
+            <BarisData label="Diselesaikan oleh">{rental.namaPenyelesai}</BarisData>
+          )}
         </DaftarData>
       </Card>
 

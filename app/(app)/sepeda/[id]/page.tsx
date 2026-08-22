@@ -9,6 +9,8 @@ import { ButtonLink } from "@/components/ui/button";
 import { BikeCard } from "@/components/rental/bike-card";
 import { StatusRentalBadge } from "@/components/ui/status-badge";
 import { Ikon } from "@/components/ui/icons";
+import { TombolKontak } from "@/components/ui/tombol-kontak";
+import { pesanWa } from "@/lib/kontak";
 import { rupiah } from "@/lib/format";
 import { formatJamWib, formatTanggalWib } from "@/lib/waktu";
 
@@ -63,15 +65,27 @@ export default async function HalamanDetailSepeda(props: PageProps<"/sepeda/[id]
           <CardHeader
             judul="Sedang disewa"
             keterangan={`${rentalBerjalan.namaPenyewa} · ${rentalBerjalan.noHpPenyewa}`}
+            // Tertulis "Buka di scan", bukan "Selesaikan". Tautan ini tidak
+            // membawa penanda pindai, jadi yang terbuka hanya keterangan
+            // rentalnya — menutup rental tetap menuntut kodenya masuk lewat
+            // kotak scan. Label yang menjanjikan penyelesaian akan membuat
+            // petugas mengira ada yang rusak saat tombolnya tidak muncul.
             aksi={
               <Link
                 href={`/scan?kode=${encodeURIComponent(sepeda.kode)}`}
                 className="text-sm font-medium text-brand underline-offset-2 hover:underline"
               >
-                Selesaikan
+                Buka di scan
               </Link>
             }
           />
+          <div className="px-4 pt-3">
+            <TombolKontak
+              noHp={rentalBerjalan.noHpPenyewa}
+              nama={rentalBerjalan.namaPenyewa}
+              pesan={pesanWa.sepedaTelat(rentalBerjalan.namaPenyewa, sepeda.kode)}
+            />
+          </div>
           <p className="px-4 py-3 text-sm text-ink-muted">
             Mulai {formatTanggalWib(rentalBerjalan.waktuMulai)} pukul{" "}
             {formatJamWib(rentalBerjalan.waktuMulai)}

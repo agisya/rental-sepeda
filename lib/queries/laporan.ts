@@ -1,8 +1,8 @@
 import "server-only";
 
-import { and, desc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, gte, lt, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { bikes, owners, rentals } from "@/lib/db/schema";
+import { bikes, owners, rentals, users } from "@/lib/db/schema";
 import { jumlahHari, kunciTanggalWib } from "@/lib/waktu";
 import { ringkasanPeriode, type RingkasanPeriode } from "./rentals";
 
@@ -138,6 +138,103 @@ export async function omzetPerHari(rentang: Rentang): Promise<OmzetHarian[]> {
   }
 
   return [...perHari.values()].sort((a, b) => a.tanggal.localeCompare(b.tanggal));
+}
+
+export type PotonganKasir = {
+  kasirId: number;
+  namaKasir: string;
+  /** Banyaknya rental telat yang ditangani, bukan hanya yang diberi keringanan. */
+  jumlahTelat: number;
+  jumlahDiberiPotongan: number;
+  totalSaran: number;
+  totalDitagih: number;
+  totalPotongan: number;
+};
+
+/**
+ * Keringanan denda keterlambatan per petugas.
+ *
+ * Tanpa laporan ini, seluruh jejak `tambahanSaran` dan `tambahanDitagih` cuma
+ * jadi kolom yang tidak pernah dibaca siapa pun — dan kolom yang tidak pernah
+ * dibaca tidak mencegah apa-apa.
+ *
+ * Yang dihitung adalah petugas yang MENYELESAIKAN rental, bukan yang memulainya:
+ * dialah yang memutuskan angkanya dan menerima uangnya.
+ *
+ * Sengaja menyertakan `jumlahTelat`, bukan hanya yang diberi potongan. Angka
+ * "5 keringanan" tidak berarti apa-apa tanpa tahu itu dari 5 atau dari 50.
+ */
+export async function potonganPerKasir(rentang: Rentang): Promise<PotonganKasir[]> {
+  const potongan = sql<number>`(${rentals.tambahanSaran} - ${rentals.tambahanDitagih})`;
+
+  return db
+    .select({
+      kasirId: users.id,
+      namaKasir: users.nama,
+      jumlahTelat: sql<number>`count(*)::int`,
+      jumlahDiberiPotongan: sql<number>`count(*) filter (where ${potongan} > 0)::int`,
+      totalSaran: sql<number>`coalesce(sum(${rentals.tambahanSaran}), 0)::int`,
+      totalDitagih: sql<number>`coalesce(sum(${rentals.tambahanDitagih}), 0)::int`,
+      totalPotongan: sql<number>`coalesce(sum(${potongan}), 0)::int`,
+    })
+    .from(rentals)
+    .innerJoin(users, eq(rentals.diselesaikanOleh, users.id))
+    .where(and(syaratSelesai(rentang), gt(rentals.tambahanSaran, 0)))
+    .groupBy(users.id, users.nama)
+    .orderBy(desc(sql`sum(${potongan})`));
+}
+
+export type RincianPotongan = {
+  rentalId: number;
+  /** Boleh null: kolomnya memang nullable, dan tipenya tidak boleh berbohong. */
+  waktuSelesai: Date | null;
+  namaKasir: string;
+  kodeSepeda: string;
+  sisaMenit: number;
+  saran: number;
+  ditagih: number;
+  alasan: string | null;
+};
+
+/**
+ * Tiap keringanan satu per satu, lengkap dengan alasannya. Ringkasan per kasir
+ * menunjukkan ada pola yang aneh; daftar inilah yang bisa ditanyakan orangnya.
+ */
+export async function rincianPotongan(
+  rentang: Rentang,
+  batas = 50,
+): Promise<RincianPotongan[]> {
+  return db
+    .select({
+      rentalId: rentals.id,
+      // Kolomnya diambil langsung, TIDAK dibungkus sql<Date>. Pembungkusan itu
+      // melewati mapFromDriverValue milik Drizzle — satu-satunya tempat nilai
+      // mentah dari penggerak database diubah menjadi Date — sehingga yang
+      // sampai ke komponen bisa berupa teks, dan formatTanggalJamWib menerima
+      // sesuatu yang bukan tanggal.
+      waktuSelesai: rentals.waktuSelesai,
+      namaKasir: users.nama,
+      kodeSepeda: bikes.kode,
+      // Menit di luar jam pokok, dihitung ulang dari durasi yang tersimpan.
+      // coalesce dipasang meski baris di kueri ini selalu punya kedua kolom:
+      // aritmetika SQL dengan NULL menghasilkan NULL, dan tipe di TypeScript
+      // tidak akan memperingatkan apa pun kalau itu terjadi.
+      sisaMenit: sql<number>`coalesce(${rentals.durasiMenit} - ${rentals.durasiJamDitagih} * 60, 0)::int`,
+      saran: sql<number>`coalesce(${rentals.tambahanSaran}, 0)::int`,
+      ditagih: sql<number>`coalesce(${rentals.tambahanDitagih}, 0)::int`,
+      alasan: rentals.alasanPotongan,
+    })
+    .from(rentals)
+    .innerJoin(users, eq(rentals.diselesaikanOleh, users.id))
+    .innerJoin(bikes, eq(rentals.bikeId, bikes.id))
+    .where(
+      and(
+        syaratSelesai(rentang),
+        gt(sql`${rentals.tambahanSaran} - ${rentals.tambahanDitagih}`, 0),
+      ),
+    )
+    .orderBy(desc(rentals.waktuSelesai))
+    .limit(batas);
 }
 
 export type LaporanPeriode = {
