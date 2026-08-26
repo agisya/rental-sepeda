@@ -4,7 +4,85 @@ Aplikasi pencatatan rental sepeda per jam dengan bagi hasil pemilik. Alur kerjan
 scan QR → mulai rental → scan lagi saat kembali → sistem menghitung durasi,
 biaya, dan bagi hasil → semuanya masuk laporan harian.
 
-Dibangun dengan Next.js 16 (App Router), TypeScript, Tailwind 4, Postgres, dan Drizzle ORM.
+Next.js 16 (App Router) · TypeScript · Tailwind 4 · Postgres · Drizzle ORM · 340 tes
+
+<!--
+  TANGKAPAN LAYAR — belum ada berkasnya, jadi bloknya dinonaktifkan dulu supaya
+  README tidak menampilkan ikon gambar rusak.
+
+  Cara menyalakan: simpan tiga berkas di docs/gambar/ dengan nama persis seperti
+  di bawah, lalu hapus baris pembuka komentar di atas dan baris penutupnya setelah
+  tabel. Ambil dari alamat produksi memakai akun demo, bukan dari localhost, supaya
+  datanya sama dengan yang dilihat pengunjung. Rinciannya ada di bagian
+  "Tangkapan layar dan alamat".
+
+![Dashboard](docs/gambar/dashboard.png)
+
+| | |
+| --- | --- |
+| ![Scan QR](docs/gambar/scan.png) | ![Laporan harian](docs/gambar/laporan.png) |
+
+-->
+
+## Coba langsung
+
+**https://rental-sepeda.vercel.app** — masuk dengan:
+
+| Username | Kata sandi |
+| --- | --- |
+| `demo` | `demo-rental-2026` |
+
+Akun demo berperan **kasir**: bisa scan QR, memulai dan menyelesaikan rental, serta
+membuka seluruh laporan. Menu Pengeluaran dan Laba/Rugi sengaja tertutup untuk peran
+ini. Datanya data contoh, jadi silakan dipakai sesuka hati.
+
+## Masalah yang dipecahkan
+
+Rental sepeda menghitung sewa per jam, dan sebagian besar sepedanya milik orang lain
+yang menitipkan dengan pembagian hasil berbeda-beda — 60%, 55%, ada yang milik rental
+sendiri. Pencatatan di buku membuat tiga hal gampang salah: durasi sewa yang dihitung
+kasar, hak tiap pemilik yang harus direkap manual tiap bulan, dan sepeda yang lupa
+tercatat sudah kembali.
+
+Aplikasi ini memakai stiker QR di tiap sepeda sebagai penggantinya. Satu scan memulai
+rental, satu scan lagi menutupnya, dan seluruh perhitungan — durasi, tarif, denda
+keterlambatan, bagi hasil pemilik — jatuh ke laporan tanpa disentuh tangan.
+
+## Keputusan teknis
+
+Bagian yang menarik dari proyek ini bukan daftar fiturnya, melainkan beberapa
+persoalan yang baru kelihatan setelah dipakai:
+
+**Satu skema, tiga driver database.** `DATABASE_URL` yang dikosongkan menjalankan
+Postgres di dalam proses lewat PGlite, sehingga `git clone && npm run dev` langsung
+bisa dipakai tanpa mendaftar layanan apa pun dan tanpa internet. Alamat berakhiran
+`.neon.tech` memakai driver WebSocket Neon, sisanya driver Postgres biasa. Ketiganya
+Postgres yang sama, jadi query dan migrasinya cuma ditulis sekali —
+[`lib/db/mode.ts`](lib/db/mode.ts), [`lib/db/index.ts`](lib/db/index.ts).
+
+**Satu permintaan halaman pernah menggantung 56 menit.** Bawaan `connectionTimeoutMillis`
+pada `pg` adalah `0`, yang berarti menunggu selamanya. Ketika Postgres berada di VPS
+lain dan jaringannya tersendat, halaman tidak gagal — ia diam. Ditambah
+`idleTimeoutMillis` bawaan 10 detik yang selalu keburu menutup koneksi sebelum
+penjajakan 60-detik berikutnya, dan itulah sumber `ECONNRESET` yang berulang —
+[`lib/db/index.ts:59-79`](lib/db/index.ts#L59-L79).
+
+**Halaman pendaftaran yang membeku saat build.** Halaman pembuatan akun pertama tidak
+menyentuh cookie maupun `searchParams`, jadi Next menganggapnya bisa dibuat statis.
+Akibatnya hasil pemeriksaan "apakah sistem masih kosong" ikut membeku ke dalam berkas:
+build berjalan di mesin tanpa database, pemeriksaan gagal, pintu dinyatakan tertutup
+selamanya, dan akun pertama tidak akan pernah bisa dibuat. Obatnya `await connection()`
+— [`app/register/page.tsx:24-36`](app/register/page.tsx#L24-L36).
+
+**Server menolak menyala daripada diam-diam kehilangan data.** `DATABASE_URL` kosong
+berarti "pakai PGlite", dan itu benar saat pengembangan. Di produksi arti yang sama
+berubah jadi jebakan: aplikasi tetap melayani, tapi menulis ke berkas yang lenyap tiap
+instance baru dibuat. Gejalanya bukan galat melainkan data yang hilang tanpa jejak,
+jadi keadaan itu dibuat menggagalkan startup — [`instrumentation.ts`](instrumentation.ts).
+
+**Kamera hanya jalan di alamat aman.** Menguji scan QR dari HP lewat `http://192.168.x.x`
+tidak akan pernah berhasil, berapa kali pun dicoba. `npm run dev:hp` menyalakan server
+ber-HTTPS dengan sertifikat buatan sendiri supaya kameranya bisa dibuka.
 
 ## Menjalankan di komputer sendiri
 
@@ -387,6 +465,40 @@ Buka `/register` di alamat produksinya dan daftarkan akun admin **sebelum alamat
 dibagikan ke siapa pun**. Halaman itu terbuka tanpa sesi karena harus bisa membuat
 akun pertama, dan ia menutup diri begitu ada satu pengguna. Selama masih kosong,
 siapa pun yang membuka alamatnya bisa menjadi admin.
+
+Urutannya tidak bisa dibalik: `/register` menutup diri pada pengguna **pertama**, siapa
+pun dia. Membuat akun demo lebih dulu berarti mengunci diri sendiri di luar.
+
+### 5. Baru buat akun demo
+
+Setelah masuk sebagai admin, buka **Pengaturan → Tim** dan tambahkan satu akun berperan
+**Kasir** dengan username `demo`. Peran kasir tidak bisa membuka Pengeluaran dan
+Laba/Rugi, jadi angka keuangan tetap tertutup meski kata sandinya tertulis terang-terangan
+di bagian atas berkas ini.
+
+Jangan pernah menjalankan `npm run db:seed` ke database produksi. Perintah itu membuat
+akun `admin`, `kasir`, dan `owner` yang kata sandinya terbaca siapa saja di
+[`lib/db/seed.ts`](lib/db/seed.ts) — aman untuk database lokal, tidak untuk alamat publik.
+
+### 6. Tangkapan layar dan alamat
+
+Dua hal terakhir di bagian atas berkas ini masih perlu disesuaikan tangan:
+
+**Alamat.** Ganti `https://rental-sepeda.vercel.app` dengan alamat yang benar-benar
+diberikan Vercel. Nama proyek yang sudah terpakai orang lain membuat Vercel menambahi
+akhiran, jadi jangan diasumsikan.
+
+**Gambar.** Ambil tiga tangkapan layar dari alamat produksi memakai akun demo, simpan
+di `docs/gambar/`, lalu buang tanda komentar di sekitar blok gambar pada bagian atas:
+
+| Berkas | Halaman | Kenapa yang ini |
+| --- | --- | --- |
+| `dashboard.png` | Dashboard | Angka-angkanya langsung menunjukkan aplikasi ini mengurus sesuatu yang nyata |
+| `scan.png` | Scan QR | Fitur yang paling membedakan, dan paling sulit ditebak dari daftar fitur |
+| `laporan.png` | Laporan Harian | Bagi hasil per pemilik memperlihatkan kedalaman domainnya |
+
+Ambil dalam lebar peramban sekitar 1280px supaya teksnya masih terbaca setelah
+diperkecil GitHub.
 
 ### Yang tidak perlu disiapkan
 
