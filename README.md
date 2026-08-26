@@ -328,13 +328,74 @@ diterapkan tetap ada di database.
 ## Deploy ke Vercel
 
 Penyimpanan berkas di Vercel tidak permanen, jadi database lokal tidak bisa dipakai
-di sana. Siapkan Neon lebih dulu.
+di sana. Siapkan Neon lebih dulu — Vercel Postgres di Marketplace juga Neon, jadi
+keduanya sama saja.
 
-1. Push ke GitHub, lalu impor repositorinya di Vercel.
-2. Isi Environment Variables: `DATABASE_URL` (connection string Neon) dan
-   `SESSION_SECRET`.
-3. Dari komputer sendiri, dengan `DATABASE_URL` yang sama di `.env.local`, jalankan
-   `npm run db:seed` sekali untuk membuat tabel dan akunnya.
+### 1. Setel versi Node
+
+Project Settings → General → Node.js Version → **24**. `package.json` menuntut
+`>=24`, dan build gagal di pemeriksaan engines kalau Vercel memakai versi lain.
+
+### 2. Isi Environment Variables
+
+Pasang di ketiga environment (Production, Preview, Development):
+
+| Variabel | Isi |
+| --- | --- |
+| `DATABASE_URL` | Connection string Neon, **yang pooled** — hostnya mengandung `-pooler` |
+| `SESSION_SECRET` | Acak, minimal 32 karakter. Buat baru, jangan pakai punya laptop |
+| `MIGRASI_OTOMATIS` | `0` |
+
+Neon membagikan banyak nama variabel sekaligus (`POSTGRES_URL`,
+`POSTGRES_PRISMA_URL`, `DATABASE_URL_UNPOOLED`, dan seterusnya). Aplikasi ini hanya
+membaca `DATABASE_URL`; sisanya boleh diabaikan. Yang berakhiran `_PRISMA_URL` tidak
+menandakan apa-apa soal proyek ini — datanya diakses lewat Drizzle, bukan Prisma.
+
+Driver dipilih otomatis dari nama host, jadi tidak ada yang perlu disetel: host
+berakhiran `.neon.tech` memakai driver WebSocket Neon, yang memang untuk serverless.
+
+**`MIGRASI_OTOMATIS=0` wajib di Vercel.** `instrumentation.ts` menjalankan migrasi
+setiap instance server menyala. Di Dokploy container menyala sekali lalu hidup
+terus, jadi itu berjalan sekali. Di Vercel setiap *cold start* adalah instance baru:
+migrasi ikut jalan berulang, menambah jeda pada permintaan pertama, dan dua cold
+start berbarengan bisa berebut tabel migrasi.
+
+Kalau `DATABASE_URL` lupa diisi, server sengaja **menolak menyala** — tanpa penjaga
+itu aplikasi diam-diam jatuh ke database berbasis berkas dan datanya hilang tiap
+cold start. Untuk menguji build produksi di komputer sendiri tanpa database, setel
+`IZINKAN_DB_LOKAL=1`.
+
+### 3. Terapkan migrasi sekali dari komputer sendiri
+
+Karena migrasi otomatis dimatikan, skemanya dibuat manual:
+
+```bash
+# .env.local — arahkan sementara ke database Vercel/Neon
+DATABASE_URL="postgresql://...-pooler.../neondb?sslmode=require"
+```
+
+```bash
+npm run db:migrate
+```
+
+Kembalikan `.env.local` seperti semula setelah selesai supaya pengembangan lokal
+tidak lagi menyentuh database produksi.
+
+### 4. Buat akun pertama — segera
+
+Buka `/register` di alamat produksinya dan daftarkan akun admin **sebelum alamat itu
+dibagikan ke siapa pun**. Halaman itu terbuka tanpa sesi karena harus bisa membuat
+akun pertama, dan ia menutup diri begitu ada satu pengguna. Selama masih kosong,
+siapa pun yang membuka alamatnya bisa menjadi admin.
+
+### Yang tidak perlu disiapkan
+
+- **Vercel Blob.** Foto sepeda sudah disimpan di dalam database sebagai `bytea`,
+  justru karena berkas di Vercel tidak permanen. Memindahkannya ke Blob malah
+  melepas penjagaan sesi yang sekarang ada di `/api/sepeda/[id]/foto`. Blob baru
+  masuk akal kalau kuota penyimpanan Neon mulai terdesak foto.
+- **`output: "standalone"`.** Sudah dimatikan otomatis saat berjalan di Vercel;
+  setelan itu hanya untuk memperkecil image Docker.
 
 ## Menu yang tersedia
 

@@ -26,7 +26,11 @@ const nextConfig: NextConfig = {
   // Menghasilkan .next/standalone berisi server beserta dependensi yang
   // benar-benar dipakai. Image Docker jadi jauh lebih kecil karena tidak perlu
   // menyalin seluruh node_modules.
-  output: "standalone",
+  //
+  // Vercel memaketkan aplikasinya sendiri lewat adapter dan tidak membaca
+  // keluaran ini, jadi di sana penyalinannya cuma memperlambat build tanpa
+  // menghasilkan apa pun yang dipakai. VERCEL diisi otomatis oleh Vercel.
+  output: process.env.VERCEL ? undefined : "standalone",
 
   // PGlite membawa berkas WASM Postgres. Bundler tidak boleh mencoba
   // memaketkannya; biarkan Node memuatnya langsung dari node_modules.
