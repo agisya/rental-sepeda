@@ -21,6 +21,7 @@ const KUNCI = [
   "DATABASE_URL",
   "IZINKAN_DB_LOKAL",
   "MIGRASI_OTOMATIS",
+  "VERCEL",
 ];
 
 function setel(env: Record<string, string | undefined>) {
@@ -38,6 +39,7 @@ beforeEach(() => {
     DATABASE_URL: undefined,
     IZINKAN_DB_LOKAL: undefined,
     MIGRASI_OTOMATIS: undefined,
+    VERCEL: undefined,
   });
   vi.spyOn(console, "warn").mockImplementation(() => {});
   vi.spyOn(console, "log").mockImplementation(() => {});
@@ -87,5 +89,45 @@ describe("penjaga database saat server menyala", () => {
   it("tidak ikut campur pada runtime Edge", async () => {
     setel({ NEXT_RUNTIME: "edge", NODE_ENV: "production" });
     await expect(register()).resolves.toBeUndefined();
+  });
+});
+
+/**
+ * Migrasi otomatis di Vercel.
+ *
+ * Migrasi membaca berkas SQL dari ./drizzle lewat filesystem. Penelusuran berkas
+ * Next hanya mengikuti import secara statis, jadi folder itu tidak pernah ikut ke
+ * bundle Vercel — di Docker ia ada semata karena Dockerfile menyalinnya. Sebelum
+ * pemeriksaan VERCEL ditambahkan, deploy pertama selalu berakhir dengan
+ * "Internal Server Error": register() melempar ENOENT dan server gagal menyala.
+ *
+ * Semua kasus di sini berhenti sebelum koneksi database dibuka, jadi tidak ada
+ * yang benar-benar menyentuh Postgres.
+ */
+describe("migrasi otomatis di Vercel", () => {
+  const URL_PALSU = "postgresql://a:b@ep-palsu.ap-southeast-1.aws.neon.tech/db";
+
+  it("dilewati tanpa melempar meski DATABASE_URL terisi", async () => {
+    setel({ NODE_ENV: "production", VERCEL: "1", DATABASE_URL: URL_PALSU });
+    await expect(register()).resolves.toBeUndefined();
+  });
+
+  // Kalau ini gagal, syarat wajibnya kembali bergantung pada orang yang ingat
+  // menyetel MIGRASI_OTOMATIS=0 — dan lupa berarti deploy gagal total.
+  it("tidak lagi menuntut MIGRASI_OTOMATIS=0 untuk bisa menyala", async () => {
+    setel({
+      NODE_ENV: "production",
+      VERCEL: "1",
+      DATABASE_URL: URL_PALSU,
+      MIGRASI_OTOMATIS: "1",
+    });
+    await expect(register()).resolves.toBeUndefined();
+  });
+
+  // Melewati migrasi bukan alasan untuk ikut melewati penjaga. Deploy Vercel tanpa
+  // DATABASE_URL tetap harus gagal menyala, bukan diam-diam memakai berkas.
+  it("tetap menolak menyala kalau DATABASE_URL kosong", async () => {
+    setel({ NODE_ENV: "production", VERCEL: "1" });
+    await expect(register()).rejects.toThrow(/DATABASE_URL kosong/i);
   });
 });

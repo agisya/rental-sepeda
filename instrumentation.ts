@@ -47,6 +47,30 @@ export async function register() {
     console.warn("[db] IZINKAN_DB_LOKAL=1 — memakai database lokal di mode produksi");
   }
 
+  /**
+   * Di Vercel migrasi otomatis tidak sekadar tidak diinginkan — ia mustahil.
+   *
+   * Migrasi membaca berkas SQL dari ./drizzle lewat filesystem saat dijalankan.
+   * Penelusuran berkas Next hanya mengikuti import dan require secara statis,
+   * sehingga pembacaan direktori di dalam drizzle tidak terlihat olehnya dan
+   * folder itu tidak pernah ikut ke dalam bundle. Di Docker foldernya ada semata
+   * karena Dockerfile menyalinnya dengan satu baris COPY; di Vercel tidak ada
+   * tempat untuk menaruh baris serupa.
+   *
+   * Sebelum pemeriksaan ini, deploy pertama ke Vercel selalu berakhir dengan
+   * "Internal Server Error" tanpa penjelasan: register() melempar ENOENT, server
+   * gagal menyala, dan tidak ada satu halaman pun yang sempat dirender. Menyerahkan
+   * urusannya ke MIGRASI_OTOMATIS=0 berarti menaruh syarat wajib pada variabel yang
+   * gampang terlewat, dengan akibat kegagalan total.
+   */
+  if (process.env.VERCEL) {
+    console.log(
+      "[migrasi] dilewati di Vercel — folder ./drizzle tidak ikut terpaket. " +
+        "Terapkan skema dari luar dengan `npm run db:migrate`.",
+    );
+    return;
+  }
+
   const otomatis = process.env.MIGRASI_OTOMATIS ?? "1";
   if (otomatis === "0") {
     console.log("[migrasi] dilewati karena MIGRASI_OTOMATIS=0");

@@ -422,7 +422,9 @@ Pasang di ketiga environment (Production, Preview, Development):
 | --- | --- |
 | `DATABASE_URL` | Connection string Neon, **yang pooled** — hostnya mengandung `-pooler` |
 | `SESSION_SECRET` | Acak, minimal 32 karakter. Buat baru, jangan pakai punya laptop |
-| `MIGRASI_OTOMATIS` | `0` |
+
+Hanya dua. Variabel baru tidak berlaku pada deployment yang sudah jadi, jadi setelah
+menambahkannya harus **Redeploy**.
 
 Neon membagikan banyak nama variabel sekaligus (`POSTGRES_URL`,
 `POSTGRES_PRISMA_URL`, `DATABASE_URL_UNPOOLED`, dan seterusnya). Aplikasi ini hanya
@@ -432,11 +434,20 @@ menandakan apa-apa soal proyek ini — datanya diakses lewat Drizzle, bukan Pris
 Driver dipilih otomatis dari nama host, jadi tidak ada yang perlu disetel: host
 berakhiran `.neon.tech` memakai driver WebSocket Neon, yang memang untuk serverless.
 
-**`MIGRASI_OTOMATIS=0` wajib di Vercel.** `instrumentation.ts` menjalankan migrasi
-setiap instance server menyala. Di Dokploy container menyala sekali lalu hidup
-terus, jadi itu berjalan sekali. Di Vercel setiap *cold start* adalah instance baru:
-migrasi ikut jalan berulang, menambah jeda pada permintaan pertama, dan dua cold
-start berbarengan bisa berebut tabel migrasi.
+**Migrasi otomatis mati sendiri di Vercel**, tidak perlu variabel apa pun.
+`instrumentation.ts` mengenali `VERCEL` dan melewatinya.
+
+Alasannya bukan sekadar tidak diinginkan, melainkan mustahil: migrasi membaca berkas
+SQL dari `./drizzle` lewat filesystem, sedangkan penelusuran berkas Next hanya
+mengikuti `import` secara statis dan tidak melihat pembacaan direktori di dalam
+drizzle. Folder itu tidak pernah ikut ke bundle. Di Docker ia ada semata karena
+[`Dockerfile`](Dockerfile) menyalinnya dengan satu baris `COPY`; di Vercel tidak ada
+tempat untuk menaruh baris serupa. Memaksanya jalan membuat `register()` melempar
+ENOENT, server gagal menyala, dan yang muncul cuma "Internal Server Error" tanpa
+penjelasan.
+
+`MIGRASI_OTOMATIS=0` tetap ada untuk mematikan migrasi otomatis di tempat lain,
+misalnya Dokploy, tapi di Vercel tidak ada gunanya diisi.
 
 Kalau `DATABASE_URL` lupa diisi, server sengaja **menolak menyala** — tanpa penjaga
 itu aplikasi diam-diam jatuh ke database berbasis berkas dan datanya hilang tiap
@@ -445,7 +456,7 @@ cold start. Untuk menguji build produksi di komputer sendiri tanpa database, set
 
 ### 3. Terapkan migrasi sekali dari komputer sendiri
 
-Karena migrasi otomatis dimatikan, skemanya dibuat manual:
+Karena Vercel tidak bisa menjalankannya sendiri, skemanya dibuat dari luar:
 
 ```bash
 # .env.local — arahkan sementara ke database Vercel/Neon
