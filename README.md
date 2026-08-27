@@ -1,4 +1,4 @@
-# Rental Sepeda
+# Rental Ku
 
 Aplikasi pencatatan rental sepeda per jam dengan bagi hasil pemilik. Alur kerjanya:
 scan QR → mulai rental → scan lagi saat kembali → sistem menghitung durasi,

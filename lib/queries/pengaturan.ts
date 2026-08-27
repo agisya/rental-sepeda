@@ -7,7 +7,7 @@ import { settings, type Settings } from "@/lib/db/schema";
 
 export const PENGATURAN_BAWAAN: Omit<Settings, "diperbaruiPada"> = {
   id: 1,
-  namaUsaha: "Rental Sepeda",
+  namaUsaha: "Rental Ku",
   alamat: null,
   noHp: null,
   batasJamRental: 12,

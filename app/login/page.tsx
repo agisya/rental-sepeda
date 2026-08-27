@@ -50,7 +50,7 @@ export default async function HalamanLogin(props: PageProps<"/login">) {
             <Bike className="size-7" strokeWidth={1.9} />
           </span>
           <h1 className="text-xl font-semibold tracking-tight text-ink">
-            Rental Sepeda
+            Rental Ku
           </h1>
           <p className="mt-1.5 text-sm text-ink-muted">
             Masuk untuk mulai mencatat rental hari ini

@@ -34,11 +34,11 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Rental Sepeda",
-    template: "%s · Rental Sepeda",
+    default: "Rental Ku",
+    template: "%s · Rental Ku",
   },
   description:
-    "Pencatatan rental sepeda per jam, bagi hasil pemilik, dan laporan harian.",
+    "Pencatatan rental per jam atau per hari, bagi hasil pemilik, dan laporan harian.",
 };
 
 export const viewport: Viewport = {
