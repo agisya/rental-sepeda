@@ -7,6 +7,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { settings, users } from "@/lib/db/schema";
 import { wajibPengguna } from "@/lib/auth/dal";
+import { adalahAkunDemo } from "@/lib/auth/demo";
 import { cocokkanKataSandi, hashKataSandi } from "@/lib/auth/password";
 import type { StatusAksi } from "./rental";
 
@@ -108,6 +109,15 @@ export async function gantiKataSandi(
   formData: FormData,
 ): Promise<StatusAksi> {
   const pengguna = await wajibPengguna();
+
+  // Kata sandi akun demo tertulis terang-terangan di README supaya siapa pun bisa
+  // mencoba aplikasinya. Pengunjung pertama yang menggantinya akan mengunci semua
+  // pengunjung berikutnya di luar, dan pemiliknya baru sadar setelah ada yang
+  // mengeluh. Peran kasir tidak menutup ini: mengganti sandi sendiri memang hak
+  // setiap pengguna yang sah.
+  if (adalahAkunDemo(pengguna.username)) {
+    return { galat: "Kata sandi akun demo tidak bisa diganti." };
+  }
 
   const hasil = skemaSandi.safeParse({
     kataSandiLama: formData.get("kataSandiLama"),

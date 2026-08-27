@@ -162,5 +162,5 @@ export function judulHalaman(pathname: string): string {
     (a, b) => b.href.length - a.href.length,
   )[0];
 
-  return cocok?.label ?? "Rental Sepeda Garut";
+  return cocok?.label ?? "Rental Sepeda";
 }

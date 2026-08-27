@@ -1,4 +1,4 @@
-# Rental Sepeda Garut
+# Rental Sepeda
 
 Aplikasi pencatatan rental sepeda per jam dengan bagi hasil pemilik. Alur kerjanya:
 scan QR → mulai rental → scan lagi saat kembali → sistem menghitung durasi,
@@ -26,15 +26,17 @@ Next.js 16 (App Router) · TypeScript · Tailwind 4 · Postgres · Drizzle ORM �
 
 ## Coba langsung
 
-**https://rental-sepeda.vercel.app** — masuk dengan:
+**https://rental-sepeda.vercel.app** — tekan **"Coba demo"** di halaman login. Tidak
+perlu mengetik apa pun; kalau lebih suka masuk lewat formulir, akunnya `demo` dengan
+kata sandi `demo-rental-2026`.
 
-| Username | Kata sandi |
-| --- | --- |
-| `demo` | `demo-rental-2026` |
+Akun demo berperan **kasir**: bisa scan QR, memulai dan menyelesaikan rental, mencatat
+penyewa, serta membuka seluruh laporan. Menghapus data, mengubah pengaturan, dan menu
+Pengeluaran/Laba-Rugi tertutup untuk peran ini — bukan lewat penjaga khusus demo,
+melainkan pembatasan peran yang sama yang berlaku bagi kasir sungguhan di rental.
 
-Akun demo berperan **kasir**: bisa scan QR, memulai dan menyelesaikan rental, serta
-membuka seluruh laporan. Menu Pengeluaran dan Laba/Rugi sengaja tertutup untuk peran
-ini. Datanya data contoh, jadi silakan dipakai sesuka hati.
+Datanya data contoh: 10 sepeda, 3 pemilik dengan bagi hasil berbeda, dan transaksi
+sebulan terakhir supaya seluruh laporan berisi angka sungguhan.
 
 ## Masalah yang dipecahkan
 
@@ -422,8 +424,9 @@ Pasang di ketiga environment (Production, Preview, Development):
 | --- | --- |
 | `DATABASE_URL` | Connection string Neon, **yang pooled** — hostnya mengandung `-pooler` |
 | `SESSION_SECRET` | Acak, minimal 32 karakter. Buat baru, jangan pakai punya laptop |
+| `AKUN_DEMO` | `demo` — hanya untuk deployment portofolio, lihat di bawah |
 
-Hanya dua. Variabel baru tidak berlaku pada deployment yang sudah jadi, jadi setelah
+Variabel baru tidak berlaku pada deployment yang sudah jadi, jadi setelah
 menambahkannya harus **Redeploy**.
 
 Neon membagikan banyak nama variabel sekaligus (`POSTGRES_URL`,
@@ -482,14 +485,36 @@ pun dia. Membuat akun demo lebih dulu berarti mengunci diri sendiri di luar.
 
 ### 5. Baru buat akun demo
 
-Setelah masuk sebagai admin, buka **Pengaturan → Tim** dan tambahkan satu akun berperan
-**Kasir** dengan username `demo`. Peran kasir tidak bisa membuka Pengeluaran dan
-Laba/Rugi, jadi angka keuangan tetap tertutup meski kata sandinya tertulis terang-terangan
-di bagian atas berkas ini.
+Urutannya tidak bisa dibalik: akun **admin** dulu lewat `/register`, baru akun demo.
+Membuat akun demo lebih dahulu akan menutup `/register` dan mengunci Anda di luar.
+
+Dari komputer sendiri, dengan `DATABASE_URL` produksi di `.env.local`:
+
+```bash
+npm run db:demo
+```
+
+Perintah itu membuat akun `demo` berperan kasir dan mengisi transaksi contoh sebulan
+terakhir, supaya Dashboard dan seluruh laporan menampilkan angka sungguhan alih-alih
+nol. Aman dijalankan berulang: akun yang sudah ada dilewati, dan transaksi contoh hanya
+dibuat kalau tabel rental masih kosong.
+
+Setelah itu setel `AKUN_DEMO=demo` di Vercel lalu **Redeploy**, dan tombol "Coba demo"
+muncul di halaman login.
+
+**Batas akun demo tidak dibangun khusus.** Ia berperan kasir, dan kasir memang sudah
+diblokir dari menghapus sepeda, mengubah pengaturan usaha, dan membuka menu keuangan —
+pemeriksaannya ada di setiap action terkait dan berlaku sama bagi kasir sungguhan.
+Yang ditambahkan hanya satu: kata sandi akun demo tidak bisa diganti, supaya pengunjung
+pertama tidak mengunci semua pengunjung berikutnya.
+
+Aplikasi menolak melayani tombol demo kalau `AKUN_DEMO` menunjuk ke akun admin atau
+owner. Salah setel tidak akan diam-diam membagikan kendali penuh.
 
 Jangan pernah menjalankan `npm run db:seed` ke database produksi. Perintah itu membuat
 akun `admin`, `kasir`, dan `owner` yang kata sandinya terbaca siapa saja di
 [`lib/db/seed.ts`](lib/db/seed.ts) — aman untuk database lokal, tidak untuk alamat publik.
+`npm run db:demo` sengaja dipisah justru karena itu.
 
 ### 6. Tangkapan layar dan alamat
 

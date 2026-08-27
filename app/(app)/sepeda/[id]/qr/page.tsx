@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { toSVG } from "bwip-js/node";
 import { wajibPengguna } from "@/lib/auth/dal";
 import { sepedaById } from "@/lib/queries/bikes";
+import { ambilPengaturan } from "@/lib/queries/pengaturan";
 import { ButtonLink } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { TombolCetak } from "@/components/sepeda/print-button";
@@ -22,6 +23,11 @@ export default async function HalamanQr(props: PageProps<"/sepeda/[id]/qr">) {
 
   const sepeda = await sepedaById(bikeId);
   if (!sepeda) notFound();
+
+  // Nama usaha ikut tercetak dan menempel bertahun-tahun di rangka sepeda, jadi ia
+  // dibaca dari pengaturan. Menuliskannya mati di sini berarti rental yang mengganti
+  // namanya lewat menu Pengaturan tetap mencetak stiker bernama lama.
+  const { namaUsaha } = await ambilPengaturan();
 
   // Pilihan penyandiannya ada di lib/qr.ts, satu tempat dengan yang dipakai uji
   // baca-ulang. Kodenya masuk apa adanya, bukan sebagai tautan: stiker ini
@@ -54,7 +60,7 @@ export default async function HalamanQr(props: PageProps<"/sepeda/[id]/qr">) {
             className="break-inside-avoid rounded-card border border-line bg-white p-3 text-center"
           >
             <p className="text-[10px] font-semibold uppercase tracking-wider text-black/60">
-              Rental Sepeda Garut
+              {namaUsaha}
             </p>
             {/* Selebar kartu, bukan tiga perempatnya. Zona sunyi sekarang ikut
                 di dalam SVG dan memakan sekitar seperempat lebarnya, jadi modul

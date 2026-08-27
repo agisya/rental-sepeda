@@ -34,8 +34,8 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Rental Sepeda Garut",
-    template: "%s · Rental Sepeda Garut",
+    default: "Rental Sepeda",
+    template: "%s · Rental Sepeda",
   },
   description:
     "Pencatatan rental sepeda per jam, bagi hasil pemilik, dan laporan harian.",

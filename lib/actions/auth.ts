@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { cocokkanKataSandi } from "@/lib/auth/password";
+import { cariAkunDemo } from "@/lib/auth/demo";
 import { buatCookieSesi, hapusCookieSesi } from "@/lib/auth/session";
 
 const skemaMasuk = z.object({
@@ -87,6 +88,53 @@ export async function masuk(
   const tujuan =
     lanjut && lanjut.startsWith("/") && !lanjut.startsWith("//") ? lanjut : "/dashboard";
   redirect(tujuan);
+}
+
+/**
+ * Masuk sebagai akun demo tanpa mengetik apa pun.
+ *
+ * Sengaja tidak menerima satu pun argumen. Username-nya dibaca dari AKUN_DEMO oleh
+ * cariAkunDemo(), bukan dari formulir, sehingga tidak ada nilai dari peramban yang
+ * bisa mengarahkan action ini ke akun lain. Yang dibagikan ke publik cuma tombolnya,
+ * bukan kemampuan memilih akun.
+ *
+ * Kelayakan akunnya — ada, aktif, dan berperan kasir — diperiksa di lib/auth/demo.ts
+ * supaya bisa diuji dengan Postgres sungguhan.
+ */
+export async function masukDemo(
+  _sebelumnya: StatusMasuk,
+  // Bentuk argumennya mengikuti kontrak useActionState. Isinya sengaja tidak pernah
+  // dibaca — itulah yang membuat action ini tidak bisa diarahkan ke akun lain.
+  _formData: FormData,
+): Promise<StatusMasuk> {
+  let hasil: Awaited<ReturnType<typeof cariAkunDemo>>;
+
+  try {
+    hasil = await cariAkunDemo();
+  } catch (galat) {
+    console.error("Gagal menghubungi database saat masuk demo:", galat);
+    return {
+      galat:
+        "Tidak bisa terhubung ke database. Periksa koneksi internet lalu coba lagi.",
+    };
+  }
+
+  if (!hasil.ada) {
+    // Alasannya untuk yang memegang deployment, bukan untuk pengunjung: kalau
+    // AKUN_DEMO salah tunjuk, log inilah yang menjelaskannya. Pengunjung cukup tahu
+    // demonya sedang tidak bisa dipakai.
+    console.error(`Tombol demo ditekan tapi akunnya tidak bisa dipakai: ${hasil.alasan}`);
+    return { galat: "Akun demo sedang tidak tersedia. Coba lagi nanti." };
+  }
+
+  await buatCookieSesi({
+    userId: hasil.pengguna.id,
+    username: hasil.pengguna.username,
+    nama: hasil.pengguna.nama,
+    peran: hasil.pengguna.peran,
+  });
+
+  redirect("/dashboard");
 }
 
 export async function keluar(): Promise<void> {

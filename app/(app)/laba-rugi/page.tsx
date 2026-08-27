@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { wajibPengguna } from "@/lib/auth/dal";
 import { LABEL_KATEGORI, labaRugi, pengeluaranPerKategori } from "@/lib/queries/keuangan";
+import { ambilPengaturan } from "@/lib/queries/pengaturan";
 import { BarisData, Card, CardHeader, DaftarData } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { FilterChips } from "@/components/ui/filter-chips";
@@ -53,9 +54,10 @@ export default async function HalamanLabaRugi(props: PageProps<"/laba-rugi">) {
           ? rentangTahunWib(sekarang)
           : rentangBulanWib(sekarang);
 
-  const [hasil, perKategori] = await Promise.all([
+  const [hasil, perKategori, { namaUsaha }] = await Promise.all([
     labaRugi(rentang),
     pengeluaranPerKategori(rentang),
+    ambilPengaturan(),
   ]);
 
   const untung = hasil.labaBersih >= 0;
@@ -117,7 +119,7 @@ export default async function HalamanLabaRugi(props: PageProps<"/laba-rugi">) {
           <BarisData label="Dikurangi bagian pemilik sepeda">
             <span className="text-danger">− {rupiah(hasil.bagianPemilik)}</span>
           </BarisData>
-          <BarisData label="Pendapatan Rental Sepeda Garut" tebal>
+          <BarisData label={`Pendapatan ${namaUsaha}`} tebal>
             {rupiah(hasil.pendapatanRental)}
           </BarisData>
           <BarisData label="Dikurangi pengeluaran">

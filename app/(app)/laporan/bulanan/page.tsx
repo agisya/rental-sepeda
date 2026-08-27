@@ -9,6 +9,7 @@ import {
   sepedaTidakDipakai,
 } from "@/lib/queries/laporan";
 import { bagiHasilSemuaPemilik } from "@/lib/queries/rentals";
+import { ambilPengaturan } from "@/lib/queries/pengaturan";
 import { Card, CardHeader, KeadaanKosong } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Ikon } from "@/components/ui/icons";
@@ -35,7 +36,7 @@ export default async function HalamanLaporanBulanan(
     new Date();
   const rentang = rentangBulanWib(acuan);
 
-  const [laporan, penggunaan, tidakDipakai, perPemilik, potongan, rincian] =
+  const [laporan, penggunaan, tidakDipakai, perPemilik, potongan, rincian, { namaUsaha }] =
     await Promise.all([
       laporanPeriode(rentang),
       penggunaanSepeda(rentang),
@@ -43,6 +44,7 @@ export default async function HalamanLaporanBulanan(
       bagiHasilSemuaPemilik(rentang),
       potonganPerKasir(rentang),
       rincianPotongan(rentang),
+      ambilPengaturan(),
     ]);
 
   const bulanLalu = kunciBulanWib(new Date(rentang.mulai.getTime() - 24 * 60 * 60 * 1000));
@@ -86,6 +88,7 @@ export default async function HalamanLaporanBulanan(
         penggunaan={penggunaan}
         judulPenggunaan="Top 10 sepeda"
         batasPenggunaan={10}
+        namaUsaha={namaUsaha}
       />
 
       <PotonganKeterlambatan perKasir={potongan} rincian={rincian} />

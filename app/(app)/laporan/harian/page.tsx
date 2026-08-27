@@ -6,6 +6,7 @@ import {
   daftarTransaksi,
   ringkasanPeriode,
 } from "@/lib/queries/rentals";
+import { ambilPengaturan } from "@/lib/queries/pengaturan";
 import {
   BarisData,
   Card,
@@ -39,10 +40,11 @@ export default async function HalamanLaporanHarian(
   const tanggal = dariKunciTanggalWib(kunci) ?? new Date();
   const rentang = rentangHariWib(tanggal);
 
-  const [ringkasan, perPemilik, transaksi] = await Promise.all([
+  const [ringkasan, perPemilik, transaksi, { namaUsaha }] = await Promise.all([
     ringkasanPeriode(rentang),
     bagiHasilSemuaPemilik(rentang),
     daftarTransaksi({ rentang, batas: 200 }),
+    ambilPengaturan(),
   ]);
 
   const rataRataPerTransaksi =
@@ -116,7 +118,7 @@ export default async function HalamanLaporanHarian(
           <BarisData label="Bagian pemilik sepeda">
             {rupiah(ringkasan.totalBagianPemilik)}
           </BarisData>
-          <BarisData label="Bagian Rental Sepeda Garut">
+          <BarisData label={`Bagian ${namaUsaha}`}>
             {rupiah(ringkasan.totalBagianRental)}
           </BarisData>
         </DaftarData>

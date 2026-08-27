@@ -17,11 +17,14 @@ export function RingkasanPeriodeLaporan({
   penggunaan,
   judulPenggunaan,
   batasPenggunaan,
+  namaUsaha,
 }: {
   laporan: LaporanPeriode;
   penggunaan: PenggunaanSepeda[];
   judulPenggunaan: string;
   batasPenggunaan?: number;
+  /** Diterima sebagai prop, bukan dibaca sendiri, supaya komponen ini tetap murni. */
+  namaUsaha: string;
 }) {
   const { ringkasan, perHari } = laporan;
   const terpakai = batasPenggunaan ? penggunaan.slice(0, batasPenggunaan) : penggunaan;
@@ -64,7 +67,7 @@ export function RingkasanPeriodeLaporan({
           <BarisData label="Bagian pemilik sepeda">
             {rupiah(ringkasan.totalBagianPemilik)}
           </BarisData>
-          <BarisData label="Bagian Rental Sepeda Garut">
+          <BarisData label={`Bagian ${namaUsaha}`}>
             {rupiah(ringkasan.totalBagianRental)}
           </BarisData>
           <BarisData label="Rata-rata omzet per hari">

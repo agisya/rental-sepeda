@@ -7,6 +7,7 @@ import {
   rincianPotongan,
 } from "@/lib/queries/laporan";
 import { bagiHasilSemuaPemilik } from "@/lib/queries/rentals";
+import { ambilPengaturan } from "@/lib/queries/pengaturan";
 import { Card, CardHeader, KeadaanKosong } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Ikon } from "@/components/ui/icons";
@@ -37,13 +38,15 @@ export default async function HalamanLaporanMingguan(
     sekarang;
   const rentang = rentangMingguWib(acuan);
 
-  const [laporan, penggunaan, perPemilik, potongan, rincian] = await Promise.all([
-    laporanPeriode(rentang),
-    penggunaanSepeda(rentang),
-    bagiHasilSemuaPemilik(rentang),
-    potonganPerKasir(rentang),
-    rincianPotongan(rentang),
-  ]);
+  const [laporan, penggunaan, perPemilik, potongan, rincian, { namaUsaha }] =
+    await Promise.all([
+      laporanPeriode(rentang),
+      penggunaanSepeda(rentang),
+      bagiHasilSemuaPemilik(rentang),
+      potonganPerKasir(rentang),
+      rincianPotongan(rentang),
+      ambilPengaturan(),
+    ]);
 
   const mingguLalu = kunciTanggalWib(new Date(rentang.mulai.getTime() - SEMINGGU));
   const mingguDepan = kunciTanggalWib(new Date(rentang.mulai.getTime() + SEMINGGU));
@@ -87,6 +90,7 @@ export default async function HalamanLaporanMingguan(
         laporan={laporan}
         penggunaan={penggunaan}
         judulPenggunaan="Penggunaan sepeda"
+        namaUsaha={namaUsaha}
       />
 
       <PotonganKeterlambatan perKasir={potongan} rincian={rincian} />

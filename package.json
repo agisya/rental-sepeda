@@ -18,6 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:seed": "tsx lib/db/seed.ts",
+    "//db:demo": "Menyiapkan deployment portofolio: satu akun berperan kasir plus transaksi contoh beberapa minggu terakhir, supaya seluruh laporan berisi angka. Dipisah dari db:seed karena seed membuat akun admin dan owner dengan kata sandi yang tertulis di dalam berkasnya — aman di laptop, tidak untuk alamat publik.",
+    "db:demo": "tsx lib/db/demo.ts",
     "db:cek": "tsx lib/db/cek.ts",
     "db:migrate": "tsx lib/db/migrasi.ts",
     "db:generate": "drizzle-kit generate",

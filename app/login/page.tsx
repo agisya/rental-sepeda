@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Bike } from "lucide-react";
 import { sistemKosong } from "@/lib/pengguna/kelola";
+import { namaAkunDemo } from "@/lib/auth/demo";
 import { ButtonLink } from "@/components/ui/button";
 import { LoginForm } from "./login-form";
+import { DemoButton } from "./demo-button";
 
 export const metadata: Metadata = {
   title: "Masuk",
@@ -35,6 +37,7 @@ export default async function HalamanLogin(props: PageProps<"/login">) {
    * menyesatkan: "belum ada akun" terlihat persis seperti "sandi salah".
    */
   const belumAdaAkun = await belumPunyaAkunSamaSekali();
+  const adaAkunDemo = namaAkunDemo() !== null;
 
   return (
     <main className="flex min-h-dvh flex-col justify-center bg-bg px-5 py-10">
@@ -47,7 +50,7 @@ export default async function HalamanLogin(props: PageProps<"/login">) {
             <Bike className="size-7" strokeWidth={1.9} />
           </span>
           <h1 className="text-xl font-semibold tracking-tight text-ink">
-            Rental Sepeda Garut
+            Rental Sepeda
           </h1>
           <p className="mt-1.5 text-sm text-ink-muted">
             Masuk untuk mulai mencatat rental hari ini
@@ -68,6 +71,28 @@ export default async function HalamanLogin(props: PageProps<"/login">) {
         ) : (
           <div className="rounded-card border border-line bg-surface p-5">
             <LoginForm lanjut={tujuan} />
+
+            {/*
+              Hanya muncul di deployment yang memang punya akun demo. Tanpa
+              AKUN_DEMO tidak ada tombol dan tidak ada jalan masuk tambahan, jadi
+              pemasangan di rental sungguhan tidak ikut membawa pintu ini.
+            */}
+            {adaAkunDemo && (
+              <>
+                <div className="my-5 flex items-center gap-3" aria-hidden="true">
+                  <span className="h-px flex-1 bg-line" />
+                  <span className="text-xs text-ink-faint">atau</span>
+                  <span className="h-px flex-1 bg-line" />
+                </div>
+
+                <DemoButton />
+
+                <p className="mt-3 text-center text-xs leading-relaxed text-ink-faint">
+                  Masuk sebagai kasir dengan data contoh. Bisa mencatat rental dan
+                  membuka laporan; menghapus data dan menu keuangan tertutup.
+                </p>
+              </>
+            )}
           </div>
         )}
 
