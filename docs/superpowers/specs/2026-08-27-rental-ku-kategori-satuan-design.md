@@ -230,20 +230,37 @@ dua tempat yang harus sama-sama benar untuk satu perilaku. Pemakai yang sudah lo
 tetap tidak mendarat di halaman jualan.
 
 Isi: penjelasan produk, kategori yang didukung, tangkapan layar, bagian harga, dan
-tombol yang membuka `wa.me/<nomor>` dengan pesan siap kirim.
+tombol ajakan berlangganan.
 
-**Tidak ada kode langganan.** Tombol itu membuka WhatsApp; tidak ada status langganan
-yang disimpan, tidak ada akses yang tertutup ketika masa berlaku habis. Ini konsekuensi
-langsung dari keputusan satu-tenant.
+**Tidak ada kode langganan.** Tidak ada status langganan yang disimpan, tidak ada akses
+yang tertutup ketika masa berlaku habis. Ini konsekuensi langsung dari keputusan
+satu-tenant.
 
-## Belum ditentukan
+## Tahap: tata letak dulu, isi menyusul
 
-Dua hal harus datang dari pemiliknya sebelum sub-proyek ini bisa dikerjakan:
+Diputuskan 27 Agustus 2026: sub-proyek ini dikerjakan **hanya sampai tata letaknya**.
+Harga dan nomor WhatsApp belum ditentukan dan ditunda dengan sengaja.
 
-1. **Nomor WhatsApp** tujuan.
-2. **Daftar harga** yang dipajang — berapa paket, berapa harga, apa isi tiap paket.
+Konsekuensinya pada rancangan — dan ini yang membuat penundaan itu murah:
 
-Keduanya isi, bukan keputusan teknis, dan tidak menghalangi sub-proyek 1 dan 2.
+- Angka harga dan isi paket ditaruh di **satu konstanta** di puncak berkasnya, bukan
+  tersebar di markup. Mengisinya nanti berarti menyunting satu tempat.
+- Tombol berlangganan sementara **tidak menunjuk ke mana pun** yang bisa diklik keliru.
+  Ia dinonaktifkan dengan keterangan singkat, bukan diarahkan ke nomor palsu. Nomor
+  contoh yang lupa diganti akan mengirim calon pelanggan ke orang asing.
+- Tata letaknya dirancang untuk **tiga paket**, karena itu bentuk yang paling mungkin
+  dipakai. Kalau nanti jadi dua, satu kolom dihapus tanpa menyentuh yang lain.
+
+Yang dibutuhkan sebelum tahap berikutnya: nomor WhatsApp tujuan, jumlah paket, harga
+tiap paket, dan isi tiap paket. Semuanya isi, bukan keputusan teknis, dan tidak
+menghalangi sub-proyek 1 maupun 2.
+
+## Kejujuran isi
+
+Paket yang dipajang hanya boleh menyebut kemampuan yang benar-benar ada di aplikasi,
+atau perbedaan **layanan** — dukungan, backup — yang tidak menuntut kode. Landing page
+yang menjanjikan multi-cabang sementara aplikasinya satu tenant adalah ketidakcocokan
+yang justru diperiksa orang yang membuka repo ini.
 
 ---
 
