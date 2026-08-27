@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users, type Peran } from "@/lib/db/schema";
 import { bacaSesi, type IsiSesi } from "./session";
+import { RUTE_SESI_HABIS } from "./rute";
 
 /**
  * Lapisan otorisasi yang sesungguhnya.
@@ -57,7 +58,16 @@ export const wajibPengguna = cache(async (): Promise<PenggunaAktif> => {
     .where(eq(users.id, sesi.userId))
     .limit(1);
 
-  if (!pengguna || !pengguna.aktif) redirect("/login");
+  /**
+   * Dikirim ke rute pembersih, bukan langsung ke /login.
+   *
+   * Cookienya masih bertanda tangan sah — yang hilang penggunanya, dan proxy.ts
+   * tidak pernah tahu itu karena ia sengaja tidak menyentuh database. Mengalihkan
+   * ke /login membuat proxy memantulkannya kembali ke /dashboard, lalu ke sini
+   * lagi, tanpa henti. Server Component tidak boleh menulis cookie, jadi sesi basi
+   * itu harus dibuang oleh Route Handler.
+   */
+  if (!pengguna || !pengguna.aktif) redirect(RUTE_SESI_HABIS);
 
   // Kolom "aktif" sengaja tidak ikut dikembalikan; ia hanya dipakai untuk
   // memutuskan akses, bukan untuk ditampilkan.
