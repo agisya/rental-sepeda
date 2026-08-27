@@ -70,8 +70,7 @@ export function Sidebar({ peran }: { peran: Peran }) {
           </span>
 
           <span className="text-[0.9375rem] font-semibold leading-tight tracking-tight text-ink">
-            Rental Sepeda
-            <span className="block text-xs font-normal text-ink-muted">Garut</span>
+            Rental Ku
           </span>
         </div>
 
