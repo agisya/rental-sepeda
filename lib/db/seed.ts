@@ -10,7 +10,7 @@
 
 import { eq } from "drizzle-orm";
 import { hash } from "bcryptjs";
-import { bikes, owners, settings, users } from "./schema";
+import { bikes, categories, owners, settings, users } from "./schema";
 import { bukaKoneksiSkrip } from "./koneksi-skrip";
 
 const PENGGUNA = [
@@ -93,6 +93,30 @@ async function main() {
     const [baru] = await db.insert(owners).values(p).returning({ id: owners.id });
     idPemilik.push(baru.id);
     console.log(`  + pemilik ${p.nama} (${p.persentaseBagiHasil}%)`);
+  }
+
+  // Kategori "Sepeda" harus ada sebelum sepeda pertama dibuat. Task berikutnya
+  // menyambungkan bikes.categoryId ke sini; untuk sekarang cukup pastikan
+  // kategorinya ada.
+  const [kategoriAda] = await db
+    .select({ id: categories.id })
+    .from(categories)
+    .where(eq(categories.nama, "Sepeda"))
+    .limit(1);
+
+  if (kategoriAda) {
+    console.log(`  kategori Sepeda sudah ada (id ${kategoriAda.id}), dilewati`);
+  } else {
+    const [baru] = await db
+      .insert(categories)
+      .values({
+        nama: "Sepeda",
+        satuan: "jam",
+        toleransiTelatMenit: 5,
+        batasBerjalanSatuan: 12,
+      })
+      .returning({ id: categories.id });
+    console.log(`  + kategori Sepeda (id ${baru.id})`);
   }
 
   for (const s of SEPEDA) {

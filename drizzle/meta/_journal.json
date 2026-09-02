@@ -50,6 +50,13 @@
       "when": 1788321741728,
       "tag": "0006_fine_vapor",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788322367059,
+      "tag": "0007_kategori_sepeda_awal",
+      "breakpoints": true
     }
   ]
 }
