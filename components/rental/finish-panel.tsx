@@ -65,7 +65,10 @@ export function FinishPanel({
   const perkiraan = hitungBiaya({
     waktuMulai,
     waktuSelesai: new Date(Math.max(sekarangMs, mulaiMs)),
-    tarifPerJam,
+    tarif: tarifPerJam,
+    // TODO(task berikutnya): pakai satuan asli dari kategori sepeda, bukan
+    // nilai tetap ini.
+    satuan: "jam",
     persentasePemilik,
     toleransiMenit: toleransiTelatMenit,
   });
@@ -105,7 +108,7 @@ export function FinishPanel({
    */
   const kirimTambahan = tambahanSah && tambahan !== saran;
 
-  const total = perkiraan.durasiJamDitagih * tarifPerJam + (tambahanSah ? tambahan : 0);
+  const total = perkiraan.durasiSatuanDitagih * tarifPerJam + (tambahanSah ? tambahan : 0);
 
   return (
     <div className="space-y-4">
@@ -127,8 +130,8 @@ export function FinishPanel({
             Kasir menyebutkan angka ini ke penyewa yang sedang berdiri di depannya,
             dan penyewa berhak tahu mana uang sewa dan mana uang keterlambatan. */}
         <DaftarData className="border-t border-line">
-          <BarisData label={`Sewa ${perkiraan.durasiJamDitagih} jam × ${rupiah(tarifPerJam)}`}>
-            {rupiah(perkiraan.durasiJamDitagih * tarifPerJam)}
+          <BarisData label={`Sewa ${perkiraan.durasiSatuanDitagih} jam × ${rupiah(tarifPerJam)}`}>
+            {rupiah(perkiraan.durasiSatuanDitagih * tarifPerJam)}
           </BarisData>
           {perkiraan.sisaMenit > 0 && (
             <BarisData label={`Lewat ${perkiraan.sisaMenit} menit`}>

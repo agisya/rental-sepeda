@@ -90,7 +90,8 @@ async function rentalSelesai(opsi: {
   const biaya = hitungBiaya({
     waktuMulai,
     waktuSelesai,
-    tarifPerJam: opsi.tarif,
+    tarif: opsi.tarif,
+    satuan: "jam",
     persentasePemilik: opsi.persen,
     toleransiMenit: 5,
   });
@@ -106,7 +107,7 @@ async function rentalSelesai(opsi: {
     waktuSelesai,
     status: "selesai",
     durasiMenit: biaya.durasiMenit,
-    durasiJamDitagih: biaya.durasiJamDitagih,
+    durasiJamDitagih: biaya.durasiSatuanDitagih,
     totalBiaya: biaya.totalBiaya,
     bagianPemilik: biaya.bagianPemilik,
     bagianRental: biaya.bagianRental,

@@ -182,7 +182,10 @@ async function main() {
     const biaya = hitungBiaya({
       waktuMulai,
       waktuSelesai,
-      tarifPerJam: sepeda.tarifPerJam,
+      tarif: sepeda.tarifPerJam,
+      // TODO(task berikutnya): pakai satuan asli dari kategori sepeda, bukan
+      // nilai tetap ini.
+      satuan: "jam",
       persentasePemilik: persentase,
       toleransiMenit: 5,
     });
@@ -198,7 +201,7 @@ async function main() {
       waktuMulai,
       waktuSelesai,
       durasiMenit: biaya.durasiMenit,
-      durasiJamDitagih: biaya.durasiJamDitagih,
+      durasiJamDitagih: biaya.durasiSatuanDitagih,
       tambahanSaran: biaya.tambahanSaran,
       tambahanDitagih: biaya.tambahanDitagih,
       totalBiaya: biaya.totalBiaya,

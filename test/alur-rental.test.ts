@@ -178,7 +178,8 @@ describe("satu rental selesai, dari mulai sampai masuk laporan", () => {
     const biaya = hitungBiaya({
       waktuMulai: mulai,
       waktuSelesai: selesai,
-      tarifPerJam: TARIF,
+      tarif: TARIF,
+      satuan: "jam",
       persentasePemilik: PERSEN,
       toleransiMenit: 5,
     });
@@ -186,7 +187,7 @@ describe("satu rental selesai, dari mulai sampai masuk laporan", () => {
     // 1 jam 10 menit: pokoknya 1 jam, dan 10 menit sisanya melewati toleransi
     // sehingga disarankan satu blok setengah jam. Dulu durasi ini ditagih 2 jam
     // penuh — perilaku itulah yang sengaja dibuang.
-    expect(biaya.durasiJamDitagih).toBe(1);
+    expect(biaya.durasiSatuanDitagih).toBe(1);
     expect(biaya.sisaMenit).toBe(10);
     expect(biaya.tambahanSaran).toBe(7_500);
     expect(biaya.totalBiaya).toBe(22_500);
@@ -199,7 +200,7 @@ describe("satu rental selesai, dari mulai sampai masuk laporan", () => {
         status: "selesai",
         waktuSelesai: selesai,
         durasiMenit: biaya.durasiMenit,
-        durasiJamDitagih: biaya.durasiJamDitagih,
+        durasiJamDitagih: biaya.durasiSatuanDitagih,
         // Ikut disimpan supaya baris ini tetap masuk akal dibaca: totalBiaya
         // sudah memuat denda, jadi tanpa kedua kolom ini rincian rentalnya
         // tidak akan pernah berjumlah sama dengan totalnya.
@@ -430,7 +431,8 @@ describe("uang tidak pernah hilang karena pembulatan", () => {
       const biaya = hitungBiaya({
         waktuMulai: mulai,
         waktuSelesai: selesai,
-        tarifPerJam: 17_777,
+        tarif: 17_777,
+        satuan: "jam",
         persentasePemilik: k.persen,
         toleransiMenit: 5,
       });
@@ -446,7 +448,7 @@ describe("uang tidak pernah hilang karena pembulatan", () => {
         waktuSelesai: selesai,
         status: "selesai",
         durasiMenit: biaya.durasiMenit,
-        durasiJamDitagih: biaya.durasiJamDitagih,
+        durasiJamDitagih: biaya.durasiSatuanDitagih,
         totalBiaya: biaya.totalBiaya,
         bagianPemilik: biaya.bagianPemilik,
         bagianRental: biaya.bagianRental,

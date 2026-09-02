@@ -229,7 +229,10 @@ export async function selesaikanRental(
         biaya = hitungBiaya({
           waktuMulai: rental.waktuMulai,
           waktuSelesai,
-          tarifPerJam: rental.tarifPerJamSnapshot,
+          tarif: rental.tarifPerJamSnapshot,
+          // TODO(task berikutnya): pakai satuan asli dari kategori sepeda, bukan
+          // nilai tetap ini.
+          satuan: "jam",
           persentasePemilik: rental.persentasePemilikSnapshot,
           toleransiMenit: pengaturan.toleransiTelatMenit,
           tambahanDitagih: data.tambahanDitagih,
@@ -255,7 +258,7 @@ export async function selesaikanRental(
         .set({
           waktuSelesai,
           durasiMenit: biaya.durasiMenit,
-          durasiJamDitagih: biaya.durasiJamDitagih,
+          durasiJamDitagih: biaya.durasiSatuanDitagih,
           tambahanSaran: biaya.tambahanSaran,
           tambahanDitagih: biaya.tambahanDitagih,
           alasanPotongan: memberiPotongan ? (data.alasanPotongan ?? null) : null,

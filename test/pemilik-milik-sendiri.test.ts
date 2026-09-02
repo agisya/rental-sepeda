@@ -87,7 +87,8 @@ describe("uang dari sepeda milik sendiri", () => {
     const hasil = hitungBiaya({
       waktuMulai: new Date("2026-08-14T05:00:00.000Z"),
       waktuSelesai: new Date("2026-08-14T08:00:00.000Z"),
-      tarifPerJam: 15000,
+      tarif: 15000,
+      satuan: "jam",
       persentasePemilik: 0,
       toleransiMenit: 5,
     });
@@ -103,7 +104,8 @@ describe("uang dari sepeda milik sendiri", () => {
     const hasil = hitungBiaya({
       waktuMulai: new Date("2026-08-14T05:00:00.000Z"),
       waktuSelesai: new Date("2026-08-14T08:00:00.000Z"),
-      tarifPerJam: 15000,
+      tarif: 15000,
+      satuan: "jam",
       persentasePemilik: 100,
       toleransiMenit: 5,
     });

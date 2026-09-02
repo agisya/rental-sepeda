@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   hitungBiaya,
   hitungDurasiMenit,
-  hitungJamPokok,
+  hitungSatuanPokok,
   hitungSaranTambahan,
   hitungSisaMenit,
 } from "./pricing";
@@ -20,7 +20,8 @@ function biayaSetelah(menit: number, tambahan?: number) {
   return hitungBiaya({
     waktuMulai: MULAI,
     waktuSelesai: menitSetelah(MULAI, menit),
-    tarifPerJam: TARIF,
+    tarif: TARIF,
+    satuan: "jam",
     persentasePemilik: 60,
     toleransiMenit: TOLERANSI,
     tambahanDitagih: tambahan,
@@ -48,7 +49,7 @@ describe("hitungDurasiMenit", () => {
   });
 });
 
-describe("hitungJamPokok — bulatkan ke BAWAH per jam, minimum 1 jam", () => {
+describe("hitungSatuanPokok — bulatkan ke BAWAH per jam, minimum 1 jam", () => {
   it.each([
     [0, 1],
     [1, 1],
@@ -61,7 +62,7 @@ describe("hitungJamPokok — bulatkan ke BAWAH per jam, minimum 1 jam", () => {
     [121, 2],
     [1440, 24],
   ])("durasi %i menit menghasilkan pokok %i jam", (menit, jam) => {
-    expect(hitungJamPokok(menit)).toBe(jam);
+    expect(hitungSatuanPokok(menit, "jam")).toBe(jam);
   });
 });
 
@@ -77,14 +78,14 @@ describe("hitungSisaMenit", () => {
     [120, 0],
     [130, 10],
   ])("durasi %i menit menyisakan %i menit", (menit, sisa) => {
-    expect(hitungSisaMenit(menit)).toBe(sisa);
+    expect(hitungSisaMenit(menit, "jam")).toBe(sisa);
   });
 
   // Inilah yang membuat denda tidak pernah melebihi satu jam tarif. Kalau
   // invarian ini pecah, seluruh jaminan batas atas denda ikut pecah.
   it("tidak pernah negatif dan selalu di bawah 60", () => {
     for (let menit = 0; menit <= 600; menit++) {
-      const sisa = hitungSisaMenit(menit);
+      const sisa = hitungSisaMenit(menit, "jam");
       expect(sisa).toBeGreaterThanOrEqual(0);
       expect(sisa).toBeLessThan(60);
     }
@@ -103,17 +104,40 @@ describe("hitungSaranTambahan — per setengah jam, nol di dalam toleransi", () 
     [45, 15_000],
     [59, 15_000],
   ])("sisa %i menit disarankan Rp%i", (sisa, saran) => {
-    expect(hitungSaranTambahan(sisa, TARIF, TOLERANSI)).toBe(saran);
+    expect(hitungSaranTambahan(sisa, TARIF, TOLERANSI, "jam")).toBe(saran);
   });
 
   it("tidak pernah melebihi satu jam tarif", () => {
     for (let sisa = 0; sisa < 60; sisa++) {
-      expect(hitungSaranTambahan(sisa, TARIF, TOLERANSI)).toBeLessThanOrEqual(TARIF);
+      expect(hitungSaranTambahan(sisa, TARIF, TOLERANSI, "jam")).toBeLessThanOrEqual(TARIF);
     }
   });
 
   it("toleransi nol berarti lewat semenit pun kena tambahan", () => {
-    expect(hitungSaranTambahan(1, TARIF, 0)).toBe(7_500);
+    expect(hitungSaranTambahan(1, TARIF, 0, "jam")).toBe(7_500);
+  });
+});
+
+describe("satuan hari", () => {
+  // 2 hari 3 jam = 2*1440 + 180 = 3060 menit
+  it("membulatkan pokok ke bawah dalam satuan hari", () => {
+    expect(hitungSatuanPokok(3060, "hari")).toBe(2);
+    expect(hitungSisaMenit(3060, "hari")).toBe(180);
+  });
+
+  it("menagih satu hari penuh untuk sewa di bawah sehari", () => {
+    expect(hitungSatuanPokok(600, "hari")).toBe(1);
+    expect(hitungSisaMenit(600, "hari")).toBe(0);
+  });
+
+  // Blok denda harian adalah separuh hari (720 menit), tarifnya separuh tarif harian.
+  it("menghitung denda harian per separuh hari", () => {
+    expect(hitungSaranTambahan(180, 200_000, 60, "hari")).toBe(100_000);
+    expect(hitungSaranTambahan(800, 200_000, 60, "hari")).toBe(200_000);
+  });
+
+  it("tidak mendenda selama sisa masih dalam toleransi", () => {
+    expect(hitungSaranTambahan(45, 200_000, 60, "hari")).toBe(0);
   });
 });
 
@@ -135,13 +159,14 @@ describe("hitungBiaya — tabel di spesifikasi", () => {
       const hasil = hitungBiaya({
         waktuMulai: MULAI,
         waktuSelesai: menitSetelah(MULAI, menit),
-        tarifPerJam: TARIF_KECIL,
+        tarif: TARIF_KECIL,
+        satuan: "jam",
         persentasePemilik: 60,
         toleransiMenit: TOLERANSI,
       });
 
       expect(hasil.durasiMenit).toBe(menit);
-      expect(hasil.durasiJamDitagih).toBe(jam);
+      expect(hasil.durasiSatuanDitagih).toBe(jam);
       expect(hasil.sisaMenit).toBe(sisa);
       expect(hasil.tambahanSaran).toBe(saran);
       expect(hasil.totalBiaya).toBe(total);
@@ -202,7 +227,8 @@ describe("hitungBiaya — bagi hasil", () => {
     const hasil = hitungBiaya({
       waktuMulai: MULAI,
       waktuSelesai: menitSetelah(MULAI, 60),
-      tarifPerJam: TARIF,
+      tarif: TARIF,
+      satuan: "jam",
       persentasePemilik: 0,
       toleransiMenit: TOLERANSI,
     });
@@ -219,13 +245,14 @@ describe("hitungBiaya — bagi hasil", () => {
     const persenUji = [0, 33, 45, 50, 55, 60, 67, 70, 100];
     const menitUji = [1, 45, 61, 64, 90, 130, 187, 359, 1_441];
 
-    for (const tarifPerJam of tarifUji) {
+    for (const tarif of tarifUji) {
       for (const persentasePemilik of persenUji) {
         for (const menit of menitUji) {
           const hasil = hitungBiaya({
             waktuMulai: MULAI,
             waktuSelesai: menitSetelah(MULAI, menit),
-            tarifPerJam,
+            tarif,
+            satuan: "jam",
             persentasePemilik,
             toleransiMenit: TOLERANSI,
           });
@@ -244,7 +271,7 @@ describe("hitungBiaya — bagi hasil", () => {
 describe("hitungBiaya — masukan yang tidak sah", () => {
   it("tidak pernah menghasilkan biaya nol walau sepeda langsung dikembalikan", () => {
     const hasil = biayaSetelah(0);
-    expect(hasil.durasiJamDitagih).toBe(1);
+    expect(hasil.durasiSatuanDitagih).toBe(1);
     expect(hasil.totalBiaya).toBe(TARIF);
   });
 
@@ -253,7 +280,8 @@ describe("hitungBiaya — masukan yang tidak sah", () => {
       hitungBiaya({
         waktuMulai: MULAI,
         waktuSelesai: menitSetelah(MULAI, 60),
-        tarifPerJam: TARIF,
+        tarif: TARIF,
+        satuan: "jam",
         persentasePemilik: 120,
         toleransiMenit: TOLERANSI,
       }),
@@ -261,12 +289,13 @@ describe("hitungBiaya — masukan yang tidak sah", () => {
   });
 
   it("menolak tarif negatif atau tidak bulat", () => {
-    for (const tarifPerJam of [-1, 15_000.5]) {
+    for (const tarif of [-1, 15_000.5]) {
       expect(() =>
         hitungBiaya({
           waktuMulai: MULAI,
           waktuSelesai: menitSetelah(MULAI, 60),
-          tarifPerJam,
+          tarif,
+          satuan: "jam",
           persentasePemilik: 60,
           toleransiMenit: TOLERANSI,
         }),
@@ -280,7 +309,8 @@ describe("hitungBiaya — masukan yang tidak sah", () => {
         hitungBiaya({
           waktuMulai: MULAI,
           waktuSelesai: menitSetelah(MULAI, 60),
-          tarifPerJam: TARIF,
+          tarif: TARIF,
+          satuan: "jam",
           persentasePemilik: 60,
           toleransiMenit,
         }),

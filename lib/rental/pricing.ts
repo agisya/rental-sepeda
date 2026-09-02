@@ -1,14 +1,14 @@
 /**
  * Inti perhitungan uang aplikasi. Sengaja dibuat murni: tanpa database, tanpa
- * membaca jam sistem, tanpa impor apa pun. Semua nilai uang adalah rupiah bulat.
+ * membaca jam sistem, tanpa impor apa pun selain tipe satuan.
  *
  * Aturannya dibagi dua bagian yang disengaja terpisah:
  *
- *  - **Jam pokok** dibulatkan ke BAWAH. Dulu dibulatkan ke atas, sehingga sewa
+ *  - **Satuan pokok** dibulatkan ke BAWAH. Dulu dibulatkan ke atas, sehingga sewa
  *    1 jam 1 menit ditagih 2 jam. Di lapangan itu terasa seperti hukuman atas
  *    keterlambatan sepele, dan akibatnya kasir enggan mencatat waktu apa adanya.
- *  - **Tambahan keterlambatan** menutupi sisa menit di luar jam pokok, dihitung
- *    per setengah jam, dan hanya berupa SARAN. Kasir yang memutuskan angka
+ *  - **Tambahan keterlambatan** menutupi sisa menit di luar satuan pokok, dihitung
+ *    per separuh satuan, dan hanya berupa SARAN. Kasir yang memutuskan angka
  *    akhirnya, karena hanya dia yang tahu sepeda itu telat karena ban bocor atau
  *    karena penyewanya santai.
  *
@@ -17,10 +17,13 @@
  * melebur jadi satu angka.
  */
 
+import { MENIT_PER_SATUAN, type Satuan } from "./satuan";
+
 export type InputBiaya = {
   waktuMulai: Date;
   waktuSelesai: Date;
-  tarifPerJam: number;
+  tarif: number;
+  satuan: Satuan;
   /** Bagian pemilik dalam persen bulat 0..100. */
   persentasePemilik: number;
   /** Kelewatan yang masih dianggap wajar, dalam menit. */
@@ -34,9 +37,9 @@ export type InputBiaya = {
 
 export type HasilBiaya = {
   durasiMenit: number;
-  /** Jam pokok, hasil pembulatan ke bawah dengan minimum 1. */
-  durasiJamDitagih: number;
-  /** Menit di luar jam pokok. Selalu 0..59. */
+  /** Satuan pokok, hasil pembulatan ke bawah dengan minimum 1. */
+  durasiSatuanDitagih: number;
+  /** Menit di luar satuan pokok. */
   sisaMenit: number;
   tambahanSaran: number;
   tambahanDitagih: number;
@@ -46,7 +49,6 @@ export type HasilBiaya = {
 };
 
 const MILIDETIK_PER_MENIT = 60_000;
-const MENIT_PER_BLOK_DENDA = 30;
 
 /**
  * Selisih dua waktu dalam menit, dibulatkan ke atas. Lewat satu detik pun sudah
@@ -64,28 +66,33 @@ export function hitungDurasiMenit(waktuMulai: Date, waktuSelesai: Date): number 
 }
 
 /**
- * Jam yang ditagih penuh: dibulatkan ke bawah, minimum 1 jam. Sewa 1 jam 50
+ * Satuan yang ditagih penuh: dibulatkan ke bawah, minimum 1. Sewa 1 jam 50
  * menit berpokok 1 jam; 50 menit sisanya diurus sebagai tambahan keterlambatan.
+ * Sewa 2 hari 3 jam berpokok 2 hari, dengan logika yang sama persis.
  */
-export function hitungJamPokok(durasiMenit: number): number {
+export function hitungSatuanPokok(durasiMenit: number, satuan: Satuan): number {
   pastikanDurasiSah(durasiMenit);
-  return Math.max(1, Math.floor(durasiMenit / 60));
+  return Math.max(1, Math.floor(durasiMenit / MENIT_PER_SATUAN[satuan]));
 }
 
 /**
- * Menit di luar jam pokok.
+ * Menit di luar satuan pokok.
  *
- * Selalu bernilai 0..59, dan itu bukan kebetulan melainkan yang menjamin denda
- * tidak pernah melebihi satu jam tarif. Sewa di bawah satu jam menghasilkan 0,
- * karena menitnya sudah terserap oleh minimum satu jam yang tetap ditagih.
+ * Selalu lebih kecil dari satu satuan penuh, dan itu bukan kebetulan melainkan
+ * yang menjamin denda tidak pernah melebihi satu satuan tarif. Sewa di bawah
+ * satu satuan menghasilkan 0, karena menitnya sudah terserap oleh minimum satu
+ * satuan yang tetap ditagih.
  */
-export function hitungSisaMenit(durasiMenit: number): number {
+export function hitungSisaMenit(durasiMenit: number, satuan: Satuan): number {
   pastikanDurasiSah(durasiMenit);
-  return Math.max(0, durasiMenit - hitungJamPokok(durasiMenit) * 60);
+  return Math.max(
+    0,
+    durasiMenit - hitungSatuanPokok(durasiMenit, satuan) * MENIT_PER_SATUAN[satuan],
+  );
 }
 
 /**
- * Saran tambahan keterlambatan: per setengah jam dibulatkan ke atas, setengah
+ * Saran tambahan keterlambatan: per separuh satuan dibulatkan ke atas, separuh
  * tarif per blok. Nol selama sisanya masih di dalam toleransi.
  *
  * Dibulatkan ke bawah saat membagi tarif supaya tarif ganjil tidak pernah
@@ -93,26 +100,30 @@ export function hitungSisaMenit(durasiMenit: number): number {
  */
 export function hitungSaranTambahan(
   sisaMenit: number,
-  tarifPerJam: number,
+  tarif: number,
   toleransiMenit: number,
+  satuan: Satuan,
 ): number {
-  pastikanTarifSah(tarifPerJam);
+  pastikanTarifSah(tarif);
   pastikanToleransiSah(toleransiMenit);
   if (sisaMenit <= toleransiMenit) return 0;
 
-  const blok = Math.ceil(sisaMenit / MENIT_PER_BLOK_DENDA);
-  return blok * Math.floor(tarifPerJam / 2);
+  // Blok denda adalah separuh satuan: 30 menit untuk jam, 12 jam untuk hari.
+  const menitPerBlok = MENIT_PER_SATUAN[satuan] / 2;
+  const blok = Math.ceil(sisaMenit / menitPerBlok);
+  return blok * Math.floor(tarif / 2);
 }
 
 export function hitungBiaya({
   waktuMulai,
   waktuSelesai,
-  tarifPerJam,
+  tarif,
+  satuan,
   persentasePemilik,
   toleransiMenit,
   tambahanDitagih,
 }: InputBiaya): HasilBiaya {
-  pastikanTarifSah(tarifPerJam);
+  pastikanTarifSah(tarif);
   pastikanToleransiSah(toleransiMenit);
   if (
     !Number.isInteger(persentasePemilik) ||
@@ -123,9 +134,9 @@ export function hitungBiaya({
   }
 
   const durasiMenit = hitungDurasiMenit(waktuMulai, waktuSelesai);
-  const durasiJamDitagih = hitungJamPokok(durasiMenit);
-  const sisaMenit = hitungSisaMenit(durasiMenit);
-  const tambahanSaran = hitungSaranTambahan(sisaMenit, tarifPerJam, toleransiMenit);
+  const durasiSatuanDitagih = hitungSatuanPokok(durasiMenit, satuan);
+  const sisaMenit = hitungSisaMenit(durasiMenit, satuan);
+  const tambahanSaran = hitungSaranTambahan(sisaMenit, tarif, toleransiMenit, satuan);
 
   const tambahanFinal = tambahanDitagih ?? tambahanSaran;
   if (!Number.isInteger(tambahanFinal) || tambahanFinal < 0) {
@@ -141,7 +152,7 @@ export function hitungBiaya({
     );
   }
 
-  const totalBiaya = durasiJamDitagih * tarifPerJam + tambahanFinal;
+  const totalBiaya = durasiSatuanDitagih * tarif + tambahanFinal;
 
   // Bagian rental dihitung sebagai sisa, bukan persentase tersendiri. Dengan
   // begitu jumlah kedua bagian selalu persis sama dengan total biaya dan tidak
@@ -154,7 +165,7 @@ export function hitungBiaya({
 
   return {
     durasiMenit,
-    durasiJamDitagih,
+    durasiSatuanDitagih,
     sisaMenit,
     tambahanSaran,
     tambahanDitagih: tambahanFinal,
@@ -170,9 +181,9 @@ function pastikanDurasiSah(durasiMenit: number): void {
   }
 }
 
-function pastikanTarifSah(tarifPerJam: number): void {
-  if (!Number.isInteger(tarifPerJam) || tarifPerJam < 0) {
-    throw new Error("Tarif per jam harus berupa rupiah bulat dan tidak negatif.");
+function pastikanTarifSah(tarif: number): void {
+  if (!Number.isInteger(tarif) || tarif < 0) {
+    throw new Error("Tarif harus berupa rupiah bulat dan tidak negatif.");
   }
 }
 
