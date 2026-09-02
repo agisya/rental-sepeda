@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bacaTema, temaBerikutnya, temaEfektif, type Tema } from "./tema";
+import { bacaTema, temaBerikutnya, type Tema } from "./tema";
 
 describe("baca tema tersimpan", () => {
   it("mengenali dua pilihan yang memang pernah disimpan", () => {
@@ -7,61 +7,42 @@ describe("baca tema tersimpan", () => {
     expect(bacaTema("gelap")).toBe("gelap");
   });
 
-  it("menganggap belum pernah memilih sebagai ikut sistem", () => {
-    expect(bacaTema(null)).toBe("sistem");
-    expect(bacaTema("")).toBe("sistem");
+  it("menganggap belum pernah memilih sebagai terang", () => {
+    expect(bacaTema(null)).toBe("terang");
+    expect(bacaTema("")).toBe("terang");
   });
 
-  // Nilai di localStorage bisa saja tertinggal dari versi lama, disunting
-  // tangan lewat devtools, atau dipakai aplikasi lain di domain yang sama.
-  // Apa pun yang tidak dikenali diperlakukan seperti belum memilih, bukan
-  // dibiarkan lolos dan merusak perbandingan di tempat lain.
+  // Sebelum tema disederhanakan jadi dua keadaan, "sistem" adalah pilihan sah
+  // yang bisa saja masih tersimpan di localStorage peninjau yang pernah
+  // membuka aplikasi ini di versi lama. Tipe Tema sekarang hanya
+  // "terang" | "gelap", jadi nilai itu harus jatuh ke "terang", bukan lolos
+  // sebagai nilai ketiga yang sudah tidak ada tempatnya.
+  it("membaca nilai lama \"sistem\" sebagai terang", () => {
+    expect(bacaTema("sistem")).toBe("terang");
+  });
+
+  // Nilai di localStorage bisa saja disunting tangan lewat devtools, atau
+  // dipakai aplikasi lain di domain yang sama. Apa pun yang tidak dikenali
+  // diperlakukan seperti belum memilih, bukan dibiarkan lolos dan merusak
+  // perbandingan di tempat lain.
   it("mengabaikan nilai yang tidak dikenali", () => {
-    for (const asing of ["dark", "light", "sistem", "GELAP", "null", "0"]) {
-      expect(bacaTema(asing)).toBe("sistem");
+    for (const asing of ["dark", "light", "GELAP", "null", "0"]) {
+      expect(bacaTema(asing)).toBe("terang");
     }
   });
 });
 
-describe("tema yang benar-benar tampil", () => {
-  it("membiarkan pilihan sendiri menang atas setelan sistem, ke dua arah", () => {
-    expect(temaEfektif("terang", true)).toBe("terang");
-    expect(temaEfektif("gelap", false)).toBe("gelap");
-  });
-
-  it("mengikuti setelan sistem selama belum ada yang dipilih", () => {
-    expect(temaEfektif("sistem", true)).toBe("gelap");
-    expect(temaEfektif("sistem", false)).toBe("terang");
-  });
-});
-
 describe("tema setelah tombol ditekan", () => {
-  it("membalik pilihan yang sudah eksplisit", () => {
-    expect(temaBerikutnya("terang", false)).toBe("gelap");
-    expect(temaBerikutnya("gelap", true)).toBe("terang");
-  });
-
-  /*
-    Inti tombolnya. Petugas yang belum pernah menyentuh tema ada di keadaan
-    "sistem", dan menebak "sistem berarti terang" membuat tombol terasa rusak
-    bagi orang yang ponselnya sedang gelap: klik pertama menyetel "gelap" ke
-    layar yang memang sudah gelap, jadi tidak terjadi apa-apa. Karena itu
-    setelan sistem dibaca dulu, bukan diasumsikan.
-  */
-  it("tetap membalik yang terlihat walau tema masih ikut sistem", () => {
-    expect(temaBerikutnya("sistem", true)).toBe("terang");
-    expect(temaBerikutnya("sistem", false)).toBe("gelap");
+  it("membalik tema yang sedang tampil", () => {
+    expect(temaBerikutnya("terang")).toBe("gelap");
+    expect(temaBerikutnya("gelap")).toBe("terang");
   });
 
   it("tidak pernah menghasilkan tema yang sedang tampil", () => {
-    const semua: Tema[] = ["sistem", "terang", "gelap"];
+    const semua: Tema[] = ["terang", "gelap"];
 
     for (const tema of semua) {
-      for (const sistemGelap of [true, false]) {
-        expect(temaBerikutnya(tema, sistemGelap)).not.toBe(
-          temaEfektif(tema, sistemGelap),
-        );
-      }
+      expect(temaBerikutnya(tema)).not.toBe(tema);
     }
   });
 });

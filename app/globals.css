@@ -16,9 +16,11 @@
   sejuk. Kalau di lapangan tetap terasa tertukar, warna status yang digeser,
   bukan mereknya.
 
-  Tiga keadaan tema, bukan dua. Pengguna yang belum memilih apa pun mengikuti
-  setelan sistemnya; yang sudah memilih ditandai lewat data-theme pada elemen
-  html, dan pilihan itu harus menang atas setelan sistem ke dua arah.
+  Dua keadaan tema, bukan tiga. Halaman selalu mulai terang, apa pun setelan
+  perangkat pengunjung — ini demo portofolio, dan layar pertama yang dilihat
+  orang tidak boleh berbeda-beda menurut HP siapa yang membukanya. Yang
+  memilih gelap ditandai lewat data-theme="dark" pada elemen html; tanpa
+  atribut itu, :root di atas ini sudah cukup.
 */
 
 :root {
@@ -101,43 +103,6 @@
   --d-info-soft: #1a2440;
   --d-idle: #a1a79c;
   --d-idle-soft: #23271f;
-}
-
-/* Dipakai dua kali: sekali untuk yang mengikuti sistem, sekali untuk yang
-   memilih gelap sendiri. Isinya hanya pemetaan, tidak ada nilai warna baru. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-
-    --bg: var(--d-bg);
-    --surface: var(--d-surface);
-    --surface-2: var(--d-surface-2);
-    --line: var(--d-line);
-    --line-strong: var(--d-line-strong);
-
-    --ink: var(--d-ink);
-    --ink-muted: var(--d-ink-muted);
-    --ink-faint: var(--d-ink-faint);
-
-    --brand: var(--d-brand);
-    --brand-hover: var(--d-brand-hover);
-    --brand-ink: var(--d-brand-ink);
-    --brand-soft: var(--d-brand-soft);
-    --brand-soft-ink: var(--d-brand-soft-ink);
-
-    --ok: var(--d-ok);
-    --ok-soft: var(--d-ok-soft);
-    --danger: var(--d-danger);
-    --danger-soft: var(--d-danger-soft);
-    --warn: var(--d-warn);
-    --warn-soft: var(--d-warn-soft);
-    --info: var(--d-info);
-    --info-soft: var(--d-info-soft);
-    --idle: var(--d-idle);
-    --idle-soft: var(--d-idle-soft);
-
-    --ring: var(--d-brand);
-  }
 }
 
 :root[data-theme="dark"] {

@@ -42,10 +42,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d0f0c" },
-  ],
+  // Satu warna tetap, bukan sepasang yang mengikuti prefers-color-scheme:
+  // halaman ini tidak lagi mengikuti setelan perangkat sama sekali, jadi warna
+  // chrome peramban yang ikut setelan itu justru bisa bertentangan dengan
+  // halaman yang selalu terang secara bawaan.
+  themeColor: "#ffffff",
   // Zoom tidak dikunci: petugas harus tetap bisa memperbesar teks.
   width: "device-width",
   initialScale: 1,
@@ -58,8 +59,11 @@ export const viewport: Viewport = {
  * tampil terang sekejap lalu berubah gelap. Kedipan itu paling terasa justru
  * bagi orang yang memilih gelap karena silau.
  *
- * Sengaja sekecil mungkin dan dibungkus try: peramban dengan penyimpanan
- * diblokir cukup mengabaikannya dan mengikuti setelan sistem.
+ * Nilai lain selain "gelap" dan "terang" — termasuk "sistem" dari versi lama,
+ * atau localStorage yang kosong — sengaja tidak menyetel atribut apa pun,
+ * karena :root di globals.css sudah terang tanpa itu. Sengaja sekecil
+ * mungkin dan dibungkus try: peramban dengan penyimpanan diblokir cukup
+ * mengabaikannya dan tetap tampil terang.
  */
 const SKRIP_TEMA = `try{var t=localStorage.getItem("tema");if(t==="gelap")document.documentElement.dataset.theme="dark";else if(t==="terang")document.documentElement.dataset.theme="light"}catch(e){}`;
 

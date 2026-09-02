@@ -12,41 +12,37 @@
 export const KUNCI_TEMA = "tema";
 
 /**
- * Tiga keadaan, bukan dua. "Sistem" bukan pelengkap — itulah keadaan awal semua
- * orang, dan petugas yang ponselnya berganti gelap sendiri saat malam tidak
- * perlu mengurus apa pun.
+ * Dua keadaan, bukan tiga. Aplikasi ini dipakai sebagai demo portofolio, dan
+ * layar pertama yang dilihat pengunjung tidak boleh bergantung pada setelan
+ * perangkat masing-masing — jadi tidak ada lagi keadaan "ikut sistem" yang
+ * jatuh ke gelap kalau kebetulan HP peninjau sedang gelap. Awalnya selalu
+ * terang; siapa pun bisa berpindah ke gelap lewat tombol, dan pilihan itu
+ * yang tersimpan.
  */
-export type Tema = "sistem" | "terang" | "gelap";
-
-/** Yang benar-benar tampil di layar. "Sistem" selalu jatuh ke salah satunya. */
-export type TemaNyata = "terang" | "gelap";
+export type Tema = "terang" | "gelap";
 
 /**
  * Menerjemahkan isi localStorage menjadi pilihan yang bisa dipercaya.
  *
- * Apa pun yang tidak dikenali dianggap belum pernah memilih. Nilai asing bisa
- * datang dari versi lama, dari devtools, atau dari aplikasi lain di domain yang
- * sama, dan membiarkannya lolos berarti keadaan tema jadi nilai yang tidak
- * pernah diperiksa di tempat lain.
+ * Apa pun yang tidak dikenali jatuh ke "terang" — termasuk "sistem", nilai
+ * lama yang mungkin masih tersimpan di peramban orang yang memakai aplikasi
+ * ini sebelum tema disederhanakan jadi dua keadaan. Nilai asing lain bisa
+ * datang dari devtools atau aplikasi lain di domain yang sama; membiarkannya
+ * lolos berarti keadaan tema jadi nilai yang tidak pernah diperiksa di
+ * tempat lain.
  */
 export function bacaTema(nilai: string | null): Tema {
-  return nilai === "terang" || nilai === "gelap" ? nilai : "sistem";
-}
-
-/** Tema yang sedang tampil. Pilihan sendiri menang atas setelan sistem, ke dua arah. */
-export function temaEfektif(tema: Tema, sistemGelap: boolean): TemaNyata {
-  if (tema !== "sistem") return tema;
-  return sistemGelap ? "gelap" : "terang";
+  return nilai === "gelap" ? "gelap" : "terang";
 }
 
 /**
- * Tema yang dituju saat tombol di bilah atas ditekan.
+ * Tema yang dituju saat tombol di bilah atas ditekan: kebalikan dari yang
+ * sedang tampil.
  *
- * Dihitung dari apa yang sedang tampil, bukan dari pilihan yang tersimpan.
- * Bedanya terasa pada petugas yang belum pernah menyentuh tema: menebak
- * "sistem berarti terang" membuat klik pertama menyetel gelap ke layar yang
- * memang sudah gelap — tombolnya terasa rusak padahal berfungsi.
+ * Fungsi kecil ini ada supaya aturannya tertulis sekali dan bisa diuji
+ * sendiri, bukan diulang sebagai `tema === "gelap" ? "terang" : "gelap"` di
+ * dalam komponen.
  */
-export function temaBerikutnya(tema: Tema, sistemGelap: boolean): TemaNyata {
-  return temaEfektif(tema, sistemGelap) === "gelap" ? "terang" : "gelap";
+export function temaBerikutnya(tema: Tema): Tema {
+  return tema === "gelap" ? "terang" : "gelap";
 }

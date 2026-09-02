@@ -3,21 +3,14 @@
 import { useSyncExternalStore } from "react";
 import { Ikon } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
-import {
-  bacaTema,
-  KUNCI_TEMA,
-  type Tema,
-  type TemaNyata,
-  temaBerikutnya,
-  temaEfektif,
-} from "@/lib/tema";
+import { bacaTema, KUNCI_TEMA, type Tema, temaBerikutnya } from "@/lib/tema";
 
 /**
  * Dua cara mengganti tema, satu keadaan.
  *
- * PemilihTema — tiga tombol berlabel di Pengaturan, tempat "Sistem" bisa
- * dipulihkan. TombolTema — satu ikon di bilah atas, untuk membalik terang dan
- * gelap tanpa meninggalkan halaman yang sedang dikerjakan.
+ * PemilihTema — dua tombol berlabel di Pengaturan. TombolTema — satu ikon di
+ * bilah atas, untuk membalik terang dan gelap tanpa meninggalkan halaman yang
+ * sedang dikerjakan.
  *
  * Keduanya tinggal di berkas ini karena keduanya membaca dan menulis keadaan
  * yang sama, dan keduanya tampil bersamaan di halaman Pengaturan. Kalau
@@ -35,11 +28,6 @@ import {
   dan di atribut elemen html, dan bisa berubah dari tab lain. Karena itu dibaca
   lewat useSyncExternalStore, bukan disalin ke useState di dalam efek — menyalin
   membuat React sempat menampilkan nilai yang sudah usang, lalu menimpanya.
-
-  Pilihan pengguna dan setelan sistem sengaja jadi dua langganan terpisah, bukan
-  satu objek berisi keduanya. useSyncExternalStore membandingkan hasil bacaan
-  dengan ===, jadi mengembalikan objek baru tiap kali dibaca membuat React
-  menggambar ulang tanpa henti. Dua nilai sederhana tidak punya masalah itu.
 */
 
 const pendengar = new Set<() => void>();
@@ -60,68 +48,27 @@ function temaDiKlien(): Tema {
     return bacaTema(localStorage.getItem(KUNCI_TEMA));
   } catch {
     // Penyimpanan diblokir — perlakukan seperti belum pernah memilih.
-    return "sistem";
+    return "terang";
   }
 }
 
 // Server tidak tahu pilihan siapa pun, dan memang tidak perlu tahu: elemen html
-// sudah disetel skrip di layout sebelum halaman digambar.
+// sudah disetel skrip di layout sebelum halaman digambar, dan bawaan aplikasi
+// ini selalu terang.
 function temaDiServer(): Tema {
-  return "sistem";
+  return "terang";
 }
 
 function useTema(): Tema {
   return useSyncExternalStore(langganTema, temaDiKlien, temaDiServer);
 }
 
-let kueriGelap: MediaQueryList | undefined;
-
-function mediaGelap(): MediaQueryList {
-  kueriGelap ??= window.matchMedia("(prefers-color-scheme: dark)");
-  return kueriGelap;
-}
-
-/*
-  Setelan sistem ikut didengarkan, bukan sekadar dibaca sekali. Ponsel yang
-  dijadwalkan berganti gelap saat matahari terbenam mengubahnya di tengah shift,
-  dan tanpa langganan ini ikon tombol tetap menunjuk arah yang salah sampai
-  halaman dimuat ulang.
-*/
-function langganSistem(ubah: () => void): () => void {
-  const kueri = mediaGelap();
-  kueri.addEventListener("change", ubah);
-
-  return () => kueri.removeEventListener("change", ubah);
-}
-
-function sistemGelapDiKlien(): boolean {
-  return mediaGelap().matches;
-}
-
-function sistemGelapDiServer(): boolean {
-  return false;
-}
-
-function useSistemGelap(): boolean {
-  return useSyncExternalStore(
-    langganSistem,
-    sistemGelapDiKlien,
-    sistemGelapDiServer,
-  );
-}
-
 function terapkan(tema: Tema) {
   const akar = document.documentElement;
-
-  if (tema === "sistem") {
-    delete akar.dataset.theme;
-  } else {
-    akar.dataset.theme = tema === "gelap" ? "dark" : "light";
-  }
+  akar.dataset.theme = tema === "gelap" ? "dark" : "light";
 
   try {
-    if (tema === "sistem") localStorage.removeItem(KUNCI_TEMA);
-    else localStorage.setItem(KUNCI_TEMA, tema);
+    localStorage.setItem(KUNCI_TEMA, tema);
   } catch {
     // Peramban dengan penyimpanan diblokir tetap boleh mengganti tema; hanya
     // pilihannya yang tidak bertahan setelah halaman ditutup.
@@ -131,12 +78,11 @@ function terapkan(tema: Tema) {
 }
 
 const PILIHAN: { nilai: Tema; label: string; ikon: typeof Ikon.temaTerang }[] = [
-  { nilai: "sistem", label: "Sistem", ikon: Ikon.temaSistem },
   { nilai: "terang", label: "Terang", ikon: Ikon.temaTerang },
   { nilai: "gelap", label: "Gelap", ikon: Ikon.temaGelap },
 ];
 
-/** Pemilih tema lengkap: Sistem, Terang, Gelap. Dipakai di Pengaturan. */
+/** Pemilih tema lengkap: Terang, Gelap. Dipakai di Pengaturan. */
 export function PemilihTema() {
   const tema = useTema();
 
@@ -172,7 +118,7 @@ export function PemilihTema() {
   );
 }
 
-const LABEL_TUJUAN: Record<TemaNyata, string> = {
+const LABEL_TUJUAN: Record<Tema, string> = {
   terang: "Ganti ke tema terang",
   gelap: "Ganti ke tema gelap",
 };
@@ -189,18 +135,12 @@ const LABEL_TUJUAN: Record<TemaNyata, string> = {
  * sisi yang sedang berlaku memakai warna teks penuh, sisi lain diredupkan.
  * Letak kenop sendiri gampang salah baca — orang harus ingat mana ujung yang
  * berarti gelap, sedangkan matahari dan bulan tidak perlu diingat.
- *
- * Hanya dua arah, jadi menekannya sekali berarti keluar dari "Sistem" untuk
- * seterusnya. Itu disengaja: yang ingin kembali mengikuti setelan ponselnya
- * memilihnya di Pengaturan > Tampilan, dan itu keputusan yang jarang diambil
- * di tengah melayani pelanggan.
  */
 export function TombolTema() {
   const tema = useTema();
-  const sistemGelap = useSistemGelap();
 
-  const gelap = temaEfektif(tema, sistemGelap) === "gelap";
-  const tujuan = temaBerikutnya(tema, sistemGelap);
+  const gelap = tema === "gelap";
+  const tujuan = temaBerikutnya(tema);
 
   return (
     <button
