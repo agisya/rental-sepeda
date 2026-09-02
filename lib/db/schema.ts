@@ -12,6 +12,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { SATUAN } from "@/lib/rental/satuan";
 
 /**
  * Data biner untuk foto sepeda. Foto disimpan di dalam database, bukan di
@@ -132,6 +133,35 @@ export const owners = pgTable(
       .where(sql`${t.milikSendiri} = true`),
   ],
 );
+
+export const satuanSewaEnum = pgEnum("satuan_sewa", SATUAN);
+
+/**
+ * Kategori barang yang disewakan.
+ *
+ * Satuan sewa melekat di sini, bukan di barang: sepeda disewa per jam, mobil hampir
+ * selalu per hari, dan menaruh keputusan itu pada tiap barang berarti menambah satu
+ * pertanyaan pada setiap unit yang didaftarkan.
+ *
+ * Toleransi keterlambatan dan ambang rental mencurigakan ikut ke sini karena keduanya
+ * kehilangan arti kalau global: toleransi 5 menit yang wajar untuk sepeda membuat mobil
+ * yang telat 6 menit kena denda separuh hari.
+ */
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  nama: text("nama").notNull().unique(),
+  satuan: satuanSewaEnum("satuan").notNull(),
+  /** Kelewatan pengembalian yang masih dianggap wajar, dalam menit. */
+  toleransiTelatMenit: integer("toleransi_telat_menit").notNull(),
+  /** Setelah sekian satuan, rental berjalan ditandai mencurigakan di dashboard. */
+  batasBerjalanSatuan: integer("batas_berjalan_satuan").notNull(),
+  /** Kategori lama dinonaktifkan, tidak dihapus, supaya laporan lama tetap terbaca. */
+  aktif: boolean("aktif").notNull().default(true),
+  urutan: integer("urutan").notNull().default(0),
+  dibuatPada: timestamp("dibuat_pada", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type Category = typeof categories.$inferSelect;
 
 export const bikes = pgTable(
   "bikes",
