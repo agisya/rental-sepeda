@@ -14,9 +14,11 @@ import {
   BadgeCheck,
   Ban,
   Bike,
+  Boxes,
   CalendarDays,
   Camera,
   ChartColumn,
+  ChevronLeft,
   ChevronRight,
   ClipboardList,
   CircleQuestionMark,
@@ -27,7 +29,6 @@ import {
   Landmark,
   LayoutDashboard,
   LogOut,
-  Monitor,
   Moon,
   Palette,
   Plus,
@@ -72,6 +73,17 @@ export function IkonWhatsApp({ className }: { className?: string }) {
 }
 
 export const Ikon = {
+  /**
+   * Lambang aplikasi. Dipakai lewat LambangMerek di components/ui/merek.tsx,
+   * bukan langsung, supaya kotaknya sama di setiap tempat.
+   *
+   * Sengaja bukan sepeda. Rental Ku melayani kategori barang apa pun — sepeda
+   * hanyalah satu di antaranya — sehingga lambangnya harus tetap masuk akal buat
+   * penyewaan alat camping atau sound system. Terpisah dari `sepeda` di bawah,
+   * yang artinya benda sewaan itu sendiri dan hanya boleh ikut berubah kalau
+   * memang benda yang ditunjuknya berubah.
+   */
+  merek: Boxes,
   dashboard: LayoutDashboard,
   scan: ScanLine,
   kamera: Camera,
@@ -100,12 +112,12 @@ export const Ikon = {
   tambah: Plus,
   keluar: LogOut,
   batal: X,
+  kembali: ChevronLeft,
   lanjut: ChevronRight,
   data: Database,
   arsip: ClipboardList,
   keuangan: Landmark,
   tampilan: Palette,
-  temaSistem: Monitor,
   temaTerang: Sun,
   temaGelap: Moon,
 } as const satisfies Record<string, LucideIcon>;

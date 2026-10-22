@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bacaTema, temaBerikutnya, type Tema } from "./tema";
+import { bacaTema, SKRIP_TEMA, temaBerikutnya, WARNA_BILAH, type Tema } from "./tema";
 
 describe("baca tema tersimpan", () => {
   it("mengenali dua pilihan yang memang pernah disimpan", () => {
@@ -44,5 +44,41 @@ describe("tema setelah tombol ditekan", () => {
     for (const tema of semua) {
       expect(temaBerikutnya(tema)).not.toBe(tema);
     }
+  });
+});
+
+/**
+ * Skrip anti-kedip dijalankan sungguhan terhadap tiruan kecil peramban.
+ * Yang diuji teksnya yang dikirim ke <head>, bukan salinan logikanya — salah
+ * ketik di dalam string itu tidak akan tertangkap pemeriksa tipe.
+ */
+function jalankanSkrip(tersimpan: string | null | Error) {
+  const akar = { dataset: {} as Record<string, string> };
+  const meta = { content: WARNA_BILAH.terang };
+  const localStorage = {
+    getItem: () => {
+      if (tersimpan instanceof Error) throw tersimpan;
+      return tersimpan;
+    },
+  };
+  const document = { documentElement: akar, querySelector: () => meta };
+
+  new Function("localStorage", "document", SKRIP_TEMA)(localStorage, document);
+  return { tema: akar.dataset.theme, bilah: meta.content };
+}
+
+describe("skrip anti-kedip", () => {
+  it("menggelapkan halaman dan bilah peramban bagi yang memilih gelap", () => {
+    expect(jalankanSkrip("gelap")).toEqual({ tema: "dark", bilah: WARNA_BILAH.gelap });
+  });
+
+  it("membiarkan halaman terang untuk pilihan lain", () => {
+    for (const nilai of ["terang", "sistem", null]) {
+      expect(jalankanSkrip(nilai)).toEqual({ tema: undefined, bilah: WARNA_BILAH.terang });
+    }
+  });
+
+  it("tidak melempar galat saat penyimpanan diblokir", () => {
+    expect(() => jalankanSkrip(new Error("SecurityError"))).not.toThrow();
   });
 });

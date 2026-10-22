@@ -13,8 +13,8 @@ const dasar =
 const gayaVariasi: Record<Variasi, string> = {
   utama: "bg-brand text-brand-ink border-brand hover:bg-brand-hover hover:border-brand-hover",
   kedua: "bg-surface text-ink border-line-strong hover:bg-surface-2",
-  bahaya: "bg-danger text-white border-danger hover:brightness-95",
-  sukses: "bg-ok text-white border-ok hover:brightness-95",
+  bahaya: "bg-danger text-danger-ink border-danger hover:brightness-95",
+  sukses: "bg-ok text-ok-ink border-ok hover:brightness-95",
   halus:
     "bg-transparent text-ink-muted border-transparent hover:bg-surface-2 hover:text-ink",
 };

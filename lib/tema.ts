@@ -8,7 +8,7 @@
  * yang sama persis, bukan dua salinan yang bisa menyimpang.
  */
 
-/** Kunci localStorage. Dipakai juga oleh skrip anti-kedip di app/layout.tsx. */
+/** Kunci localStorage. Dipakai juga oleh skrip anti-kedip di bawah. */
 export const KUNCI_TEMA = "tema";
 
 /**
@@ -20,6 +20,20 @@ export const KUNCI_TEMA = "tema";
  * yang tersimpan.
  */
 export type Tema = "terang" | "gelap";
+
+/**
+ * Warna bilah peramban HP (meta theme-color) untuk tiap tema.
+ *
+ * Harus sama dengan --bg dan --d-bg di app/globals.css. Ditulis ulang di sini
+ * karena skrip anti-kedip berjalan sebelum stylesheet pasti termuat, jadi
+ * belum bisa membacanya dari CSS. Tanpa ini, halaman gelap di HP dimahkotai
+ * bilah alamat putih — yang paling terasa justru di layar yang paling sering
+ * dipakai petugas.
+ */
+export const WARNA_BILAH: Record<Tema, string> = {
+  terang: "#ffffff",
+  gelap: "#0d0f0c",
+};
 
 /**
  * Menerjemahkan isi localStorage menjadi pilihan yang bisa dipercaya.
@@ -46,3 +60,25 @@ export function bacaTema(nilai: string | null): Tema {
 export function temaBerikutnya(tema: Tema): Tema {
   return tema === "gelap" ? "terang" : "gelap";
 }
+
+/**
+ * Skrip yang menerapkan tema pilihan sebelum halaman digambar, dipasang di
+ * <head> oleh app/layout.tsx.
+ *
+ * Harus berjalan lebih dulu daripada React, karena kalau tidak, halaman sempat
+ * tampil terang sekejap lalu berubah gelap. Kedipan itu paling terasa justru
+ * bagi orang yang memilih gelap karena silau.
+ *
+ * Hanya "gelap" yang mengubah apa pun. Nilai lain — termasuk "sistem" dari
+ * versi lama, atau localStorage yang kosong — dibiarkan, karena :root di
+ * globals.css sudah terang tanpa atribut. Dibungkus try: peramban dengan
+ * penyimpanan diblokir cukup mengabaikannya dan tetap tampil terang.
+ *
+ * Disusun dari konstanta di atas, bukan ditulis sebagai teks lepas, supaya
+ * kunci dan warnanya tidak bisa berbeda dari yang dipakai tombol tema.
+ */
+export const SKRIP_TEMA =
+  `try{if(localStorage.getItem(${JSON.stringify(KUNCI_TEMA)})==="gelap"){` +
+  `document.documentElement.dataset.theme="dark";` +
+  `var m=document.querySelector('meta[name="theme-color"]');` +
+  `if(m)m.content=${JSON.stringify(WARNA_BILAH.gelap)}}}catch(e){}`;

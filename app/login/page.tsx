@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Bike } from "lucide-react";
 import { sistemKosong } from "@/lib/pengguna/kelola";
 import { namaAkunDemo } from "@/lib/auth/demo";
 import { ButtonLink } from "@/components/ui/button";
+import { KerangkaPublik } from "@/components/ui/kerangka-publik";
+import { DemoButton } from "@/components/auth/demo-button";
 import { LoginForm } from "./login-form";
-import { DemoButton } from "./demo-button";
 
 export const metadata: Metadata = {
   title: "Masuk",
@@ -39,38 +39,37 @@ export default async function HalamanLogin(props: PageProps<"/login">) {
   const belumAdaAkun = await belumPunyaAkunSamaSekali();
   const adaAkunDemo = namaAkunDemo() !== null;
 
+  /*
+    Form langsung di atas latar, tanpa kartu. Halaman ini hanya punya satu
+    pekerjaan, dan bingkai di sekeliling satu-satunya isi halaman tidak
+    memisahkannya dari apa pun — hanya menambah garis.
+  */
   return (
-    <main className="flex min-h-dvh flex-col justify-center bg-bg px-5 py-10">
+    <KerangkaPublik>
       <div className="mx-auto w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <span
-            className="mx-auto mb-4 flex size-14 items-center justify-center rounded-panel bg-brand text-brand-ink"
-            aria-hidden="true"
-          >
-            <Bike className="size-7" strokeWidth={1.9} />
-          </span>
-          <h1 className="text-xl font-semibold tracking-tight text-ink">
-            Rental Ku
-          </h1>
-          <p className="mt-1.5 text-sm text-ink-muted">
-            Masuk untuk mulai mencatat rental hari ini
-          </p>
-        </div>
-
         {belumAdaAkun ? (
-          <div className="rounded-card border border-line bg-surface p-5 text-center">
-            <h2 className="text-sm font-semibold text-ink">Belum ada akun di sistem ini</h2>
+          <>
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">
+              Belum ada akun
+            </h1>
             <p className="mt-2 text-sm leading-relaxed text-ink-muted">
               Database sudah siap, tapi belum ada satu pun akun untuk masuk. Buat akun
               admin pertama lebih dulu.
             </p>
-            <ButtonLink href="/register" ukuran="lg" penuh className="mt-5">
+            <ButtonLink href="/register" ukuran="lg" penuh className="mt-8">
               Buat akun pertama
             </ButtonLink>
-          </div>
+          </>
         ) : (
-          <div className="rounded-card border border-line bg-surface p-5">
-            <LoginForm lanjut={tujuan} />
+          <>
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">Masuk</h1>
+            <p className="mt-2 text-sm text-ink-muted">
+              Lanjutkan mencatat rental hari ini.
+            </p>
+
+            <div className="mt-8">
+              <LoginForm lanjut={tujuan} />
+            </div>
 
             {/*
               Hanya muncul di deployment yang memang punya akun demo. Tanpa
@@ -79,7 +78,7 @@ export default async function HalamanLogin(props: PageProps<"/login">) {
             */}
             {adaAkunDemo && (
               <>
-                <div className="my-5 flex items-center gap-3" aria-hidden="true">
+                <div className="my-6 flex items-center gap-3" aria-hidden="true">
                   <span className="h-px flex-1 bg-line" />
                   <span className="text-xs text-ink-faint">atau</span>
                   <span className="h-px flex-1 bg-line" />
@@ -87,21 +86,21 @@ export default async function HalamanLogin(props: PageProps<"/login">) {
 
                 <DemoButton />
 
-                <p className="mt-3 text-center text-xs leading-relaxed text-ink-faint">
+                <p className="mt-3 text-xs leading-relaxed text-ink-faint">
                   Masuk sebagai kasir dengan data contoh. Bisa mencatat rental dan
                   membuka laporan; menghapus data dan menu keuangan tertutup.
                 </p>
               </>
             )}
-          </div>
+          </>
         )}
 
-        <p className="mt-6 text-center text-xs text-ink-faint">
+        <p className="mt-10 border-t border-line pt-5 text-xs text-ink-faint">
           {belumAdaAkun
             ? "Halaman ini hanya muncul sekali, sebelum akun pertama ada."
             : "Lupa kata sandi? Hubungi admin rental."}
         </p>
       </div>
-    </main>
+    </KerangkaPublik>
   );
 }

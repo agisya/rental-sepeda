@@ -1,26 +1,34 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useLayoutEffect, useSyncExternalStore } from "react";
 import { Ikon } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
-import { bacaTema, KUNCI_TEMA, type Tema, temaBerikutnya } from "@/lib/tema";
+import {
+  bacaTema,
+  KUNCI_TEMA,
+  type Tema,
+  temaBerikutnya,
+  WARNA_BILAH,
+} from "@/lib/tema";
 
 /**
  * Dua cara mengganti tema, satu keadaan.
  *
- * PemilihTema — dua tombol berlabel di Pengaturan. TombolTema — satu ikon di
- * bilah atas, untuk membalik terang dan gelap tanpa meninggalkan halaman yang
- * sedang dikerjakan.
+ * PemilihTema — dua tombol berlabel di Pengaturan. TombolTema — satu ikon yang
+ * ada di setiap halaman: bilah atas aplikasi, kepala landing page, dan kepala
+ * halaman masuk, daftar, serta galat. Tema adalah pilihan milik perangkat,
+ * bukan milik akun, jadi orang yang belum masuk pun harus bisa menggantinya —
+ * termasuk di layar login, yang paling sering dibuka di konter yang silau.
  *
  * Keduanya tinggal di berkas ini karena keduanya membaca dan menulis keadaan
  * yang sama, dan keduanya tampil bersamaan di halaman Pengaturan. Kalau
  * masing-masing punya daftar pendengarnya sendiri, menekan tombol di bilah atas
  * tidak akan menggerakkan pilihan di bawahnya — terlihat seperti tidak berfungsi.
  *
- * Pilihan disimpan di localStorage dan diterapkan lagi oleh skrip kecil di
- * app/layout.tsx sebelum halaman digambar. Tanpa skrip itu, halaman sempat
- * tampil terang sekejap sebelum berubah gelap — kedipan yang paling terasa
- * justru bagi orang yang memilih gelap karena silau.
+ * Pilihan disimpan di localStorage dan diterapkan lagi oleh SKRIP_TEMA di
+ * <head> sebelum halaman digambar. Tanpa skrip itu, halaman sempat tampil
+ * terang sekejap sebelum berubah gelap — kedipan yang paling terasa justru
+ * bagi orang yang memilih gelap karena silau.
  */
 
 /*
@@ -63,9 +71,21 @@ function useTema(): Tema {
   return useSyncExternalStore(langganTema, temaDiKlien, temaDiServer);
 }
 
+/** Memasang tema ke halaman tanpa menyimpannya. */
+function pasang(tema: Tema) {
+  document.documentElement.dataset.theme = tema === "gelap" ? "dark" : "light";
+
+  // Bilah alamat di HP ikut berganti. Elemen meta-nya dibuat Next dari
+  // viewport.themeColor di app/layout.tsx.
+  document
+    .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
+    .forEach((meta) => {
+      meta.content = WARNA_BILAH[tema];
+    });
+}
+
 function terapkan(tema: Tema) {
-  const akar = document.documentElement;
-  akar.dataset.theme = tema === "gelap" ? "dark" : "light";
+  pasang(tema);
 
   try {
     localStorage.setItem(KUNCI_TEMA, tema);
@@ -124,67 +144,49 @@ const LABEL_TUJUAN: Record<Tema, string> = {
 };
 
 /**
- * Sakelar tema di bilah atas: matahari di kiri, bulan di kanan, kenop bergeser.
+ * Tombol tema satu ikon: bulan saat terang, matahari saat gelap.
  *
- * Jalur dan kenop memakai warna tema yang sama di kedua keadaan — jalur
- * surface-2, kenop ink. Karena kedua warna itu sendiri sudah bertukar mengikuti
- * tema, sakelarnya otomatis tampil kenop gelap di atas jalur terang saat terang,
- * dan sebaliknya saat gelap. Tidak ada warna yang perlu ditulis dua kali.
- *
- * Yang menandakan keadaan bukan hanya letak kenop, tapi juga ikon di sisinya:
- * sisi yang sedang berlaku memakai warna teks penuh, sisi lain diredupkan.
- * Letak kenop sendiri gampang salah baca — orang harus ingat mana ujung yang
- * berarti gelap, sedangkan matahari dan bulan tidak perlu diingat.
+ * Ikonnya menunjukkan ke mana tombol ini membawa, bukan keadaan sekarang —
+ * keadaan sekarang sudah terlihat dari halamannya sendiri. Satu ikon polos
+ * dipilih supaya bisa duduk di kepala halaman mana pun, termasuk kepala login
+ * yang hanya berisi merek, tanpa menjadi benda paling ramai di situ.
  */
-export function TombolTema() {
+export function TombolTema({ className }: { className?: string }) {
   const tema = useTema();
+
+  /*
+    Memasang ulang tema setelah React mengambil alih halaman. Di mode
+    pengembangan, Strict Mode memasang ulang elemen html dan membuang atribut
+    yang dipasang SKRIP_TEMA, sehingga halaman kembali terang padahal pilihan
+    tersimpannya gelap. Di produksi ini tidak mengubah apa pun.
+
+    Tombol ini ada di setiap halaman, jadi di sinilah tempat yang menjamin
+    pemasangan ulang itu selalu terjadi.
+  */
+  useLayoutEffect(() => {
+    pasang(temaDiKlien());
+  }, []);
 
   const gelap = tema === "gelap";
   const tujuan = temaBerikutnya(tema);
+  const IkonTujuan = gelap ? Ikon.temaTerang : Ikon.temaGelap;
 
   return (
     <button
       type="button"
       // Sakelar, bukan tombol biasa: pembaca layar menyebutkan keadaan hidup
-      // atau mati, sehingga letak kenop yang tak terlihat itu tetap tersampaikan.
+      // atau mati, sesuatu yang tidak bisa disampaikan ikon saja.
       role="switch"
       aria-checked={gelap}
       aria-label="Tema gelap"
       title={LABEL_TUJUAN[tujuan]}
       onClick={() => terapkan(tujuan)}
-      className="group flex h-9 shrink-0 items-center gap-1.5 rounded-control px-1"
+      className={cn(
+        "flex size-9 shrink-0 items-center justify-center rounded-control text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink",
+        className,
+      )}
     >
-      <Ikon.temaTerang
-        className={cn(
-          "size-4 shrink-0 transition-colors",
-          gelap ? "text-ink-faint" : "text-ink",
-        )}
-        strokeWidth={1.9}
-        aria-hidden="true"
-      />
-
-      <span className="flex h-6 w-11 shrink-0 items-center rounded-full border border-line bg-surface-2 transition-colors group-hover:border-line-strong">
-        {/*
-          Kenop digeser dengan transform, bukan dengan mengubah margin atau
-          posisi: transform tidak memaksa tata letak dihitung ulang, sehingga
-          geserannya tetap mulus di ponsel kentang yang dipakai di konter.
-        */}
-        <span
-          className={cn(
-            "size-[18px] rounded-full bg-ink transition-transform duration-200 motion-reduce:transition-none",
-            gelap ? "translate-x-[22px]" : "translate-x-[2px]",
-          )}
-        />
-      </span>
-
-      <Ikon.temaGelap
-        className={cn(
-          "size-4 shrink-0 transition-colors",
-          gelap ? "text-ink" : "text-ink-faint",
-        )}
-        strokeWidth={1.9}
-        aria-hidden="true"
-      />
+      <IkonTujuan className="size-[18px]" strokeWidth={1.8} aria-hidden="true" />
     </button>
   );
 }

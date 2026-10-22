@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { ErrorView } from "@/components/ui/error-view";
+import { KerangkaPublik } from "@/components/ui/kerangka-publik";
 
 /**
  * Penjaga terakhir untuk rute di luar grup (app), terutama halaman login.
@@ -20,8 +21,8 @@ export default function GalatAkar({
   }, [error]);
 
   return (
-    <main className="flex min-h-dvh flex-col justify-center">
-      <ErrorView error={error} reset={reset} />
-    </main>
+    <KerangkaPublik>
+      <ErrorView error={error} reset={reset} tingkat="h1" />
+    </KerangkaPublik>
   );
 }

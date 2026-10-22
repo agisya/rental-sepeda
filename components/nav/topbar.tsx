@@ -5,6 +5,7 @@ import { keluar } from "@/lib/actions/auth";
 import type { PenggunaAktif } from "@/lib/auth/dal";
 import { Ikon } from "@/components/ui/icons";
 import { KonfirmasiAksi } from "@/components/ui/konfirmasi";
+import { LambangMerek } from "@/components/ui/merek";
 import { TombolTema } from "@/components/ui/tema";
 import { judulHalaman } from "./menu";
 
@@ -29,31 +30,28 @@ export function Topbar({ pengguna }: { pengguna: PenggunaAktif }) {
     <header className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur-sm">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 px-4">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span
-            className="flex size-8 shrink-0 items-center justify-center rounded-control bg-brand text-brand-ink lg:hidden"
-            aria-hidden="true"
-          >
-            <Ikon.sepeda className="size-[18px]" strokeWidth={2} />
-          </span>
+          <LambangMerek className="lg:hidden" />
           <h1 className="truncate text-[0.9375rem] font-semibold tracking-tight text-ink">
             {judulHalaman(pathname)}
           </h1>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <div className="hidden text-right sm:block">
-            <p className="text-sm font-medium leading-tight text-ink">{pengguna.nama}</p>
-            <p className="text-xs leading-tight text-ink-muted">
-              {LABEL_PERAN[pengguna.peran]}
-            </p>
-          </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <div className="mr-2 hidden items-center gap-2.5 sm:flex">
+            <div className="text-right">
+              <p className="text-sm font-medium leading-tight text-ink">{pengguna.nama}</p>
+              <p className="text-xs leading-tight text-ink-muted">
+                {LABEL_PERAN[pengguna.peran]}
+              </p>
+            </div>
 
-          <span
-            className="flex size-8 items-center justify-center rounded-full bg-surface-2 text-[11px] font-semibold text-ink-muted"
-            title={`${pengguna.nama} · ${LABEL_PERAN[pengguna.peran]}`}
-          >
-            {inisial(pengguna.nama)}
-          </span>
+            <span
+              className="flex size-8 items-center justify-center rounded-full bg-surface-2 text-[11px] font-semibold text-ink-muted"
+              title={`${pengguna.nama} · ${LABEL_PERAN[pengguna.peran]}`}
+            >
+              {inisial(pengguna.nama)}
+            </span>
+          </div>
 
           <TombolTema />
 

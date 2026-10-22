@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import type { Peran } from "@/lib/db/schema";
 import { Ikon } from "@/components/ui/icons";
+import { Merek } from "@/components/ui/merek";
 import { kelompokUntukPeran, menuAktif, type ItemMenu } from "./menu";
 
 /** Satu tautan menu. Bentuknya sama baik di dalam lipatan maupun di luar. */
@@ -20,11 +21,14 @@ function TautanMenu({ item, aktif }: { item: ItemMenu; aktif: boolean }) {
       className={cn(
         "relative flex items-center gap-3 rounded-control px-3 py-2 text-sm transition-colors",
         aktif
-          ? "bg-brand-soft font-medium text-brand-soft-ink"
+          ? "bg-surface-2 font-medium text-ink"
           : "text-ink-muted hover:bg-surface-2 hover:text-ink",
       )}
     >
-      {/* Penanda batang di tepi kiri: status aktif tidak hanya dibedakan
+      {/* Latarnya abu-abu netral, hijaunya hanya di batang dan ikon. Latar
+          hijau muda pada menu aktif membuat sidebar menjadi bagian paling
+          berwarna di layar, padahal yang perlu dilihat ada di isi halaman.
+          Batang di tepi kiri menjaga status aktif tidak hanya dibedakan
           lewat warna. */}
       {aktif && (
         <span
@@ -61,17 +65,10 @@ export function Sidebar({ peran }: { peran: Peran }) {
       className="hidden w-64 shrink-0 border-r border-line bg-surface lg:block"
     >
       <div className="sticky top-0 flex h-dvh flex-col">
-        <div className="flex items-center gap-3 px-5 py-5">
-          <span
-            className="flex size-9 shrink-0 items-center justify-center rounded-control bg-brand text-brand-ink"
-            aria-hidden="true"
-          >
-            <Ikon.sepeda className="size-5" strokeWidth={2} />
-          </span>
-
-          <span className="text-[0.9375rem] font-semibold leading-tight tracking-tight text-ink">
-            Rental Ku
-          </span>
+        {/* Setinggi topbar dan bergaris bawah sama, supaya merek dan judul
+            halaman duduk di satu garis yang menyambung melintasi layar. */}
+        <div className="flex h-14 shrink-0 items-center border-b border-line px-5">
+          <Merek />
         </div>
 
         {/*
@@ -91,7 +88,7 @@ export function Sidebar({ peran }: { peran: Peran }) {
           pengoperasian lewat papan tik, dan pembacaan oleh pembaca layar sudah
           benar tanpa ditulis ulang.
         */}
-        <div className="flex-1 space-y-1.5 overflow-y-auto px-3 pb-6">
+        <div className="flex-1 space-y-1.5 overflow-y-auto px-3 pb-6 pt-3">
           {kelompokMenu.map((kelompok) => {
             const memuatHalamanIni = kelompok.item.some((m) =>
               menuAktif(pathname, m.href),

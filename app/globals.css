@@ -55,8 +55,13 @@
      hijau merek yang condong zaitun. */
   --ok: #12793f;
   --ok-soft: #e3f4ea;
+  /* Tulisan di atas blok ok/danger pekat (tombol Selesaikan, tombol Hapus).
+     Terpisah dari --brand-ink karena di tema gelap kedua blok itu dicerahkan,
+     dan tulisan putih di atas merah muda pucat nyaris tak terbaca. */
+  --ok-ink: #ffffff;
   --danger: #b3261e;
   --danger-soft: #fce9e7;
+  --danger-ink: #ffffff;
   --warn: #9a5b00;
   --warn-soft: #fdf0dc;
   --info: #1d4ed8;
@@ -95,8 +100,10 @@
 
   --d-ok: #57c184;
   --d-ok-soft: #12301f;
+  --d-ok-ink: #04170b;
   --d-danger: #f28b82;
   --d-danger-soft: #3a1c1a;
+  --d-danger-ink: #2a0805;
   --d-warn: #e8b465;
   --d-warn-soft: #362614;
   --d-info: #8fb2f7;
@@ -126,8 +133,10 @@
 
   --ok: var(--d-ok);
   --ok-soft: var(--d-ok-soft);
+  --ok-ink: var(--d-ok-ink);
   --danger: var(--d-danger);
   --danger-soft: var(--d-danger-soft);
+  --danger-ink: var(--d-danger-ink);
   --warn: var(--d-warn);
   --warn-soft: var(--d-warn-soft);
   --info: var(--d-info);
@@ -157,8 +166,10 @@
 
   --color-ok: var(--ok);
   --color-ok-soft: var(--ok-soft);
+  --color-ok-ink: var(--ok-ink);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --color-danger-ink: var(--danger-ink);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
   --color-info: var(--info);
@@ -176,10 +187,12 @@
   --font-display: var(--font-jakarta), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
-  /* Satu tangga radius, dipakai konsisten: kontrol kecil, kartu, lalu panel. */
+  /* Satu tangga radius, dipakai konsisten: kontrol kecil, kartu, lalu panel.
+     Anak tangganya rapat — sudut yang terlalu membulat membuat kartu terlihat
+     seperti mainan dan memakan ruang di layar HP. */
   --radius-control: 0.5rem;
-  --radius-card: 0.875rem;
-  --radius-panel: 1.25rem;
+  --radius-card: 0.75rem;
+  --radius-panel: 1rem;
 
   /* Kedalaman dipakai sangat hemat — hanya untuk elemen yang benar-benar
      melayang di atas isi halaman, bukan untuk setiap kartu. */
@@ -191,33 +204,41 @@
    ditempel satu per satu. Judul di aplikasi ini semuanya sudah memakai h1/h2/h3
    yang benar demi pembaca layar, jadi penanda yang sama bisa sekalian dipakai
    untuk tipografi — komponen baru ikut otomatis tanpa perlu diingatkan. */
-h1,
-h2,
-h3,
-.label-bagian,
-.angka-utama {
-  font-family: var(--font-display);
+/* Semua aturan buatan sendiri di bawah ini berada di dalam layer, bukan lepas.
+   Aturan tanpa layer selalu mengalahkan utilitas Tailwind, sehingga misalnya
+   `angka-utama text-base` tetap tampil 2rem — kelas pengecil itu diam-diam
+   tidak berlaku. Di dalam layer, utilitas yang ditempel belakangan menang. */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+  }
 }
 
-/* Label bagian: huruf kecil berjarak, dipakai sebagai judul kelompok informasi.
-   Menggantikan judul tebal yang dulu bersaing dengan angka utama. */
-.label-bagian {
-  font-size: 0.6875rem;
-  line-height: 1rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-}
+@layer components {
+  /* Label bagian: huruf kecil berjarak, dipakai sebagai judul kelompok
+     informasi. Menggantikan judul tebal yang dulu bersaing dengan angka utama. */
+  .label-bagian {
+    font-family: var(--font-display);
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
 
-/* Angka besar pada kartu utama. Tabular supaya tidak bergeser saat nilainya
-   berubah setiap kali dashboard menyegarkan diri. */
-.angka-utama {
-  font-size: 2rem;
-  line-height: 2.25rem;
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
+  /* Angka besar pada kartu utama. Tabular supaya tidak bergeser saat nilainya
+     berubah setiap kali dashboard menyegarkan diri. */
+  .angka-utama {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    line-height: 2.25rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 body {
@@ -228,12 +249,24 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Sorotan teks ikut tema, bukan biru bawaan peramban yang menabrak hijau. */
+::selection {
+  background: var(--brand-soft);
+  color: var(--brand-soft-ink);
+}
+
 /* Cincin fokus yang terlihat jelas di semua elemen interaktif. Petugas yang
-   memakai scanner USB banyak berpindah antar-kolom dengan Tab. */
-:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-  border-radius: 4px;
+   memakai scanner USB banyak berpindah antar-kolom dengan Tab.
+
+   Di layer base supaya radius 4px hanya mengisi elemen yang belum punya
+   radius sendiri. Tanpa layer, tombol yang sedang difokus ikut kehilangan
+   sudut rounded-control-nya dan terlihat berubah bentuk saat di-Tab. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { WARNA_BILAH } from "@/lib/tema";
+import { SkripTema } from "@/components/ui/skrip-tema";
 import "./globals.css";
 
 /**
@@ -42,30 +44,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // Satu warna tetap, bukan sepasang yang mengikuti prefers-color-scheme:
-  // halaman ini tidak lagi mengikuti setelan perangkat sama sekali, jadi warna
-  // chrome peramban yang ikut setelan itu justru bisa bertentangan dengan
-  // halaman yang selalu terang secara bawaan.
-  themeColor: "#ffffff",
+  // Satu warna, bukan sepasang yang mengikuti prefers-color-scheme: halaman ini
+  // tidak mengikuti setelan perangkat sama sekali. Bawaannya terang; bagi yang
+  // memilih gelap, skrip tema dan tombol tema yang menggantinya.
+  themeColor: WARNA_BILAH.terang,
   // Zoom tidak dikunci: petugas harus tetap bisa memperbesar teks.
   width: "device-width",
   initialScale: 1,
 };
-
-/**
- * Menerapkan tema pilihan sebelum halaman digambar.
- *
- * Harus berjalan lebih dulu daripada React, karena kalau tidak, halaman sempat
- * tampil terang sekejap lalu berubah gelap. Kedipan itu paling terasa justru
- * bagi orang yang memilih gelap karena silau.
- *
- * Nilai lain selain "gelap" dan "terang" — termasuk "sistem" dari versi lama,
- * atau localStorage yang kosong — sengaja tidak menyetel atribut apa pun,
- * karena :root di globals.css sudah terang tanpa itu. Sengaja sekecil
- * mungkin dan dibungkus try: peramban dengan penyimpanan diblokir cukup
- * mengabaikannya dan tetap tampil terang.
- */
-const SKRIP_TEMA = `try{var t=localStorage.getItem("tema");if(t==="gelap")document.documentElement.dataset.theme="dark";else if(t==="terang")document.documentElement.dataset.theme="light"}catch(e){}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -78,7 +64,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: SKRIP_TEMA }} />
+        <SkripTema />
       </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
-import { ShieldCheck } from "lucide-react";
 import { sistemKosong } from "@/lib/pengguna/kelola";
+import { KerangkaPublik } from "@/components/ui/kerangka-publik";
 import { RegisterForm } from "./register-form";
 
 export const metadata: Metadata = {
@@ -51,30 +51,22 @@ export default async function HalamanRegister() {
   if (!kosong) redirect("/login");
 
   return (
-    <main className="flex min-h-dvh flex-col justify-center bg-bg px-5 py-10">
+    <KerangkaPublik>
       <div className="mx-auto w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <span
-            className="mx-auto mb-4 flex size-14 items-center justify-center rounded-panel bg-brand text-brand-ink"
-            aria-hidden="true"
-          >
-            <ShieldCheck className="size-7" strokeWidth={1.9} />
-          </span>
-          <h1 className="text-xl font-semibold tracking-tight text-ink">Buat akun pertama</h1>
-          <p className="mt-1.5 text-sm text-ink-muted">
-            Belum ada akun di sistem ini. Akun pertama menjadi admin.
-          </p>
-        </div>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">Buat akun pertama</h1>
+        <p className="mt-2 text-sm text-ink-muted">
+          Belum ada akun di sistem ini. Akun pertama menjadi admin.
+        </p>
 
-        <div className="rounded-card border border-line bg-surface p-5">
+        <div className="mt-8">
           <RegisterForm />
         </div>
 
-        <p className="mt-6 text-center text-xs leading-relaxed text-ink-faint">
+        <p className="mt-10 border-t border-line pt-5 text-xs leading-relaxed text-ink-faint">
           Halaman ini menutup sendiri setelah akun pertama dibuat. Petugas berikutnya
           ditambahkan dari menu Pengaturan.
         </p>
       </div>
-    </main>
+    </KerangkaPublik>
   );
 }
