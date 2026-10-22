@@ -10,11 +10,13 @@ import { NAMA_COOKIE_SESI, dekripsiSesi } from "@/lib/auth/token";
  * Sejak Next.js 16, berkas ini bernama proxy.ts (dulu middleware.ts).
  */
 
+// / adalah landing page: penjelasan produk beserta tombol masuk dan coba demo.
+//
 // /register dipakai membuat akun admin pertama pada instance yang baru dideploy,
 // jadi ia harus bisa dibuka tanpa sesi. Halamannya sendiri mengalihkan ke /login
 // begitu tabel pengguna berisi — pemeriksaan itu menyentuh database, sehingga
 // tidak boleh dilakukan di sini.
-const RUTE_PUBLIK = ["/login", "/register"];
+const RUTE_PUBLIK = ["/", "/login", "/register"];
 
 export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
@@ -26,15 +28,12 @@ export async function proxy(req: NextRequest) {
   if (!sesi && !rutePublik) {
     const tujuan = new URL("/login", req.nextUrl);
     // Simpan halaman yang dituju supaya setelah login pengguna kembali ke sana.
-    if (path !== "/") tujuan.searchParams.set("lanjut", path + req.nextUrl.search);
+    tujuan.searchParams.set("lanjut", path + req.nextUrl.search);
     return NextResponse.redirect(tujuan);
   }
 
+  // Termasuk "/": yang sudah masuk mendarat di dashboard, bukan di halaman jualan.
   if (sesi && rutePublik) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
-  }
-
-  if (sesi && path === "/") {
     return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 
