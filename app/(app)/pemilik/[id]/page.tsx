@@ -10,8 +10,8 @@ import {
 import {
   BarisData,
   Card,
-  CardBody,
   CardHeader,
+  CatatanKaki,
   DaftarData,
   KeadaanKosong,
 } from "@/components/ui/card";
@@ -50,12 +50,15 @@ export default async function HalamanDetailPemilik(props: PageProps<"/pemilik/[i
           <>
             <span className="tabular-nums">{pemilik.noHp}</span>
             {pemilik.alamat && ` · ${pemilik.alamat}`}
-            <TombolKontak
-              noHp={pemilik.noHp}
-              nama={pemilik.nama}
-              pesan={pesanWa.sapaan(pemilik.nama)}
-              className="mt-2"
-            />
+            {/* Baris sendiri di bawah nomornya, bukan menempel di ujung
+                alamat yang panjangnya tidak bisa ditebak. */}
+            <span className="mt-2.5 block">
+              <TombolKontak
+                noHp={pemilik.noHp}
+                nama={pemilik.nama}
+                pesan={pesanWa.sapaan(pemilik.nama)}
+              />
+            </span>
           </>
         }
         aksi={
@@ -85,10 +88,10 @@ export default async function HalamanDetailPemilik(props: PageProps<"/pemilik/[i
           <BarisData label="Bagian rental">{rupiah(bagiHasil.bagianRental)}</BarisData>
         </DaftarData>
 
-        <p className="border-t border-line px-4 py-3 text-xs text-ink-muted">
+        <CatatanKaki>
           Pencatatan pembayaran ke pemilik akan tersedia pada tahap berikutnya, di menu
           Laporan Pemilik.
-        </p>
+        </CatatanKaki>
       </Card>
 
       <Card>
@@ -132,9 +135,9 @@ export default async function HalamanDetailPemilik(props: PageProps<"/pemilik/[i
       {pemilik.catatan && (
         <Card>
           <CardHeader judul="Catatan" />
-          <CardBody className="text-sm leading-relaxed text-ink-muted">
+          <p className="px-4 py-3 text-sm leading-relaxed text-ink-muted">
             {pemilik.catatan}
-          </CardBody>
+          </p>
         </Card>
       )}
     </div>

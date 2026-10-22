@@ -90,13 +90,15 @@ export function KeadaanKosong({
 }) {
   return (
     <div role="status" className="px-4 py-12 text-center">
+      {/* Ikon polos tanpa lingkaran di belakangnya: cukup untuk memberi tahu
+          jenis isi yang kosong, tanpa menjadi hiasan yang paling menonjol di
+          kartu yang justru tidak berisi apa-apa. */}
       {IkonKosong && (
-        <span
-          className="mx-auto mb-3.5 flex size-11 items-center justify-center rounded-full bg-surface-2 text-ink-faint"
+        <IkonKosong
+          className="mx-auto mb-3 size-6 text-ink-faint"
+          strokeWidth={1.6}
           aria-hidden="true"
-        >
-          <IkonKosong className="size-5" strokeWidth={1.8} />
-        </span>
+        />
       )}
       <h3 className="text-sm font-semibold text-ink">{judul}</h3>
       {keterangan && (
@@ -109,11 +111,35 @@ export function KeadaanKosong({
   );
 }
 
+/**
+ * Catatan kecil di kaki kartu: dasar perhitungan, sumber angka, atau batasan
+ * yang perlu diketahui. Sebelumnya ditulis ulang di enam tempat dengan jarak
+ * baris yang berbeda-beda.
+ */
+export function CatatanKaki({ className, ...props }: ComponentProps<"p">) {
+  return (
+    <p
+      className={cn(
+        "border-t border-line px-4 py-3 text-xs leading-relaxed text-ink-muted",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+/*
+  Tiga kotak pesan dengan bentuk yang sama, hanya nadanya yang berbeda. Garis
+  tepinya sama-sama /30 — sebelumnya tiap halaman memilih tingkat transparansi
+  sendiri (/25, /30, /40), sehingga kotak peringatan yang sama terlihat sedikit
+  berbeda di tiap halaman.
+*/
+
 export function PesanGalat({ children }: { children: ReactNode }) {
   return (
     <p
       role="alert"
-      className="rounded-control border border-danger/25 bg-danger-soft px-3.5 py-2.5 text-sm text-danger"
+      className="rounded-control border border-danger/30 bg-danger-soft px-3.5 py-2.5 text-sm text-danger"
     >
       {children}
     </p>
@@ -124,9 +150,39 @@ export function PesanBerhasil({ children }: { children: ReactNode }) {
   return (
     <p
       role="status"
-      className="rounded-control border border-ok/25 bg-ok-soft px-3.5 py-2.5 text-sm font-medium text-ok"
+      className="rounded-control border border-ok/30 bg-ok-soft px-3.5 py-2.5 text-sm font-medium text-ok"
     >
       {children}
     </p>
+  );
+}
+
+/** Peringatan yang perlu dibaca sebelum melanjutkan, tapi bukan galat. */
+export function PesanPeringatan({ className, ...props }: ComponentProps<"p">) {
+  return (
+    <p
+      className={cn(
+        "rounded-control border border-warn/30 bg-warn-soft px-3.5 py-2.5 text-sm leading-relaxed text-warn",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+/**
+ * Kotak keterangan netral: penjelasan tarif, ringkasan pilihan, atau petunjuk
+ * yang menyertai form. Abu-abu tanpa garis, supaya tidak terbaca sebagai
+ * peringatan.
+ */
+export function KotakKeterangan({ className, ...props }: ComponentProps<"div">) {
+  return (
+    <div
+      className={cn(
+        "rounded-control bg-surface-2 px-3.5 py-2.5 text-sm leading-relaxed text-ink-muted",
+        className,
+      )}
+      {...props}
+    />
   );
 }

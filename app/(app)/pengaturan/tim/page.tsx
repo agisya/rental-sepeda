@@ -22,9 +22,10 @@ export default async function HalamanTim() {
     <>
       <Card>
         <CardHeader judul="Tim" keterangan={`${tim.length} akun terdaftar`} />
-        <CardBody className="px-4 py-3.5">
-          <DaftarTim anggota={tim} idSaya={pengguna.id} />
-        </CardBody>
+        {/* Langsung di dalam kartu, tanpa CardBody: tiap baris sudah membawa
+            jarak tepinya sendiri, dan pembungkus berpadding membuat isinya
+            menjorok dua kali sementara garis pemisahnya tidak sampai ke tepi. */}
+        <DaftarTim anggota={tim} idSaya={pengguna.id} />
       </Card>
 
       <Card>

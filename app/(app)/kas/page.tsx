@@ -86,12 +86,17 @@ function Lipatan({
   if (jumlah === 0) return null;
 
   return (
-    <details className="border-t border-line first:border-t-0">
-      <summary className="flex min-h-11 cursor-pointer items-center justify-between px-4 text-sm font-medium text-ink marker:content-['']">
-        <span>{judul}</span>
+    <details className="group border-t border-line first:border-t-0">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-4 text-sm font-medium text-ink transition-colors marker:content-[''] hover:bg-surface-2">
+        <Ikon.lanjut
+          className="size-4 shrink-0 text-ink-faint transition-transform group-open:rotate-90"
+          strokeWidth={2}
+          aria-hidden="true"
+        />
+        <span className="flex-1">{judul}</span>
         <span className="text-xs text-ink-muted">{jumlah} baris</span>
       </summary>
-      <ul className="divide-y divide-line border-t border-line bg-surface-2/40">
+      <ul className="divide-y divide-line border-t border-line bg-surface-2">
         {children}
       </ul>
     </details>
@@ -138,7 +143,7 @@ export default async function HalamanKas() {
           sementara sepeda belum kembali berarti hari itu belum benar-benar
           selesai, dan uang sewanya belum masuk hitungan mana pun. */}
       {masihDiLuar.length > 0 && (
-        <Card className="border-warn/40 bg-warn-soft/40">
+        <Card className="border-warn/40">
           <CardHeader
             className="border-warn/25"
             judul={
@@ -149,7 +154,7 @@ export default async function HalamanKas() {
             }
             keterangan="Uang sewanya belum masuk hitungan"
           />
-          <ul className="divide-y divide-warn/20">
+          <ul className="divide-y divide-line">
             {masihDiLuar.map((r) => (
               <li key={r.id} className="px-4 py-2.5">
                 <p className="truncate text-sm font-medium text-ink">

@@ -42,8 +42,8 @@ export function BikeCard({
       </div>
 
       {/* Tarif ditonjolkan karena inilah angka yang disebutkan ke penyewa. */}
-      <div className="flex items-baseline gap-1.5 border-b border-line bg-surface-2 px-4 py-3">
-        <span className="text-xl font-semibold tracking-tight text-ink">
+      <div className="flex items-baseline gap-1.5 border-b border-line px-4 py-3">
+        <span className="font-display text-xl font-semibold tracking-tight tabular-nums text-ink">
           {rupiah(sepeda.tarifPerJam)}
         </span>
         <span className="text-sm text-ink-muted">per jam</span>

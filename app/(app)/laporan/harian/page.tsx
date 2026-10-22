@@ -17,6 +17,7 @@ import {
 import { Stat, StatUtama } from "@/components/ui/stat";
 import { StatusRentalBadge } from "@/components/ui/status-badge";
 import { PageHeader } from "@/components/ui/page-header";
+import { FormTanggal } from "@/components/ui/form-tanggal";
 import { Ikon } from "@/components/ui/icons";
 import { rupiah } from "@/lib/format";
 import {
@@ -59,27 +60,12 @@ export default async function HalamanLaporanHarian(
         keterangan={formatHariTanggalWib(tanggal)}
       />
 
-      <form method="get" action="/laporan/harian" className="flex items-end gap-2">
-        <div className="min-w-40 flex-1">
-          <label htmlFor="tanggal" className="block text-xs font-medium text-ink-muted">
-            Pilih tanggal
-          </label>
-          <input
-            id="tanggal"
-            type="date"
-            name="tanggal"
-            defaultValue={kunci}
-            max={kunciHariIni}
-            className="mt-1 min-h-11 w-full rounded-control border border-line-strong bg-surface px-3.5 py-2.5 text-base text-ink"
-          />
-        </div>
-        <button
-          type="submit"
-          className="min-h-11 rounded-control border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
-        >
-          Tampilkan
-        </button>
-      </form>
+      <FormTanggal
+        aksi="/laporan/harian"
+        label="Pilih tanggal"
+        nilaiAwal={kunci}
+        maks={kunciHariIni}
+      />
 
       <StatUtama
         label="Omzet"
@@ -92,18 +78,10 @@ export default async function HalamanLaporanHarian(
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Transaksi" ikon={Ikon.transaksi} nilai={ringkasan.jumlahTransaksi} />
-        <Stat
-          label="Sepeda dipakai"
-          ikon={Ikon.sepeda}
-          nilai={ringkasan.jumlahSepedaDipakai}
-        />
-        <Stat label="Total jam" ikon={Ikon.jam} nilai={`${ringkasan.totalJam} jam`} />
-        <Stat
-          label="Bagian rental"
-          ikon={Ikon.uang}
-          nilai={rupiah(ringkasan.totalBagianRental)}
-        />
+        <Stat label="Transaksi" nilai={ringkasan.jumlahTransaksi} />
+        <Stat label="Sepeda dipakai" nilai={ringkasan.jumlahSepedaDipakai} />
+        <Stat label="Total jam" nilai={`${ringkasan.totalJam} jam`} />
+        <Stat label="Bagian rental" nilai={rupiah(ringkasan.totalBagianRental)} />
       </div>
 
       <Card>

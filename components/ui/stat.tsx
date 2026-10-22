@@ -1,53 +1,68 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
-import { Ikon, type KomponenIkon } from "./icons";
 
-type Nada = "netral" | "ok" | "danger" | "warn" | "info";
+type Nada = "netral" | "ok" | "danger" | "warn" | "info" | "idle";
 
-const warnaNada: Record<Nada, string> = {
-  netral: "text-ink",
-  ok: "text-ok",
-  danger: "text-danger",
-  warn: "text-warn",
-  info: "text-info",
+/**
+ * Titik warna di depan label. Satu-satunya tempat nada sebuah angka terlihat:
+ * angkanya sendiri tetap berwarna teks biasa, supaya deretan kartu tidak
+ * berubah jadi pelangi angka yang bersaing satu sama lain. Bahasa titiknya
+ * sama dengan lencana status, jadi "Tersedia" hijau di dashboard dan di
+ * daftar sepeda terbaca sebagai hal yang sama.
+ */
+const warnaTitik: Record<Exclude<Nada, "netral">, string> = {
+  ok: "bg-ok",
+  danger: "bg-danger",
+  warn: "bg-warn",
+  info: "bg-info",
+  idle: "bg-idle",
 };
 
-const latarIkon: Record<Nada, string> = {
-  netral: "bg-surface-2 text-ink-muted",
-  ok: "bg-ok-soft text-ok",
-  danger: "bg-danger-soft text-danger",
-  warn: "bg-warn-soft text-warn",
-  info: "bg-info-soft text-info",
-};
+function Label({ label, nada }: { label: string; nada: Nada }) {
+  return (
+    <p className="flex items-center gap-2 text-xs font-medium text-ink-muted">
+      {nada !== "netral" && (
+        <span
+          aria-hidden="true"
+          className={cn("size-1.5 shrink-0 rounded-full", warnaTitik[nada])}
+        />
+      )}
+      <span className="truncate">{label}</span>
+    </p>
+  );
+}
 
 /**
  * Kartu angka utama, dipakai untuk omzet hari ini. Angkanya sengaja jauh lebih
  * besar dari yang lain karena inilah yang paling sering dicari pemilik usaha.
+ *
+ * Nada mewarnai angkanya — berbeda dari Stat. Kartu ini selalu berdiri
+ * sendiri, jadi warnanya tidak bersaing dengan apa pun; dipakai laba-rugi
+ * untuk membedakan untung dari rugi.
  */
 export function StatUtama({
   label,
   nilai,
   keterangan,
-  ikon: IkonStat = Ikon.uang,
+  nada = "netral",
 }: {
   label: string;
   nilai: ReactNode;
   keterangan?: ReactNode;
-  ikon?: KomponenIkon;
+  nada?: "netral" | "ok" | "danger";
 }) {
   return (
     <div className="rounded-card border border-line bg-surface p-5">
-      <div className="flex items-start justify-between gap-3">
-        <p className="label-bagian">{label}</p>
-        <span
-          className="flex size-8 items-center justify-center rounded-full bg-brand-soft text-brand-soft-ink"
-          aria-hidden="true"
-        >
-          <IkonStat className="size-[18px]" strokeWidth={1.9} />
-        </span>
-      </div>
-      <p className="angka-utama mt-2 text-ink">{nilai}</p>
+      <p className="label-bagian">{label}</p>
+      <p
+        className={cn(
+          "angka-utama mt-2",
+          nada === "ok" ? "text-ok" : nada === "danger" ? "text-danger" : "text-ink",
+        )}
+      >
+        {nilai}
+      </p>
       {keterangan && <p className="mt-1.5 text-sm text-ink-muted">{keterangan}</p>}
     </div>
   );
@@ -58,41 +73,19 @@ export function Stat({
   label,
   nilai,
   keterangan,
-  ikon: IkonStat,
   nada = "netral",
   href,
 }: {
   label: string;
   nilai: ReactNode;
   keterangan?: string;
-  ikon?: KomponenIkon;
   nada?: Nada;
   href?: string;
 }) {
   const isi = (
     <>
-      <div className="flex items-center gap-2">
-        {IkonStat && (
-          <span
-            className={cn(
-              "flex size-6 shrink-0 items-center justify-center rounded-md",
-              latarIkon[nada],
-            )}
-            aria-hidden="true"
-          >
-            <IkonStat className="size-3.5" strokeWidth={2} />
-          </span>
-        )}
-        <p className="truncate text-xs font-medium text-ink-muted">{label}</p>
-      </div>
-      <p
-        className={cn(
-          // font-display disebut manual di sini karena varian ini tidak memakai
-          // kelas .angka-utama seperti saudaranya di atas.
-          "mt-1.5 font-display text-2xl font-semibold tracking-tight tabular-nums",
-          warnaNada[nada],
-        )}
-      >
+      <Label label={label} nada={nada} />
+      <p className="mt-1.5 font-display text-2xl font-semibold tracking-tight text-ink tabular-nums">
         {nilai}
       </p>
       {keterangan && <p className="mt-0.5 text-xs text-ink-faint">{keterangan}</p>}

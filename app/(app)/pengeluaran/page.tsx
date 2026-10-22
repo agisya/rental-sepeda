@@ -11,6 +11,7 @@ import {
 import { Card, CardBody, CardHeader, KeadaanKosong } from "@/components/ui/card";
 import { Stat } from "@/components/ui/stat";
 import { PageHeader } from "@/components/ui/page-header";
+import { NavPeriode } from "@/components/ui/nav-periode";
 import { Ikon } from "@/components/ui/icons";
 import { FormPengeluaran } from "@/components/keuangan/form-pengeluaran";
 import { rupiah } from "@/lib/format";
@@ -52,34 +53,19 @@ export default async function HalamanPengeluaran(props: PageProps<"/pengeluaran"
     <div className="space-y-5">
       <PageHeader judul="Pengeluaran" keterangan={formatBulanWib(rentang.mulai)} />
 
-      <nav className="flex items-center justify-between gap-2" aria-label="Pindah bulan">
-        <Link
-          href={`/pengeluaran?bulan=${bulanLalu}`}
-          className="flex min-h-11 items-center rounded-control border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
-        >
-          ← Bulan lalu
-        </Link>
-        <Link
-          href="/pengeluaran"
-          className="flex min-h-11 items-center rounded-control px-3 text-sm font-medium text-ink-muted hover:text-ink"
-        >
-          Bulan ini
-        </Link>
-        {!sudahBulanIni ? (
-          <Link
-            href={`/pengeluaran?bulan=${bulanDepan}`}
-            className="flex min-h-11 items-center rounded-control border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
-          >
-            Bulan depan →
-          </Link>
-        ) : (
-          <span className="min-h-11" />
-        )}
-      </nav>
+      <NavPeriode
+        label="Pindah bulan"
+        sebelumnya={{ href: `/pengeluaran?bulan=${bulanLalu}`, label: "Bulan lalu" }}
+        sekarang={{ href: "/pengeluaran", label: "Bulan ini" }}
+        berikutnya={
+          sudahBulanIni
+            ? undefined
+            : { href: `/pengeluaran?bulan=${bulanDepan}`, label: "Bulan depan" }
+        }
+      />
 
       <Stat
         label="Total pengeluaran bulan ini"
-        ikon={Ikon.pengeluaran}
         nada="danger"
         nilai={rupiah(total)}
         keterangan={`${daftar.length} catatan`}
@@ -148,11 +134,9 @@ export default async function HalamanPengeluaran(props: PageProps<"/pengeluaran"
                     membuat seluruh pembukuan kehilangan gunanya sebagai
                     pertanggungjawaban. Salah catat diperbaiki dengan mencatat
                     koreksinya, bukan dengan menghilangkan jejaknya. */}
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="font-semibold tabular-nums text-ink">
-                    {rupiah(p.jumlah)}
-                  </span>
-                </div>
+                <span className="shrink-0 font-semibold tabular-nums text-ink">
+                  {rupiah(p.jumlah)}
+                </span>
               </li>
             ))}
           </ul>

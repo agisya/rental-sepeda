@@ -4,6 +4,10 @@ import { cn } from "@/lib/cn";
 /**
  * Baris saringan berbentuk pil. Bisa digeser mendatar di layar HP tanpa membuat
  * seluruh halaman ikut bergeser.
+ *
+ * Pil yang aktif berwarna tinta, bukan hijau merek. Hijau pekat disimpan untuk
+ * tombol yang mengerjakan sesuatu; saringan hanya memilih apa yang dilihat, dan
+ * pil hijau di atas daftar sempat bersaing dengan tombol Tambah di sebelahnya.
  */
 export function FilterChips({
   label,
@@ -27,8 +31,8 @@ export function FilterChips({
                 className={cn(
                   "block whitespace-nowrap rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
                   dipilih
-                    ? "border-brand bg-brand text-brand-ink"
-                    : "border-line-strong bg-surface text-ink-muted hover:bg-surface-2 hover:text-ink",
+                    ? "border-ink bg-ink text-bg"
+                    : "border-line bg-surface text-ink-muted hover:border-line-strong hover:text-ink",
                 )}
               >
                 {p.label}

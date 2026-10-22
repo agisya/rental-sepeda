@@ -100,7 +100,7 @@ export default async function HalamanBookingBaru(props: PageProps<"/booking/baru
       ) : (
         <>
           {kodeTidakCocok && (
-            <Card className="border-warn/40 bg-warn-soft/40">
+            <Card className="border-warn/40">
               <KeadaanKosong
                 ikon={Ikon.peringatan}
                 judul="Sepeda itu tidak bisa dipesan"

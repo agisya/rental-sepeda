@@ -44,7 +44,9 @@ export function FotoSepeda({
     return (
       <span
         className={cn(
-          "flex shrink-0 items-center justify-center rounded-control bg-surface-2 text-ink-faint",
+          // Bergaris tepi seperti fotonya, supaya baris yang berfoto dan yang
+          // belum tetap sejajar dan sama ukurannya di daftar.
+          "flex shrink-0 items-center justify-center rounded-control border border-line bg-surface-2 text-ink-faint",
           gaya.kotak,
           className,
         )}

@@ -4,6 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ambilNotifikasi } from "@/lib/actions/notifikasi";
 import type { NadaNotifikasi, Notifikasi } from "@/lib/notifikasi/susun";
+import { ButtonLink } from "@/components/ui/button";
 import { Ikon } from "@/components/ui/icons";
 import { TombolKontak } from "@/components/ui/tombol-kontak";
 import { cn } from "@/lib/cn";
@@ -267,12 +268,9 @@ function Kartu({
             ikut hilang, satu-satunya pengingat lenyap justru sebelum urusannya
             benar-benar tuntas. Ia hilang saat ditutup dengan sengaja, atau saat
             keadaannya memang sudah berubah. */}
-        <Link
-          href={n.href}
-          className="flex min-h-9 flex-1 items-center justify-center rounded-control border border-line-strong bg-surface px-3 text-xs font-medium text-ink transition-colors hover:bg-surface-2"
-        >
+        <ButtonLink href={n.href} variasi="kedua" ukuran="sm" className="flex-1">
           Buka {n.kodeSepeda}
-        </Link>
+        </ButtonLink>
         {/* Ikon saja: kartunya sempit, dan tombol "Buka" yang perlu ruang. */}
         <TombolKontak
           noHp={n.noHpPenyewa}

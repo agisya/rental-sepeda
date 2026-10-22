@@ -13,32 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { PesanBerhasil, PesanGalat } from "@/components/ui/card";
 import { KonfirmasiAksi } from "@/components/ui/konfirmasi";
-import { cn } from "@/lib/cn";
+import { Lencana } from "@/components/ui/status-badge";
 
 const AWAL: StatusAksi = {};
-
-/**
- * Lencana aktif/nonaktif.
- *
- * status-badge.tsx sengaja terikat pada enum status sepeda dan rental, jadi tidak
- * bisa dipakai di sini. Bentuknya disamakan supaya tampilannya tetap satu bahasa.
- */
-function LencanaAktif({ aktif }: { aktif: boolean }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium",
-        aktif ? "bg-ok-soft text-ok" : "bg-idle-soft text-idle",
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className={cn("size-1.5 shrink-0 rounded-full", aktif ? "bg-ok" : "bg-idle")}
-      />
-      {aktif ? "Aktif" : "Nonaktif"}
-    </span>
-  );
-}
 
 const LABEL_PERAN: Record<RingkasanPengguna["peran"], string> = {
   admin: "Admin",
@@ -217,7 +194,7 @@ export function DaftarTim({
   return (
     <ul className="divide-y divide-line">
       {anggota.map((orang) => (
-        <li key={orang.id} className="space-y-3 px-4 py-3.5 first:pt-0 last:pb-0">
+        <li key={orang.id} className="space-y-3 px-4 py-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-sm font-medium text-ink">
@@ -232,7 +209,9 @@ export function DaftarTim({
             </div>
 
             <div className="flex items-center gap-2">
-              <LencanaAktif aktif={orang.aktif} />
+              <Lencana nada={orang.aktif ? "ok" : "idle"} titik>
+                {orang.aktif ? "Aktif" : "Nonaktif"}
+              </Lencana>
 
               {/* Tombol nonaktifkan tidak ditampilkan untuk diri sendiri. Action-nya
                   juga menolaknya, tapi tombol yang pasti gagal lebih baik tidak ada. */}

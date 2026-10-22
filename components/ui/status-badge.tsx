@@ -51,20 +51,59 @@ const aktivitas: Record<StatusAktivitas, Tampilan> = {
   batal: rental.batal,
 };
 
-function Lencana({ tampilan, className }: { tampilan: Tampilan; className?: string }) {
+const kelasLencana =
+  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium";
+
+function LencanaStatus({ tampilan, className }: { tampilan: Tampilan; className?: string }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium",
-        tampilan.kelas,
-        className,
-      )}
-    >
+    <span className={cn(kelasLencana, tampilan.kelas, className)}>
       <span
         aria-hidden="true"
         className={cn("size-1.5 shrink-0 rounded-full", tampilan.titik)}
       />
       {tampilan.label}
+    </span>
+  );
+}
+
+const nadaLencana = {
+  ok: { kelas: "bg-ok-soft text-ok", titik: "bg-ok" },
+  danger: { kelas: "bg-danger-soft text-danger", titik: "bg-danger" },
+  warn: { kelas: "bg-warn-soft text-warn", titik: "bg-warn" },
+  info: { kelas: "bg-info-soft text-info", titik: "bg-info" },
+  idle: { kelas: "bg-idle-soft text-idle", titik: "bg-idle" },
+  netral: { kelas: "bg-surface-2 text-ink-muted", titik: "bg-ink-faint" },
+} as const;
+
+/**
+ * Lencana bebas untuk keterangan yang bukan status sepeda atau rental: jumlah
+ * sepeda seorang pemilik, penyewa yang sedang menyewa, akun yang nonaktif.
+ *
+ * Bentuknya sama persis dengan lencana status di atas. Sebelumnya tiap halaman
+ * membuat pilnya sendiri, dengan tiga ukuran dan tiga ketebalan huruf yang
+ * berbeda — terlihat seperti tiga jenis benda padahal maksudnya satu.
+ */
+export function Lencana({
+  nada = "netral",
+  titik = false,
+  className,
+  children,
+}: {
+  nada?: keyof typeof nadaLencana;
+  /** Titik di depan teks, untuk lencana yang memang menyatakan keadaan. */
+  titik?: boolean;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <span className={cn(kelasLencana, nadaLencana[nada].kelas, className)}>
+      {titik && (
+        <span
+          aria-hidden="true"
+          className={cn("size-1.5 shrink-0 rounded-full", nadaLencana[nada].titik)}
+        />
+      )}
+      {children}
     </span>
   );
 }
@@ -76,7 +115,7 @@ export function StatusSepedaBadge({
   status: StatusSepeda;
   className?: string;
 }) {
-  return <Lencana tampilan={sepeda[status]} className={className} />;
+  return <LencanaStatus tampilan={sepeda[status]} className={className} />;
 }
 
 export function StatusRentalBadge({
@@ -86,7 +125,7 @@ export function StatusRentalBadge({
   status: StatusRental;
   className?: string;
 }) {
-  return <Lencana tampilan={rental[status]} className={className} />;
+  return <LencanaStatus tampilan={rental[status]} className={className} />;
 }
 
 export function StatusAktivitasBadge({
@@ -96,7 +135,7 @@ export function StatusAktivitasBadge({
   status: StatusAktivitas;
   className?: string;
 }) {
-  return <Lencana tampilan={aktivitas[status]} className={className} />;
+  return <LencanaStatus tampilan={aktivitas[status]} className={className} />;
 }
 
 export const labelStatusSepeda = (status: StatusSepeda) => sepeda[status].label;

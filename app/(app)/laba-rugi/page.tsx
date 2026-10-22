@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { wajibPengguna } from "@/lib/auth/dal";
 import { LABEL_KATEGORI, labaRugi, pengeluaranPerKategori } from "@/lib/queries/keuangan";
 import { ambilPengaturan } from "@/lib/queries/pengaturan";
-import { BarisData, Card, CardHeader, DaftarData } from "@/components/ui/card";
+import { BarisData, Card, CardHeader, CatatanKaki, DaftarData } from "@/components/ui/card";
+import { StatUtama } from "@/components/ui/stat";
 import { PageHeader } from "@/components/ui/page-header";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { Ikon } from "@/components/ui/icons";
@@ -80,34 +81,12 @@ export default async function HalamanLabaRugi(props: PageProps<"/laba-rugi">) {
 
       {/* Angka utama sengaja laba bersih, bukan omzet: inilah uang yang benar-benar
           menjadi milik rental setelah bagian pemilik disisihkan dan biaya dibayar. */}
-      <div
-        className={`rounded-card border p-5 ${
-          untung ? "border-ok/30 bg-ok-soft/40" : "border-danger/30 bg-danger-soft/40"
-        }`}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <p className="label-bagian">{untung ? "Laba bersih" : "Rugi"}</p>
-          <span
-            className={`flex size-8 items-center justify-center rounded-full ${
-              untung ? "bg-ok-soft text-ok" : "bg-danger-soft text-danger"
-            }`}
-            aria-hidden="true"
-          >
-            {untung ? (
-              <Ikon.laporanNaik className="size-[18px]" strokeWidth={1.9} />
-            ) : (
-              <Ikon.pengeluaran className="size-[18px]" strokeWidth={1.9} />
-            )}
-          </span>
-        </div>
-        <p className={`angka-utama mt-2 ${untung ? "text-ok" : "text-danger"}`}>
-          {rupiah(hasil.labaBersih)}
-        </p>
-        <p className="mt-1.5 text-sm text-ink-muted">
-          Pendapatan rental {rupiah(hasil.pendapatanRental)} − pengeluaran{" "}
-          {rupiah(hasil.pengeluaran)}
-        </p>
-      </div>
+      <StatUtama
+        label={untung ? "Laba bersih" : "Rugi"}
+        nada={untung ? "ok" : "danger"}
+        nilai={rupiah(hasil.labaBersih)}
+        keterangan={`Pendapatan rental ${rupiah(hasil.pendapatanRental)} − pengeluaran ${rupiah(hasil.pengeluaran)}`}
+      />
 
       <Card>
         <CardHeader
@@ -132,12 +111,12 @@ export default async function HalamanLabaRugi(props: PageProps<"/laba-rugi">) {
           </BarisData>
         </DaftarData>
 
-        <p className="border-t border-line px-4 py-3 text-xs leading-relaxed text-ink-muted">
+        <CatatanKaki>
           Laba dihitung dari pendapatan rental, bukan dari omzet kotor. Omzet kotor masih
           memuat bagian pemilik sepeda — uang yang wajib disetorkan dan bukan milik rental.
           Mengurangkan pengeluaran langsung dari omzet kotor akan membuat laba terbaca
           jauh lebih besar daripada yang sebenarnya.
-        </p>
+        </CatatanKaki>
       </Card>
 
       {perKategori.length > 0 && (
@@ -159,9 +138,10 @@ export default async function HalamanLabaRugi(props: PageProps<"/laba-rugi">) {
           <div className="border-t border-line px-4 py-3">
             <Link
               href="/pengeluaran"
-              className="text-sm font-medium text-brand underline-offset-2 hover:underline"
+              className="inline-flex items-center gap-1 text-sm font-medium text-brand underline-offset-2 hover:underline"
             >
-              Kelola pengeluaran →
+              Kelola pengeluaran
+              <Ikon.lanjut className="size-4" strokeWidth={2} aria-hidden="true" />
             </Link>
           </div>
         </Card>

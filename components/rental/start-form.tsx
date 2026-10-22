@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 import { mulaiRental, type StatusAksi } from "@/lib/actions/rental";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
-import { PesanGalat } from "@/components/ui/card";
+import { KotakKeterangan, PesanGalat } from "@/components/ui/card";
 import { Ikon } from "@/components/ui/icons";
 import { rupiah } from "@/lib/format";
 
@@ -148,23 +148,21 @@ export function StartForm({
       </Field>
 
       {perkiraan === null ? (
-        <p className="rounded-control bg-surface-2 px-3.5 py-2.5 text-sm text-ink-muted">
+        <KotakKeterangan>
           Tarif <span className="font-medium text-ink">{rupiah(tarifPerJam)}</span>/jam.
           Durasi dibulatkan ke atas per jam, minimum 1 jam.
-        </p>
+        </KotakKeterangan>
       ) : (
-        <div className="rounded-control border border-line bg-surface-2 px-3.5 py-3">
-          <p className="text-xs text-ink-muted">
-            Perkiraan biaya untuk {Math.round(jam)} jam
-          </p>
-          <p className="mt-0.5 text-xl font-semibold tabular-nums text-ink">
+        <KotakKeterangan>
+          <p className="text-xs">Perkiraan biaya untuk {Math.round(jam)} jam</p>
+          <p className="mt-0.5 font-display text-xl font-semibold tracking-tight tabular-nums text-ink">
             {rupiah(perkiraan)}
           </p>
-          <p className="mt-1 text-xs text-ink-muted">
+          <p className="mt-1 text-xs">
             {rupiah(tarifPerJam)}/jam · yang ditagih nanti dihitung dari waktu sepeda
             benar-benar kembali, bukan dari angka ini.
           </p>
-        </div>
+        </KotakKeterangan>
       )}
 
       <TombolMulai />

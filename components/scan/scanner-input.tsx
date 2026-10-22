@@ -123,7 +123,7 @@ export function ScannerInput({
             autoCorrect="off"
             spellCheck={false}
             enterKeyHint="search"
-            className="min-h-12 w-full rounded-control border border-line-strong bg-surface py-3 pl-11 pr-3 text-base font-semibold uppercase tracking-wide text-ink transition-colors placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-ink-faint"
+            className="min-h-13 w-full rounded-control border border-line-strong bg-surface py-3 pl-11 pr-3 text-base font-semibold uppercase tracking-wide text-ink transition-colors placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-ink-faint"
           />
         </div>
         <Button type="submit" ukuran="lg" className="px-5">

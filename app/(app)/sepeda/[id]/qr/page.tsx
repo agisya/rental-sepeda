@@ -5,6 +5,7 @@ import { wajibPengguna } from "@/lib/auth/dal";
 import { sepedaById } from "@/lib/queries/bikes";
 import { ambilPengaturan } from "@/lib/queries/pengaturan";
 import { ButtonLink } from "@/components/ui/button";
+import { KotakKeterangan } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { TombolCetak } from "@/components/sepeda/print-button";
 import { OPSI_QR } from "@/lib/qr";
@@ -40,10 +41,10 @@ export default async function HalamanQr(props: PageProps<"/sepeda/[id]/qr">) {
       <div className="no-print space-y-4">
         <PageHeader judul="Cetak QR" keterangan={`${sepeda.kode} — ${sepeda.nama}`} />
 
-        <p className="rounded-control bg-surface-2 px-3.5 py-3 text-sm leading-relaxed text-ink-muted">
+        <KotakKeterangan>
           Tempel stiker di rangka atau stang sepeda pada posisi yang mudah dijangkau
           kamera. Cetak beberapa buah sekaligus sebagai cadangan kalau ada yang rusak.
-        </p>
+        </KotakKeterangan>
 
         <div className="flex gap-2">
           <TombolCetak />
@@ -53,6 +54,10 @@ export default async function HalamanQr(props: PageProps<"/sepeda/[id]/qr">) {
         </div>
       </div>
 
+      {/* Stikernya putih-hitam di tema apa pun, satu-satunya bagian aplikasi
+          yang sengaja tidak mengikuti tema. Yang tampil di layar adalah pratinjau
+          kertas yang akan dicetak, dan kamera pemindai butuh QR gelap di atas
+          latar terang — QR terbalik di tema gelap sering gagal terbaca. */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {Array.from({ length: JUMLAH_STIKER }).map((_, i) => (
           <div

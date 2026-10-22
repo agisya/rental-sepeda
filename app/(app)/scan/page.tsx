@@ -64,12 +64,9 @@ export default async function HalamanScan(props: PageProps<"/scan">) {
             judul={`Kode "${kode}" tidak ditemukan`}
             keterangan="Periksa stikernya, atau cari lewat menu Data Sepeda."
             aksi={
-              <Link
-                href="/sepeda"
-                className="text-sm font-medium text-brand underline underline-offset-2"
-              >
+              <ButtonLink href="/sepeda" variasi="kedua">
                 Buka Data Sepeda
-              </Link>
+              </ButtonLink>
             }
           />
         </Card>
@@ -147,7 +144,7 @@ async function IsiSepeda({
             keterangan={`${kodeBooking(siapJemput.id)} · ${siapJemput.namaPenyewa} · ${formatJamWib(siapJemput.waktuMulai)} · ${siapJemput.durasiJam} jam`}
           />
           <CardBody className="space-y-3">
-            <DaftarData className="rounded-card border border-line">
+            <DaftarData className="rounded-control bg-surface-2">
               <BarisData label="Penyewa">{siapJemput.namaPenyewa}</BarisData>
               <BarisKontak
                 noHp={siapJemput.noHpPenyewa}
@@ -168,7 +165,7 @@ async function IsiSepeda({
 
             <Link
               href={`/booking/${siapJemput.id}`}
-              className="block text-center text-sm font-medium text-brand underline underline-offset-2"
+              className="block text-center text-sm font-medium text-brand underline-offset-2 hover:underline"
             >
               Buka detail booking
             </Link>
@@ -226,7 +223,7 @@ async function IsiSepeda({
             keterangan={`Mulai ${formatTanggalWib(rentalBerjalan.waktuMulai)} pukul ${formatJamWib(rentalBerjalan.waktuMulai)}`}
           />
           <CardBody className="space-y-4">
-            <DaftarData className="rounded-card border border-line">
+            <DaftarData className="rounded-control bg-surface-2">
               <BarisData label="Penyewa">{rentalBerjalan.namaPenyewa}</BarisData>
               <BarisKontak
                 noHp={rentalBerjalan.noHpPenyewa}
@@ -252,13 +249,12 @@ async function IsiSepeda({
                 toleransiTelatMenit={pengaturan.toleransiTelatMenit}
               />
             ) : (
-              <div className="rounded-card border border-dashed border-line-strong px-4 py-6 text-center">
-                <span
-                  className="mx-auto mb-3 flex size-11 items-center justify-center rounded-full bg-surface-2 text-ink-faint"
+              <div className="rounded-control border border-dashed border-line-strong px-4 py-6 text-center">
+                <Ikon.scan
+                  className="mx-auto mb-3 size-6 text-ink-faint"
+                  strokeWidth={1.6}
                   aria-hidden="true"
-                >
-                  <Ikon.scan className="size-5" strokeWidth={1.8} />
-                </span>
+                />
                 <p className="text-sm font-semibold text-ink">
                   Pindai sepedanya untuk menyelesaikan
                 </p>
@@ -304,12 +300,9 @@ async function IsiSepeda({
                   : "Sepeda ditandai tidak aktif. Aktifkan kembali lewat Data Sepeda kalau mau disewakan."
             }
             aksi={
-              <Link
-                href={`/sepeda/${sepeda.id}`}
-                className="text-sm font-medium text-brand underline underline-offset-2"
-              >
+              <ButtonLink href={`/sepeda/${sepeda.id}`} variasi="kedua">
                 Buka detail sepeda
-              </Link>
+              </ButtonLink>
             }
           />
         </Card>

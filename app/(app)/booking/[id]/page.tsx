@@ -10,10 +10,12 @@ import {
   Card,
   CardBody,
   CardHeader,
+  CatatanKaki,
   DaftarData,
   PesanBerhasil,
+  PesanPeringatan,
 } from "@/components/ui/card";
-import { ButtonLink } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { Ikon } from "@/components/ui/icons";
 import { FormBatalBooking, TombolJemput } from "@/components/booking/booking-aksi";
@@ -108,19 +110,19 @@ export default async function HalamanDetailBooking(props: PageProps<"/booking/[i
           </BarisData>
         </DaftarData>
 
-        <p className="border-t border-line px-4 py-3 text-xs leading-relaxed text-ink-muted">
+        <CatatanKaki>
           Perkiraan di atas memakai tarif saat booking dibuat. Tagihan sebenarnya
           dihitung dari jam kembali, dibulatkan ke atas per jam.
-        </p>
+        </CatatanKaki>
       </Card>
 
       {booking.status === "booking" && (
         <>
           {terlewat && (
-            <p className="rounded-control border border-warn/30 bg-warn-soft px-3.5 py-2.5 text-sm text-warn">
+            <PesanPeringatan>
               Jam mulai sudah lewat lebih dari {pengaturan.toleransiBookingMenit} menit
               dan penyewa belum datang.
-            </p>
+            </PesanPeringatan>
           )}
 
           <Card>
@@ -144,12 +146,9 @@ export default async function HalamanDetailBooking(props: PageProps<"/booking/[i
               {terlewat && (
                 <form action={tandaiHangus}>
                   <input type="hidden" name="bookingId" value={booking.id} />
-                  <button
-                    type="submit"
-                    className="w-full rounded-control border border-line-strong px-4 py-2.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
-                  >
+                  <Button type="submit" variasi="kedua" penuh>
                     Tandai hangus (penyewa tidak datang)
-                  </button>
+                  </Button>
                 </form>
               )}
             </CardBody>

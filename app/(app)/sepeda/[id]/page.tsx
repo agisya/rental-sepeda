@@ -79,17 +79,17 @@ export default async function HalamanDetailSepeda(props: PageProps<"/sepeda/[id]
               </Link>
             }
           />
-          <div className="px-4 pt-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+            <p className="text-sm text-ink-muted">
+              Mulai {formatTanggalWib(rentalBerjalan.waktuMulai)} pukul{" "}
+              {formatJamWib(rentalBerjalan.waktuMulai)}
+            </p>
             <TombolKontak
               noHp={rentalBerjalan.noHpPenyewa}
               nama={rentalBerjalan.namaPenyewa}
               pesan={pesanWa.sepedaTelat(rentalBerjalan.namaPenyewa, sepeda.kode)}
             />
           </div>
-          <p className="px-4 py-3 text-sm text-ink-muted">
-            Mulai {formatTanggalWib(rentalBerjalan.waktuMulai)} pukul{" "}
-            {formatJamWib(rentalBerjalan.waktuMulai)}
-          </p>
         </Card>
       )}
 

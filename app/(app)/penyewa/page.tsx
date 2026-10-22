@@ -5,6 +5,7 @@ import { Card, KeadaanKosong } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { SearchForm } from "@/components/ui/search-form";
 import { Ikon } from "@/components/ui/icons";
+import { Lencana } from "@/components/ui/status-badge";
 import { TombolKontak } from "@/components/ui/tombol-kontak";
 import { pesanWa } from "@/lib/kontak";
 import { rupiah } from "@/lib/format";
@@ -53,10 +54,12 @@ export default async function HalamanPenyewa(props: PageProps<"/penyewa">) {
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 truncate font-medium text-ink">
                     {p.nama}
+                    {/* Merah, mengikuti "Sedang disewa" di lencana status
+                        sepeda: satu keadaan, satu warna di seluruh aplikasi. */}
                     {p.sedangMenyewa > 0 && (
-                      <span className="shrink-0 rounded-full bg-danger-soft px-2 py-0.5 text-xs font-normal text-danger">
-                        sedang menyewa
-                      </span>
+                      <Lencana nada="danger" titik className="shrink-0">
+                        Sedang menyewa
+                      </Lencana>
                     )}
                   </p>
                   <p className="mt-1 text-sm tabular-nums text-ink-muted">{p.noHp}</p>

@@ -10,6 +10,7 @@ import { bagiHasilSemuaPemilik } from "@/lib/queries/rentals";
 import { ambilPengaturan } from "@/lib/queries/pengaturan";
 import { Card, CardHeader, KeadaanKosong } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import { NavPeriode } from "@/components/ui/nav-periode";
 import { Ikon } from "@/components/ui/icons";
 import { RingkasanPeriodeLaporan } from "@/components/laporan/ringkasan-periode";
 import { PotonganKeterlambatan } from "@/components/laporan/potongan-keterlambatan";
@@ -61,30 +62,16 @@ export default async function HalamanLaporanMingguan(
         keterangan={formatRentangTanggalWib(rentang.mulai, rentang.selesai)}
       />
 
-      <nav className="flex items-center justify-between gap-2" aria-label="Pindah minggu">
-        <Link
-          href={`/laporan/mingguan?tanggal=${mingguLalu}`}
-          className="flex min-h-11 items-center rounded-control border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
-        >
-          ← Minggu lalu
-        </Link>
-        <Link
-          href="/laporan/mingguan"
-          className="flex min-h-11 items-center rounded-control px-3 text-sm font-medium text-ink-muted hover:text-ink"
-        >
-          Minggu ini
-        </Link>
-        {!belumTiba ? (
-          <Link
-            href={`/laporan/mingguan?tanggal=${mingguDepan}`}
-            className="flex min-h-11 items-center rounded-control border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
-          >
-            Minggu depan →
-          </Link>
-        ) : (
-          <span className="min-h-11" />
-        )}
-      </nav>
+      <NavPeriode
+        label="Pindah minggu"
+        sebelumnya={{ href: `/laporan/mingguan?tanggal=${mingguLalu}`, label: "Minggu lalu" }}
+        sekarang={{ href: "/laporan/mingguan", label: "Minggu ini" }}
+        berikutnya={
+          belumTiba
+            ? undefined
+            : { href: `/laporan/mingguan?tanggal=${mingguDepan}`, label: "Minggu depan" }
+        }
+      />
 
       <RingkasanPeriodeLaporan
         laporan={laporan}

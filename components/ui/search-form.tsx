@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Button } from "./button";
 import { Ikon } from "./icons";
 
 /** Kolom pencarian dengan pengiriman biasa lewat GET, tanpa JavaScript. */
@@ -34,12 +35,9 @@ export function SearchForm({
           className="min-h-11 w-full rounded-control border border-line-strong bg-surface py-2.5 pl-11 pr-3 text-base text-ink transition-colors placeholder:text-ink-faint"
         />
       </div>
-      <button
-        type="submit"
-        className="min-h-11 shrink-0 rounded-control border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
-      >
+      <Button type="submit" variasi="kedua" className="shrink-0">
         Cari
-      </button>
+      </Button>
     </form>
   );
 }

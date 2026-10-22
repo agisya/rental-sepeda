@@ -10,7 +10,7 @@ import {
 import { selesaikanServis } from "@/lib/actions/maintenance";
 import { daftarSepeda } from "@/lib/queries/bikes";
 import { Card, CardHeader, KeadaanKosong } from "@/components/ui/card";
-import { ButtonLink } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Stat } from "@/components/ui/stat";
 import { PageHeader } from "@/components/ui/page-header";
 import { Ikon } from "@/components/ui/icons";
@@ -49,19 +49,12 @@ export default async function HalamanMaintenance() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Stat
           label="Biaya bulan ini"
-          ikon={Ikon.servis}
           nilai={rupiah(ringkasan.totalBiaya)}
           keterangan={`${ringkasan.jumlah} catatan · ${ringkasan.sepedaDiservis} sepeda`}
         />
-        <Stat
-          label="Sedang diservis"
-          ikon={Ikon.servis}
-          nada="info"
-          nilai={semuaSepeda.length}
-        />
+        <Stat label="Sedang diservis" nada="info" nilai={semuaSepeda.length} />
         <Stat
           label="Jadwal jatuh tempo"
-          ikon={Ikon.peringatan}
           nada={jatuhTempo.length > 0 ? "warn" : "netral"}
           nilai={jatuhTempo.length}
         />
@@ -78,12 +71,12 @@ export default async function HalamanMaintenance() {
               </span>
             }
           />
-          <ul className="divide-y divide-warn/20">
+          <ul className="divide-y divide-line">
             {jatuhTempo.map((s) => (
               <li key={s.bikeId}>
                 <Link
                   href={`/sepeda/${s.bikeId}`}
-                  className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-surface-2"
+                  className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-surface-2"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-ink">
@@ -124,12 +117,9 @@ export default async function HalamanMaintenance() {
                 {bolehKelola && (
                   <form action={selesaikanServis}>
                     <input type="hidden" name="bikeId" value={s.id} />
-                    <button
-                      type="submit"
-                      className="min-h-9 shrink-0 rounded-control border border-line-strong bg-surface px-3 text-xs font-medium text-ink transition-colors hover:bg-surface-2"
-                    >
+                    <Button type="submit" variasi="kedua" ukuran="sm" className="shrink-0">
                       Selesai servis
-                    </button>
+                    </Button>
                   </form>
                 )}
               </li>

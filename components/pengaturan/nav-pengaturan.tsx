@@ -74,13 +74,15 @@ export function NavPengaturan({ bolehKelolaTim }: { bolehKelolaTim: boolean }) {
                 aria-current={aktif ? "page" : undefined}
                 className={cn(
                   "flex min-h-11 items-center gap-2.5 rounded-control px-3.5 py-2 text-sm font-medium leading-tight transition-colors",
+                  // Sama dengan menu aktif di sidebar: latar netral, hijau
+                  // hanya di ikon.
                   aktif
-                    ? "bg-brand-soft text-brand-soft-ink"
+                    ? "bg-surface-2 text-ink"
                     : "text-ink-muted hover:bg-surface-2 hover:text-ink",
                 )}
               >
                 <IkonBagian
-                  className="size-[18px] shrink-0"
+                  className={cn("size-[18px] shrink-0", aktif && "text-brand")}
                   strokeWidth={1.9}
                   aria-hidden="true"
                 />

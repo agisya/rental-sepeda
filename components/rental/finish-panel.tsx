@@ -114,7 +114,7 @@ export function FinishPanel({
     <div className="space-y-4">
       {/* Perkiraan total ditonjolkan: inilah angka yang disebutkan ke penyewa
           sebelum tombol selesai ditekan. */}
-      <div className="rounded-card border border-line bg-surface-2">
+      <div className="rounded-control bg-surface-2">
         <div className="flex items-end justify-between gap-3 px-4 pb-3 pt-4">
           <div>
             <p className="label-bagian">Perkiraan total</p>
@@ -164,7 +164,7 @@ export function FinishPanel({
             Menampilkannya pada rental yang pulang tepat waktu cuma menambah satu
             kolom yang selalu berisi nol untuk dilewati puluhan kali sehari. */}
         {saran > 0 && (
-          <div className="space-y-4 rounded-card border border-warn/30 bg-warn-soft/30 p-4">
+          <div className="space-y-4 rounded-control border border-warn/30 bg-warn-soft p-4">
             <div>
               <p className="text-sm font-medium text-ink">
                 Sepeda telat {perkiraan.sisaMenit} menit

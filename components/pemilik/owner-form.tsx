@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 import { simpanPemilik, type StatusAksi } from "@/lib/actions/owners";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
-import { PesanGalat } from "@/components/ui/card";
+import { KotakKeterangan, PesanGalat } from "@/components/ui/card";
 
 const AWAL: StatusAksi = {};
 
@@ -67,13 +67,13 @@ export function OwnerForm({ awal }: { awal?: NilaiAwal }) {
       {/* Penanda milik sendiri ditaruh SEBELUM kolom persentase, karena ia
           menentukan apakah kolom itu masih ada gunanya. Menaruhnya di bawah
           membuat orang mengisi persentase dulu lalu bingung kenapa hilang. */}
-      <label className="flex items-start gap-2.5 rounded-control border border-line bg-surface-2 px-3.5 py-3 text-sm text-ink">
+      <label className="flex cursor-pointer items-start gap-2.5 rounded-control border border-line px-3.5 py-3 text-sm text-ink transition-colors hover:border-line-strong">
         <input
           type="checkbox"
           name="milikSendiri"
           checked={milikSendiri}
           onChange={(e) => setMilikSendiri(e.target.checked)}
-          className="mt-0.5 size-4 accent-[var(--brand)]"
+          className="mt-0.5 size-4 shrink-0 accent-brand"
         />
         <span>
           Ini sepeda milik rental sendiri
@@ -85,10 +85,10 @@ export function OwnerForm({ awal }: { awal?: NilaiAwal }) {
       </label>
 
       {milikSendiri ? (
-        <p className="rounded-control border border-brand/25 bg-brand-soft px-3.5 py-2.5 text-sm text-brand-soft-ink">
+        <KotakKeterangan>
           Bagian pemilik otomatis 0% — tidak ada yang perlu disetorkan, dan seluruh
           omzetnya masuk ke laba rental.
-        </p>
+        </KotakKeterangan>
       ) : (
         <Field
           id="persentaseBagiHasil"
@@ -118,20 +118,20 @@ export function OwnerForm({ awal }: { awal?: NilaiAwal }) {
         )}
       </Field>
 
-      <label className="flex items-center gap-2.5 text-sm text-ink">
+      <label className="flex cursor-pointer items-center gap-2.5 text-sm text-ink">
         <input
           type="checkbox"
           name="aktif"
           defaultChecked={awal?.aktif ?? true}
-          className="size-4 accent-[var(--brand)]"
+          className="size-4 shrink-0 accent-brand"
         />
         Pemilik masih aktif
       </label>
 
-      <p className="rounded-control bg-surface-2 px-3 py-2.5 text-xs text-ink-muted">
+      <KotakKeterangan className="text-xs">
         Mengubah persentase hanya berlaku untuk rental berikutnya. Transaksi yang sudah
         tercatat tetap memakai persentase saat itu.
-      </p>
+      </KotakKeterangan>
 
       <div className="flex gap-2">
         <ButtonLink href="/pemilik" variasi="kedua" ukuran="lg" className="flex-1">

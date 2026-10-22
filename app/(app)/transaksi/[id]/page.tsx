@@ -7,6 +7,7 @@ import {
   BarisData,
   Card,
   CardHeader,
+  CatatanKaki,
   DaftarData,
   PesanBerhasil,
 } from "@/components/ui/card";
@@ -117,11 +118,11 @@ export default async function HalamanDetailTransaksi(
         )}
 
         {rental.status === "selesai" && (
-          <p className="border-t border-line px-4 py-3 text-xs leading-relaxed text-ink-muted">
+          <CatatanKaki>
             Jam pokok dibulatkan ke bawah dengan minimum 1 jam; sisa menit di luar
             toleransi ditagih terpisah sebagai tambahan keterlambatan. Persentase yang
             dipakai adalah persentase pemilik saat rental dimulai.
-          </p>
+          </CatatanKaki>
         )}
       </Card>
 

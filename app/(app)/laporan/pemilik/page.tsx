@@ -10,6 +10,7 @@ import {
   PesanBerhasil,
 } from "@/components/ui/card";
 import { Stat } from "@/components/ui/stat";
+import { Lencana } from "@/components/ui/status-badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { Ikon } from "@/components/ui/icons";
 import { FormPembayaranPemilik } from "@/components/keuangan/form-pembayaran";
@@ -57,16 +58,10 @@ export default async function HalamanLaporanPemilik(
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Stat label="Total hak pemilik" ikon={Ikon.pemilik} nilai={rupiah(totalHak)} />
-        <Stat
-          label="Sudah dibayar"
-          ikon={Ikon.selesai}
-          nada="ok"
-          nilai={rupiah(totalDibayar)}
-        />
+        <Stat label="Total hak pemilik" nilai={rupiah(totalHak)} />
+        <Stat label="Sudah dibayar" nada="ok" nilai={rupiah(totalDibayar)} />
         <Stat
           label="Sisa harus dibayar"
-          ikon={Ikon.uang}
           nada={totalSisa > 0 ? "danger" : "ok"}
           nilai={rupiah(totalSisa)}
         />
@@ -115,9 +110,7 @@ export default async function HalamanLaporanPemilik(
                       {/* Lencana, bukan "0%". Persentase nol menuntut orang
                           menerjemahkannya sendiri; lencana menyebut artinya. */}
                       {s.milikSendiri ? (
-                        <span className="ml-1.5 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand-soft-ink">
-                          Milik sendiri
-                        </span>
+                        <Lencana className="ml-1.5">Milik sendiri</Lencana>
                       ) : (
                         <span className="ml-1.5 text-xs text-ink-muted">
                           ({s.persentaseBagiHasil}%)
@@ -191,11 +184,9 @@ export default async function HalamanLaporanPemilik(
                     bukti uang yang sudah berpindah tangan — kalau barisnya bisa
                     dihilangkan, pemilik tidak punya apa pun untuk dipegang saat
                     jumlahnya dipersoalkan. */}
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="font-semibold tabular-nums text-ink">
-                    {rupiah(p.jumlah)}
-                  </span>
-                </div>
+                <span className="shrink-0 font-semibold tabular-nums text-ink">
+                  {rupiah(p.jumlah)}
+                </span>
               </li>
             ))}
           </ul>

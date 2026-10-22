@@ -2,8 +2,8 @@ import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 const gayaKontrol =
-  "w-full rounded-control border border-line-strong bg-surface text-ink px-3.5 py-2.5 min-h-11 " +
-  "text-base transition-colors placeholder:text-ink-faint hover:border-line-strong " +
+  "w-full rounded-control border border-line-strong bg-surface text-ink px-3.5 min-h-11 " +
+  "text-base transition-colors placeholder:text-ink-faint hover:border-ink-faint " +
   "disabled:opacity-60 disabled:bg-surface-2 aria-[invalid=true]:border-danger";
 
 type PropsField = {
@@ -64,14 +64,29 @@ export function Field({ id, label, petunjuk, galat, wajib, children }: PropsFiel
   );
 }
 
-export function Input({ className, ...props }: ComponentProps<"input">) {
-  return <input className={cn(gayaKontrol, className)} {...props} />;
+/* Tombol "Pilih berkas" bawaan peramban berwarna abu-abu sistem yang tidak ikut
+   tema — paling mencolok di tema gelap. Dulu ada dua gaya kolom berkas yang
+   berbeda di form sepeda dan form foto; sekarang keduanya lewat sini. */
+const gayaBerkas =
+  "py-2 file:mr-3 file:cursor-pointer file:rounded-[0.375rem] file:border-0 " +
+  "file:bg-surface-2 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-ink";
+
+export function Input({ className, type, ...props }: ComponentProps<"input">) {
+  return (
+    <input
+      type={type}
+      className={cn(gayaKontrol, type === "file" ? gayaBerkas : "py-2.5", className)}
+      {...props}
+    />
+  );
 }
 
 export function Select({ className, ...props }: ComponentProps<"select">) {
-  return <select className={cn(gayaKontrol, className)} {...props} />;
+  return <select className={cn(gayaKontrol, "py-2.5", className)} {...props} />;
 }
 
 export function Textarea({ className, ...props }: ComponentProps<"textarea">) {
-  return <textarea className={cn(gayaKontrol, "min-h-24 resize-y", className)} {...props} />;
+  return (
+    <textarea className={cn(gayaKontrol, "min-h-24 resize-y py-2.5", className)} {...props} />
+  );
 }

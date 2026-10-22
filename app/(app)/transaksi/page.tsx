@@ -7,6 +7,7 @@ import { Card, KeadaanKosong } from "@/components/ui/card";
 import { StatusRentalBadge } from "@/components/ui/status-badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { FilterChips } from "@/components/ui/filter-chips";
+import { FormTanggal } from "@/components/ui/form-tanggal";
 import { Ikon } from "@/components/ui/icons";
 import { rupiah } from "@/lib/format";
 import {
@@ -65,36 +66,16 @@ export default async function HalamanTransaksi(props: PageProps<"/transaksi">) {
         }
       />
 
-      <form method="get" action="/transaksi" className="flex flex-wrap items-end gap-2">
-        {status && <input type="hidden" name="status" value={status} />}
-        <div className="min-w-40 flex-1">
-          <label htmlFor="tanggal" className="block text-xs font-medium text-ink-muted">
-            Tanggal
-          </label>
-          <input
-            id="tanggal"
-            type="date"
-            name="tanggal"
-            defaultValue={tanggalParam}
-            max={kunciTanggalWib(new Date())}
-            className="mt-1 min-h-11 w-full rounded-control border border-line-strong bg-surface px-3.5 py-2.5 text-base text-ink"
-          />
-        </div>
-        <button
-          type="submit"
-          className="min-h-11 rounded-control border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
-        >
-          Tampilkan
-        </button>
-        {tanggalParam && (
-          <Link
-            href={status ? `/transaksi?status=${status}` : "/transaksi"}
-            className="flex min-h-11 items-center rounded-control px-3 text-sm font-medium text-ink-muted hover:text-ink"
-          >
-            Reset
-          </Link>
-        )}
-      </form>
+      <FormTanggal
+        aksi="/transaksi"
+        label="Tanggal"
+        nilaiAwal={tanggalParam}
+        maks={kunciTanggalWib(new Date())}
+        hrefReset={
+          tanggalParam ? (status ? `/transaksi?status=${status}` : "/transaksi") : undefined
+        }
+        tersembunyi={status && <input type="hidden" name="status" value={status} />}
+      />
 
       <FilterChips
         label="Saring menurut status"

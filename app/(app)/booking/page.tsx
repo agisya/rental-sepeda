@@ -3,6 +3,7 @@ import { wajibPengguna } from "@/lib/auth/dal";
 import { daftarAktivitas } from "@/lib/queries/aktivitas";
 import { ambilPengaturan } from "@/lib/queries/pengaturan";
 import { ButtonLink } from "@/components/ui/button";
+import { PesanPeringatan } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { Ikon } from "@/components/ui/icons";
@@ -70,10 +71,10 @@ export default async function HalamanBooking(props: PageProps<"/booking">) {
       />
 
       {hangus > 0 && (
-        <p className="rounded-control border border-warn/30 bg-warn-soft px-3.5 py-2.5 text-sm text-warn">
+        <PesanPeringatan>
           {hangus} booking sudah lewat jam mulainya tapi belum dijemput. Tandai hangus
           lewat detail booking kalau penyewanya tidak datang.
-        </p>
+        </PesanPeringatan>
       )}
 
       <DaftarAktivitas

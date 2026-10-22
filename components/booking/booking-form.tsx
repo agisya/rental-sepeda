@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 import { buatBooking, type StatusAksi } from "@/lib/actions/booking";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
-import { PesanGalat } from "@/components/ui/card";
+import { KotakKeterangan, PesanGalat, PesanPeringatan } from "@/components/ui/card";
 import { rupiah } from "@/lib/format";
 
 const AWAL: StatusAksi = {};
@@ -84,15 +84,13 @@ export function BookingForm({
           tersembunyi karena sudah dipastikan dari QR yang dipindai. */}
       <input type="hidden" name="bikeId" value={sepeda.id} />
 
-      <div className="rounded-control border border-line bg-surface-2 px-3.5 py-3">
-        <p className="text-xs text-ink-muted">Sepeda yang dipesan</p>
-        <p className="mt-0.5 text-sm font-semibold text-ink">
+      <KotakKeterangan>
+        <p className="text-xs">Sepeda yang dipesan</p>
+        <p className="mt-0.5 font-semibold text-ink">
           {sepeda.kode} — {sepeda.nama}
         </p>
-        <p className="mt-0.5 text-xs text-ink-muted">
-          {rupiah(sepeda.tarifPerJam)}/jam
-        </p>
-      </div>
+        <p className="mt-0.5 text-xs">{rupiah(sepeda.tarifPerJam)}/jam</p>
+      </KotakKeterangan>
 
       <Field
         id="namaPenyewa"
@@ -197,11 +195,11 @@ export function BookingForm({
       </Field>
 
       {bentrok.length > 0 && (
-        <p role="status" className="rounded-control border border-warn/25 bg-warn-soft px-3.5 py-2.5 text-sm text-warn">
+        <PesanPeringatan role="status">
           Jam {bentrok.map((j) => `${String(j).padStart(2, "0")}:00`).join(", ")} sudah
           dipesan orang lain untuk sepeda ini. Kurangi durasinya, geser jam mulainya,
           atau pilih sepeda lain.
-        </p>
+        </PesanPeringatan>
       )}
 
       {terpakai.size > 0 && bentrok.length === 0 && (
@@ -215,11 +213,11 @@ export function BookingForm({
         </p>
       )}
 
-      <p className="rounded-control bg-surface-2 px-3.5 py-2.5 text-sm text-ink-muted">
+      <KotakKeterangan>
         Perkiraan biaya{" "}
         <span className="font-semibold text-ink">{rupiah(perkiraan)}</span> untuk{" "}
         {durasi} jam. Tagihan akhir dihitung dari jam kembali yang sebenarnya.
-      </p>
+      </KotakKeterangan>
 
       <div className="flex gap-2">
         <ButtonLink href="/booking" variasi="kedua" ukuran="lg" className="flex-1">

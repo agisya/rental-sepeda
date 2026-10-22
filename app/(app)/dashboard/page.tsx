@@ -44,8 +44,10 @@ export default async function HalamanDashboard() {
       </ButtonLink>
 
       <Bagian judul="Hari ini">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="sm:col-span-3">
+        {/* Dua kolom sejak HP: tiga kartu kecil yang masing-masing selebar
+            layar mendorong daftar armada dua layar ke bawah. */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="col-span-2 sm:col-span-3">
             <StatUtama
               label="Omzet hari ini"
               nilai={rupiah(ringkasan.hariIni.totalOmzet)}
@@ -59,20 +61,19 @@ export default async function HalamanDashboard() {
 
           <Stat
             label="Bagian pemilik"
-            ikon={Ikon.pemilik}
             nilai={rupiah(ringkasan.hariIni.totalBagianPemilik)}
           />
           <Stat
             label="Bagian rental"
-            ikon={Ikon.uang}
             nilai={rupiah(ringkasan.hariIni.totalBagianRental)}
           />
-          <Stat
-            label="Total jam"
-            ikon={Ikon.jam}
-            nilai={`${ringkasan.hariIni.totalJam} jam`}
-            keterangan="jam yang ditagihkan"
-          />
+          <div className="col-span-2 sm:col-span-1">
+            <Stat
+              label="Total jam"
+              nilai={`${ringkasan.hariIni.totalJam} jam`}
+              keterangan="jam yang ditagihkan"
+            />
+          </div>
         </div>
       </Bagian>
 
@@ -90,14 +91,12 @@ export default async function HalamanDashboard() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           <Stat
             label="Tersedia"
-            ikon={Ikon.sepeda}
             nada="ok"
             nilai={ringkasan.status.tersedia}
             href="/sepeda?status=tersedia"
           />
           <Stat
             label="Sedang disewa"
-            ikon={Ikon.transaksi}
             nada="danger"
             nilai={ringkasan.status.disewa}
             href="/sepeda?status=disewa"
@@ -106,21 +105,19 @@ export default async function HalamanDashboard() {
               sepeda bisa punya beberapa booking pada jam yang berbeda. */}
           <Stat
             label="Booking"
-            ikon={Ikon.booking}
             nada="warn"
             nilai={ringkasan.bookingAktif}
             href="/booking?status=dibooking"
           />
           <Stat
             label="Servis"
-            ikon={Ikon.servis}
             nada="info"
             nilai={ringkasan.status.servis}
             href="/sepeda?status=servis"
           />
           <Stat
             label="Tidak aktif"
-            ikon={Ikon.nonaktif}
+            nada="idle"
             nilai={ringkasan.status.nonaktif}
             href="/sepeda?status=nonaktif"
           />
@@ -128,7 +125,7 @@ export default async function HalamanDashboard() {
       </Bagian>
 
       {terlaluLama.length > 0 && (
-        <Card className="border-warn/40 bg-warn-soft/40">
+        <Card className="border-warn/40">
           <CardHeader
             className="border-warn/25"
             judul={
@@ -139,7 +136,7 @@ export default async function HalamanDashboard() {
             }
             keterangan={`Sudah lebih dari ${BATAS_JAM_MENCURIGAKAN} jam sejak dicatat keluar`}
           />
-          <ul className="divide-y divide-warn/20">
+          <ul className="divide-y divide-line">
             {terlaluLama.map((r) => (
               <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">

@@ -6,6 +6,32 @@ import { Ikon } from "@/components/ui/icons";
 import { rupiah } from "@/lib/format";
 import { formatTanggalWib, namaHariWib } from "@/lib/waktu";
 
+/** Satu hari terpilih: paling ramai atau paling sepi. */
+function KartuHari({
+  judul,
+  hari,
+  catatan,
+}: {
+  judul: string;
+  hari: NonNullable<LaporanPeriode["hariTeramai"]>;
+  catatan?: string;
+}) {
+  const tanggal = new Date(hari.tanggal + "T05:00:00Z");
+
+  return (
+    <Card className="p-4">
+      <p className="label-bagian">{judul}</p>
+      <p className="mt-1.5 font-display text-lg font-semibold tracking-tight text-ink">
+        {namaHariWib(tanggal)}, {formatTanggalWib(tanggal)}
+      </p>
+      <p className="mt-0.5 text-sm text-ink-muted">
+        {rupiah(hari.totalOmzet)} · {hari.jumlahTransaksi} transaksi
+      </p>
+      {catatan && <p className="mt-1 text-xs text-ink-faint">{catatan}</p>}
+    </Card>
+  );
+}
+
 /**
  * Isi laporan mingguan dan bulanan.
  *
@@ -44,18 +70,10 @@ export function RingkasanPeriodeLaporan({
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Transaksi" ikon={Ikon.transaksi} nilai={ringkasan.jumlahTransaksi} />
-        <Stat
-          label="Sepeda dipakai"
-          ikon={Ikon.sepeda}
-          nilai={ringkasan.jumlahSepedaDipakai}
-        />
-        <Stat label="Total jam" ikon={Ikon.jam} nilai={`${ringkasan.totalJam} jam`} />
-        <Stat
-          label="Bagian rental"
-          ikon={Ikon.uang}
-          nilai={rupiah(ringkasan.totalBagianRental)}
-        />
+        <Stat label="Transaksi" nilai={ringkasan.jumlahTransaksi} />
+        <Stat label="Sepeda dipakai" nilai={ringkasan.jumlahSepedaDipakai} />
+        <Stat label="Total jam" nilai={`${ringkasan.totalJam} jam`} />
+        <Stat label="Bagian rental" nilai={rupiah(ringkasan.totalBagianRental)} />
       </div>
 
       <Card>
@@ -79,38 +97,14 @@ export function RingkasanPeriodeLaporan({
       {(laporan.hariTeramai || laporan.hariTersepi) && (
         <div className="grid gap-3 sm:grid-cols-2">
           {laporan.hariTeramai && (
-            <Card>
-              <div className="p-4">
-                <p className="label-bagian">Hari paling ramai</p>
-                <p className="mt-1 text-lg font-semibold tracking-tight text-ink">
-                  {namaHariWib(new Date(laporan.hariTeramai.tanggal + "T05:00:00Z"))},{" "}
-                  {formatTanggalWib(new Date(laporan.hariTeramai.tanggal + "T05:00:00Z"))}
-                </p>
-                <p className="mt-0.5 text-sm text-ink-muted">
-                  {rupiah(laporan.hariTeramai.totalOmzet)} ·{" "}
-                  {laporan.hariTeramai.jumlahTransaksi} transaksi
-                </p>
-              </div>
-            </Card>
+            <KartuHari judul="Hari paling ramai" hari={laporan.hariTeramai} />
           )}
-
           {laporan.hariTersepi && (
-            <Card>
-              <div className="p-4">
-                <p className="label-bagian">Hari paling sepi</p>
-                <p className="mt-1 text-lg font-semibold tracking-tight text-ink">
-                  {namaHariWib(new Date(laporan.hariTersepi.tanggal + "T05:00:00Z"))},{" "}
-                  {formatTanggalWib(new Date(laporan.hariTersepi.tanggal + "T05:00:00Z"))}
-                </p>
-                <p className="mt-0.5 text-sm text-ink-muted">
-                  {rupiah(laporan.hariTersepi.totalOmzet)} ·{" "}
-                  {laporan.hariTersepi.jumlahTransaksi} transaksi
-                </p>
-                <p className="mt-1 text-xs text-ink-faint">
-                  Hanya menghitung hari yang ada transaksinya.
-                </p>
-              </div>
-            </Card>
+            <KartuHari
+              judul="Hari paling sepi"
+              hari={laporan.hariTersepi}
+              catatan="Hanya menghitung hari yang ada transaksinya."
+            />
           )}
         </div>
       )}
@@ -156,7 +150,7 @@ export function RingkasanPeriodeLaporan({
                         )}
                         <Link
                           href={`/sepeda/${s.bikeId}`}
-                          className="font-medium text-brand underline-offset-2 hover:underline"
+                          className="whitespace-nowrap font-medium text-brand underline-offset-2 hover:underline"
                         >
                           {s.kode}
                         </Link>

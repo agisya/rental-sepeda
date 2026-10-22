@@ -138,31 +138,33 @@ export function MaintenanceForm({
         {(props) => <Textarea {...props} name="catatan" rows={2} placeholder="Opsional" />}
       </Field>
 
-      <div className="space-y-2.5 rounded-control bg-surface-2 p-3.5">
-        <label className="flex items-start gap-2.5 text-sm text-ink">
+      {/* Satu kotak bergaris, dua pilihan di dalamnya dipisah garis tipis —
+          bentuk yang sama dengan pilihan "milik sendiri" di form pemilik. */}
+      <div className="divide-y divide-line rounded-control border border-line">
+        <label className="flex cursor-pointer items-start gap-2.5 px-3.5 py-3 text-sm text-ink">
           <input
             type="checkbox"
             name="catatKePengeluaran"
             defaultChecked
-            className="mt-0.5 size-4 accent-[var(--brand)]"
+            className="mt-0.5 size-4 shrink-0 accent-brand"
           />
           <span>
             Catat biayanya sebagai pengeluaran
-            <span className="block text-xs text-ink-muted">
+            <span className="mt-0.5 block text-xs text-ink-muted">
               Supaya ikut terhitung di Laba/Rugi. Biayanya hanya dihitung sekali.
             </span>
           </span>
         </label>
 
-        <label className="flex items-start gap-2.5 text-sm text-ink">
+        <label className="flex cursor-pointer items-start gap-2.5 px-3.5 py-3 text-sm text-ink">
           <input
             type="checkbox"
             name="tandaiServis"
-            className="mt-0.5 size-4 accent-[var(--brand)]"
+            className="mt-0.5 size-4 shrink-0 accent-brand"
           />
           <span>
             Tandai sepeda sedang servis
-            <span className="block text-xs text-ink-muted">
+            <span className="mt-0.5 block text-xs text-ink-muted">
               Sepeda tidak bisa disewakan sampai statusnya dikembalikan.
             </span>
           </span>

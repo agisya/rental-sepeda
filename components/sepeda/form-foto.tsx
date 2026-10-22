@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 import { unggahFotoSepeda, type StatusAksi } from "@/lib/actions/foto";
 import { hapusFotoSepeda } from "@/lib/actions/foto";
 import { Button } from "@/components/ui/button";
-import { Field } from "@/components/ui/field";
+import { Field, Input } from "@/components/ui/field";
 import { PesanBerhasil, PesanGalat } from "@/components/ui/card";
 import { FotoSepeda } from "./foto-sepeda";
 import { Ikon } from "@/components/ui/icons";
@@ -72,12 +72,11 @@ export function FormFotoSepeda({
           galat={status.galatField?.foto}
         >
           {(props) => (
-            <input
+            <Input
               {...props}
               type="file"
               name="foto"
               accept="image/jpeg,image/png,image/webp"
-              className="w-full rounded-control border border-line-strong bg-surface p-2.5 text-sm text-ink file:mr-3 file:rounded-md file:border-0 file:bg-surface-2 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-ink"
             />
           )}
         </Field>

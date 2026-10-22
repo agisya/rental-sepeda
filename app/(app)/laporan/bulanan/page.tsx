@@ -12,6 +12,7 @@ import { bagiHasilSemuaPemilik } from "@/lib/queries/rentals";
 import { ambilPengaturan } from "@/lib/queries/pengaturan";
 import { Card, CardHeader, KeadaanKosong } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import { NavPeriode } from "@/components/ui/nav-periode";
 import { Ikon } from "@/components/ui/icons";
 import { RingkasanPeriodeLaporan } from "@/components/laporan/ringkasan-periode";
 import { PotonganKeterlambatan } from "@/components/laporan/potongan-keterlambatan";
@@ -58,30 +59,16 @@ export default async function HalamanLaporanBulanan(
     <div className="space-y-5">
       <PageHeader judul="Laporan Bulanan" keterangan={formatBulanWib(rentang.mulai)} />
 
-      <nav className="flex items-center justify-between gap-2" aria-label="Pindah bulan">
-        <Link
-          href={`/laporan/bulanan?bulan=${bulanLalu}`}
-          className="flex min-h-11 items-center rounded-control border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
-        >
-          ← Bulan lalu
-        </Link>
-        <Link
-          href="/laporan/bulanan"
-          className="flex min-h-11 items-center rounded-control px-3 text-sm font-medium text-ink-muted hover:text-ink"
-        >
-          Bulan ini
-        </Link>
-        {!sudahBulanIni ? (
-          <Link
-            href={`/laporan/bulanan?bulan=${bulanDepan}`}
-            className="flex min-h-11 items-center rounded-control border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
-          >
-            Bulan depan →
-          </Link>
-        ) : (
-          <span className="min-h-11" />
-        )}
-      </nav>
+      <NavPeriode
+        label="Pindah bulan"
+        sebelumnya={{ href: `/laporan/bulanan?bulan=${bulanLalu}`, label: "Bulan lalu" }}
+        sekarang={{ href: "/laporan/bulanan", label: "Bulan ini" }}
+        berikutnya={
+          sudahBulanIni
+            ? undefined
+            : { href: `/laporan/bulanan?bulan=${bulanDepan}`, label: "Bulan depan" }
+        }
+      />
 
       <RingkasanPeriodeLaporan
         laporan={laporan}

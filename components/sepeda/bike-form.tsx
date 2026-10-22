@@ -232,7 +232,6 @@ export function BikeForm({
               name="foto"
               type="file"
               accept="image/jpeg,image/png,image/webp"
-              className="py-2"
             />
           )}
         </Field>
